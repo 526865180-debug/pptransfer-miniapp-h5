@@ -1,0 +1,18 @@
+# 依赖与工具产物
+node_modules/
+package-lock.json
+__pycache__/
+*.py[cod]
+
+# Python 虚拟环境
+.venv/
+venv/
+
+# 编辑器与系统
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# 校验脚本的临时截图
+*.tmp.png

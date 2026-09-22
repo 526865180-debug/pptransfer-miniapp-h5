@@ -1,0 +1,13 @@
+{
+  "name": "pptransfer-miniapp-h5",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PPTransfer 商户端小程序转 H5 单文件版（自带运行时，零外部依赖）",
+  "scripts": {
+    "build": "python3 h5/build.py --miniapp ../pptransfer-miniapp --out index.html",
+    "verify": "node h5/verify_h5.js index.html"
+  },
+  "devDependencies": {
+    "jsdom": "^30.0.1"
+  }
+}
