@@ -385,13 +385,32 @@ async function main() {
           .every(function (x) { return s.indexOf(x) >= 0 }) && s.indexOf('开户行支行号：') < 0,
         JSON.stringify(s))
 
-      // 供应商 + 企业：支行号出现（与所属无关），供应商侧扩展材料收起
+      // 供应商 + 企业：支行号 + 法人信息出现（与所属无关），供应商侧个人材料收起
       await click(cdp, '.radio-pill[data-type="enterprise"]')
       await sleep(150)
       s = await visibleFields()
-      check('供应商+企业 → 仅保留支行号（8 行）',
-        s.length === 8 && s.indexOf('开户行支行号：') >= 0 && s.indexOf('公司名称') < 0 && s.indexOf('历史采购合同：') < 0,
-        JSON.stringify(s))
+      check('供应商+企业 → 支行号 + 法人信息（10 行）',
+        s.length === 10 && ['开户行支行号：', '法人名称', '法人身份证号'].every(function (x) { return s.indexOf(x) >= 0 }) &&
+        s.indexOf('公司名称') < 0 && s.indexOf('历史采购合同：') < 0, JSON.stringify(s))
+
+      // 法人名称 / 法人身份证号：初始都是选填
+      const legalMarks = () => cdp.eval(`['#add-legal-name', '#add-legal-id'].map(function (sel) {
+        var label = document.querySelector(sel).closest('.frow').querySelector('.frow-label')
+        return {
+          req: !label.querySelector('.frow-req').hidden,
+          optional: !label.querySelector('.frow-optional').hidden
+        }
+      })`)
+      s = await legalMarks()
+      check('法人两字段初始均为选填',
+        s.every(function (m) { return m.optional && !m.req }), JSON.stringify(s))
+
+      // 填了法人名称 → 法人身份证号立刻变必填
+      await setVal('#add-legal-name', '张伟')
+      await sleep(150)
+      s = await legalMarks()
+      check('填了法人名称 → 法人身份证号变必填',
+        s[0].optional && !s[0].req && s[1].req && !s[1].optional, JSON.stringify(s))
 
       // 开户地区：系统固定「中国内地」，只读不可修改
       s = await cdp.eval(`(function () {
@@ -430,7 +449,32 @@ async function main() {
       s = await cdp.eval(`document.querySelector('#add-branch-value').textContent`)
       check('支行选中回填', /前海/.test(s), s)
 
-      // 切回供应商 + 个人：支行号收起；企业手选的银行换成自动返显框，值清空重采
+      // 基础项填齐：法人名称已填 → 法人身份证号变必填，被拦在步骤 1
+      await setVal('#add-acct-name', '罗炬')
+      await setVal('#add-acct-no', '6222020200123456789')
+      await click(cdp, '#add-next-btn')
+      await sleep(200)
+      s = await cdp.eval(`({
+        toast: document.querySelector('#toast-layer').textContent,
+        step: document.querySelector('.page[data-page="add-rmb-exchange-account"] .wizard-step:not([hidden])').getAttribute('data-step')
+      })`)
+      check('填了法人名称 → 缺法人身份证号被拦在步骤 1',
+        /法人身份证号/.test(s.toast) && s.step === '0', JSON.stringify(s))
+
+      // 清空法人名称 → 两字段都空即都选填，放行进授权步骤
+      await setVal('#add-legal-name', '')
+      await sleep(150)
+      s = await legalMarks()
+      check('清空法人名称 → 两字段回到选填',
+        s.every(function (m) { return m.optional && !m.req }), JSON.stringify(s))
+      await click(cdp, '#add-next-btn')
+      await sleep(200)
+      s = await cdp.eval(`document.querySelector('.page[data-page="add-rmb-exchange-account"] .wizard-step:not([hidden])').getAttribute('data-step')`)
+      check('法人信息全空 → 放行进授权步骤', s === '1', s)
+      await click(cdp, '#add-prev-btn')
+      await sleep(200)
+
+      // 切回供应商 + 个人：支行号收起；企业手选的银行换成按账号返显
       await click(cdp, '.radio-pill[data-type="personal"]')
       await sleep(150)
       s = await visibleFields()
@@ -439,11 +483,10 @@ async function main() {
         auto: document.querySelector('#add-bank-auto').value,
         pickerHidden: document.querySelector('#add-bank-btn').hidden
       })`)
-      check('切类型后企业手选的银行被清空重采', s.auto === '' && s.pickerHidden, JSON.stringify(s))
+      check('切类型后银行改按账号返显（不沿用企业手选的招商银行）',
+        s.auto === '工商银行' && s.pickerHidden, JSON.stringify(s))
 
-      // 基础项填齐后：公司名称/信用代码是选填，剩下收款人身份证号把关
-      await setVal('#add-acct-name', '罗炬')
-      await setVal('#add-acct-no', '6222020200123456789')
+      // 个人账户：公司名称/信用代码是选填，剩下收款人身份证号把关
       await click(cdp, '#add-next-btn')
       await sleep(200)
       s = await cdp.eval(`({

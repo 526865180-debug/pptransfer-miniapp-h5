@@ -10,11 +10,13 @@
    银行名称按类型分两种采集方式：企业账户用 searchPicker 手选；个人账户不可填写，
    由银行账号按卡 BIN 前缀自动返显（见 CARD_BINS / detectBank）。
    条件字段（见 RULES）：
-     personal          仅个人账户        → I 类银行账户卡提示
-     enterprise        仅企业账户        → 开户行支行号（CNAPS 行号，必填）
-     supplier-personal 供应商的个人账户  → 公司名称 / 统一信用代码（选填）/
-                                          收款人身份证号（必填）/ 历史采购合同（选填）
-   即企业账户一律填开户行支行号，扩展材料只对「供应商 + 个人账户」收集。
+     personal            仅个人账户        → I 类银行账户卡提示
+     enterprise          仅企业账户        → 开户行支行号（CNAPS 行号，必填）
+     supplier-enterprise 供应商的企业账户  → 法人名称 / 法人身份证号（双双选填，
+                                            填其一则另一必填，见 syncLegalRequired）
+     supplier-personal   供应商的个人账户  → 公司名称 / 统一信用代码（选填）/
+                                            收款人身份证号（必填）/ 历史采购合同（选填）
+   即企业账户一律填开户行支行号，扩展材料只对供应商账户收集。
    切换所属/类型只改 data-only 行的显隐，已填值留在 DOM 里，来回切换不丢；
    例外：银行来源随类型而变（企业手选 ↔ 个人自动返显），切类型时银行与支行清空重采。
    校验按同一套规则决定是否检查条件字段。
@@ -111,11 +113,12 @@
 
   /**
    * 条件字段规则：data-only 的取值 → 显示条件。
-   *   企业账户一律要填开户行支行号；扩展材料只对「供应商 + 个人账户」收集。
+   *   企业账户一律要填开户行支行号；扩展材料只对供应商账户收集。
    */
   var RULES = {
     personal: function () { return isPersonal() },
     enterprise: function () { return !isPersonal() },
+    'supplier-enterprise': function () { return isSupplier() && !isPersonal() },
     'supplier-personal': function () { return isSupplier() && isPersonal() }
   }
 
@@ -148,6 +151,32 @@
 
     /* 个人账户的银行名称由银行账号返显，切换类型后立刻按当前账号重算一次 */
     if (isPersonal()) syncAutoBank()
+
+    /* 法人信息的必填标记随另一字段的填写情况变化 */
+    syncLegalRequired()
+  }
+
+  /* ---------------- 法人信息（供应商企业账户）：填其一则另一必填 ---------------- */
+
+  /** 把某字段的标签在「*（必填）」与「选填」之间切换 */
+  function setRequiredMark(sel, required) {
+    var field = dom.qs(sel, view.root)
+    if (!field) return
+    var row = field.closest('.frow')
+    if (!row) return
+    var req = dom.qs('.frow-req', row)
+    var optional = dom.qs('.frow-optional', row)
+    if (req) req.hidden = !required
+    if (optional) optional.hidden = required
+  }
+
+  /** 法人名称 / 法人身份证号：都空则都选填，任一有值则另一必填 */
+  function syncLegalRequired() {
+    if (!isSupplier() || isPersonal()) return
+    var byName = !!val('#add-legal-name')
+    var byId = !!val('#add-legal-id')
+    setRequiredMark('#add-legal-name', byId)
+    setRequiredMark('#add-legal-id', byName)
   }
 
   /** 银行来源随类型切换：清掉上一次采集的银行与支行，避免取值与可见控件对不上 */
@@ -216,6 +245,13 @@
     /* 企业账户一律要选开户行支行号 */
     if (!isPersonal() && !view.branch) {
       return { msg: '请选择开户行支行号', sel: '#add-branch-btn' }
+    }
+    /* 供应商企业账户的法人信息：两项都选填，但填其一则另一必填 */
+    if (isSupplier() && !isPersonal()) {
+      var legalName = val('#add-legal-name')
+      var legalId = val('#add-legal-id')
+      if (legalName && !legalId) return { msg: '请填写法人身份证号', sel: '#add-legal-id' }
+      if (legalId && !legalName) return { msg: '请填写法人名称', sel: '#add-legal-name' }
     }
     /* 公司名称 / 统一信用代码为选填（自然人供应商不一定有），这里只把关身份证号 */
     if (isSupplier() && isPersonal() && !val('#add-id-card')) {
@@ -397,6 +433,11 @@
       listen('focusout', '#add-acct-no', function (e, el) {
         el.value = group4(el.value.replace(/\s+/g, ''))
       })
+
+      /* -------- 法人信息：填其一则另一变必填 -------- */
+
+      listen('input', '#add-legal-name', syncLegalRequired)
+      listen('input', '#add-legal-id', syncLegalRequired)
 
       /* -------- 历史采购合同上传 -------- */
 
