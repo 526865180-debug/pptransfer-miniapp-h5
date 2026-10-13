@@ -101,11 +101,15 @@ function launchChrome(extraArgs) {
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'pp-render-'))
   const proc = spawn(CHROME, [
     '--headless=new',
+    // 受限环境（容器/沙箱）下 Chrome 自身的 setuid 沙箱起不来，会连带 GPU 进程崩溃；
+    // headless 自动化场景关掉它是常规做法，不影响被测页面
+    '--no-sandbox',
+    '--disable-gpu',
+    '--disable-software-rasterizer',
     '--remote-debugging-port=0',
     '--user-data-dir=' + profile,
     '--no-first-run',
     '--no-default-browser-check',
-    '--disable-gpu',
     '--disable-extensions',
     '--hide-scrollbars',
     '--mute-audio',
