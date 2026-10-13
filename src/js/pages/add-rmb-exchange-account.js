@@ -7,6 +7,8 @@
      步骤 2 授权声明（回填步骤 1 的账户信息）+ 交易密码 + 同意勾选
      步骤 3 申请成功
    开户地区是系统固定值（中国内地），只读展示、不参与校验也不提供选择器。
+   银行名称按类型分两种采集方式：企业账户用 searchPicker 手选；个人账户不可填写，
+   由银行账号按卡 BIN 前缀自动返显（见 CARD_BINS / detectBank）。
    条件字段（见 RULES）：
      personal          仅个人账户        → I 类银行账户卡提示
      enterprise        仅企业账户        → 开户行支行号（CNAPS 行号）
@@ -14,6 +16,7 @@
                                           收款人身份证号 / 历史采购合同
    即企业账户一律填开户行支行号，扩展材料只对「供应商 + 个人账户」收集。
    切换所属/类型只改 data-only 行的显隐，已填值留在 DOM 里，来回切换不丢；
+   例外：银行来源随类型而变（企业手选 ↔ 个人自动返显），切类型时银行与支行清空重采。
    校验按同一套规则决定是否检查条件字段。
    弹层统一走 PP.ui（picker / searchPicker / toast）。
    ============================================================ */
@@ -50,6 +53,31 @@
       { value: head + '046', title: bankName + '深圳南山支行', sub: 'CNAPS ' + head + '046' },
       { value: head + '091', title: bankName + '深圳福田支行', sub: 'CNAPS ' + head + '091' }
     ]
+  }
+
+  /** 演示数据：卡 BIN 前缀 → 银行名称。个人账户按银行账号自动识别开户行用 */
+  var CARD_BINS = [
+    { prefix: '6222', bank: '工商银行' },
+    { prefix: '6225', bank: '招商银行' },
+    { prefix: '6217', bank: '建设银行' },
+    { prefix: '6216', bank: '中国银行' },
+    { prefix: '6228', bank: '农业银行' },
+    { prefix: '6214', bank: '交通银行' },
+    { prefix: '6215', bank: '浦发银行' },
+    { prefix: '6226', bank: '中信银行' },
+    { prefix: '6221', bank: '民生银行' },
+    { prefix: '6229', bank: '兴业银行' }
+  ]
+
+  /** 按卡 BIN 前缀识别开户银行；账号不足 6 位或匹配不上时返回 '' */
+  function detectBank(acctNo) {
+    var n = String(acctNo).replace(/\D/g, '')
+    if (n.length < 6) return ''
+    var hit = ''
+    CARD_BINS.forEach(function (b) {
+      if (!hit && n.indexOf(b.prefix) === 0) hit = b.bank
+    })
+    return hit
   }
 
   /** 当前页面实例的可变状态；未挂载时为 null */
@@ -117,6 +145,44 @@
         ? '请输入'
         : '如：深圳市极光贸易有限公司'
     }
+
+    /* 个人账户的银行名称由银行账号返显，切换类型后立刻按当前账号重算一次 */
+    if (isPersonal()) syncAutoBank()
+  }
+
+  /** 银行来源随类型切换：清掉上一次采集的银行与支行，避免取值与可见控件对不上 */
+  function resetBank() {
+    view.bank = ''
+    view.branch = ''
+    view.branchTitle = ''
+    var picked = dom.qs('#add-bank-value', view.root)
+    if (picked) {
+      picked.textContent = '搜索银行名称 / CNAPS 行号'
+      picked.classList.add('is-placeholder')
+    }
+    var auto = dom.qs('#add-bank-auto', view.root)
+    if (auto) auto.value = ''
+    var branch = dom.qs('#add-branch-value', view.root)
+    if (branch) {
+      branch.textContent = '请先选择开户银行'
+      branch.classList.add('is-placeholder')
+    }
+  }
+
+  /** 个人账户：银行名称不可填写，按银行账号自动返显（识别不出则留空） */
+  function syncAutoBank() {
+    var name = detectBank(rawNum('#add-acct-no'))
+    view.bank = name
+    /* 账号变了，先前识别/选择出的支行不再适用 */
+    view.branch = ''
+    view.branchTitle = ''
+    var auto = dom.qs('#add-bank-auto', view.root)
+    if (auto) auto.value = name
+    var branch = dom.qs('#add-branch-value', view.root)
+    if (branch) {
+      branch.textContent = '请先选择开户银行'
+      branch.classList.add('is-placeholder')
+    }
   }
 
   /* ---------------------------------------------- 行内校验 */
@@ -142,7 +208,11 @@
   function firstMissing() {
     if (!val('#add-acct-name')) return { msg: '请填写账户名称', sel: '#add-acct-name' }
     if (!rawNum('#add-acct-no')) return { msg: '请填写银行账号', sel: '#add-acct-no' }
-    if (!view.bank) return { msg: '请选择银行名称', sel: '#add-bank-btn' }
+    if (!view.bank) {
+      return isPersonal()
+        ? { msg: '银行账号有误，无法识别开户银行', sel: '#add-acct-no' }
+        : { msg: '请选择银行名称', sel: '#add-bank-btn' }
+    }
     /* 企业账户一律要选开户行支行号 */
     if (!isPersonal() && !view.branch) {
       return { msg: '请选择开户行支行号', sel: '#add-branch-btn' }
@@ -308,6 +378,8 @@
           b.setAttribute('aria-checked', b === el ? 'true' : 'false')
         })
         view.type = el.getAttribute('data-type')
+        /* 企业手选 / 个人自动返显是两套来源，切换时清空重采 */
+        resetBank()
         syncConditionalRows()
       })
 
@@ -320,6 +392,8 @@
 
       listen('input', '#add-acct-no', function (e, el) {
         el.value = el.value.replace(/[^\d\s]/g, '')
+        /* 个人账户的银行名称跟着账号走 */
+        if (isPersonal()) syncAutoBank()
       })
       listen('focusout', '#add-acct-no', function (e, el) {
         el.value = group4(el.value.replace(/\s+/g, ''))

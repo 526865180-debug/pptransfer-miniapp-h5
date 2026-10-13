@@ -311,6 +311,13 @@ async function main() {
       check('本公司+企业 → 基础字段 + 开户行支行号（8 行）',
         s.length === 8 && s.indexOf('开户行支行号：') >= 0 && s.indexOf('公司名称：') < 0 &&
         s.indexOf('收款人身份证号：') < 0, JSON.stringify(s))
+      s = await cdp.eval(`(function () {
+        var auto = document.querySelector('#add-bank-auto')
+        var btn = document.querySelector('#add-bank-btn')
+        return { autoHidden: auto.hidden, pickerShown: !btn.hidden }
+      })()`)
+      check('企业账户 → 银行名称走搜索选择器（自动返显框隐藏）',
+        s.autoHidden && s.pickerShown, JSON.stringify(s))
 
       // 未选银行时点支行号 → toast 引导 + 银行行标红
       await click(cdp, '#add-branch-btn')
@@ -332,11 +339,42 @@ async function main() {
       s = await cdp.eval(`document.querySelector('.page[data-page="add-rmb-exchange-account"] .hint-warn').hidden`)
       check('本公司+个人 → I 类卡提示仍显示', s === false, String(s))
 
-      // 空表单下一步 → 校验提示
+      // 个人账户的银行名称：不是选择器，而是按银行账号自动返显的只读框
+      s = await cdp.eval(`(function () {
+        var auto = document.querySelector('#add-bank-auto')
+        var btn = document.querySelector('#add-bank-btn')
+        return { shown: !auto.hidden, readonly: auto.readOnly, value: auto.value, pickerHidden: btn.hidden }
+      })()`)
+      check('个人账户 → 银行名称为只读自动返显框',
+        s.shown && s.readonly && s.value === '' && s.pickerHidden, JSON.stringify(s))
+
+      // 输入银行账号 → 按卡 BIN 自动带出银行
+      await setVal('#add-acct-no', '6225881234567890')
+      await sleep(150)
+      s = await cdp.eval(`document.querySelector('#add-bank-auto').value`)
+      check('输入 6225 开头账号 → 自动返显招商银行', s === '招商银行', s)
+
+      // 识别不出的账号 → 返显留空，校验按「无法识别开户银行」拦下
+      await setVal('#add-acct-no', '1111111111111111')
+      await setVal('#add-acct-name', '罗炬')
+      await sleep(150)
+      s = await cdp.eval(`document.querySelector('#add-bank-auto').value`)
+      check('无法识别的账号 → 银行名称留空', s === '', JSON.stringify(s))
+      await click(cdp, '#add-next-btn')
+      await sleep(200)
+      s = await cdp.eval(`({
+        toast: document.querySelector('#toast-layer').textContent,
+        step: document.querySelector('.page[data-page="add-rmb-exchange-account"] .wizard-step:not([hidden])').getAttribute('data-step')
+      })`)
+      check('无法识别开户银行 → 拦在步骤 1',
+        /无法识别开户银行/.test(s.toast) && s.step === '0', JSON.stringify(s))
+      await setVal('#add-acct-no', '')
+
+      // 账号清空 → 校验提示
       await click(cdp, '#add-next-btn')
       await sleep(150)
       s = await cdp.eval(`document.querySelector('#toast-layer').textContent`)
-      check('空表单校验 → toast 提示', /请填写/.test(s), s)
+      check('账号为空 → 提示填写银行账号', /请填写银行账号/.test(s), s)
 
       // 供应商 + 个人：供应商侧扩展材料显示，支行号随「个人账户」隐藏
       await click(cdp, '.radio-pill[data-owner="supplier"]')
@@ -392,11 +430,16 @@ async function main() {
       s = await cdp.eval(`document.querySelector('#add-branch-value').textContent`)
       check('支行选中回填', /前海/.test(s), s)
 
-      // 切回供应商 + 个人：支行号收起（已选值保留），供应商侧材料转由校验把关
+      // 切回供应商 + 个人：支行号收起；企业手选的银行换成自动返显框，值清空重采
       await click(cdp, '.radio-pill[data-type="personal"]')
       await sleep(150)
       s = await visibleFields()
       check('切回个人账户 → 支行号收起', s.indexOf('开户行支行号：') < 0, JSON.stringify(s))
+      s = await cdp.eval(`({
+        auto: document.querySelector('#add-bank-auto').value,
+        pickerHidden: document.querySelector('#add-bank-btn').hidden
+      })`)
+      check('切类型后企业手选的银行被清空重采', s.auto === '' && s.pickerHidden, JSON.stringify(s))
 
       // 基础项填齐后，缺失的条件必填项先被拦下
       await setVal('#add-acct-name', '罗炬')
@@ -420,7 +463,7 @@ async function main() {
         confirmDisabled: document.querySelector('#add-confirm-btn').getAttribute('aria-disabled')
       })`)
       check('进入授权步骤且账户信息回填',
-        s.step === '1' && s.bank === '招商银行' && s.name === '罗炬' && s.no === '6222 0202 0012 3456 789',
+        s.step === '1' && s.bank === '工商银行' && s.name === '罗炬' && s.no === '6222 0202 0012 3456 789',
         JSON.stringify(s))
       check('未填密码/未勾选时提交置灰', s.confirmDisabled === 'true', s.confirmDisabled)
 

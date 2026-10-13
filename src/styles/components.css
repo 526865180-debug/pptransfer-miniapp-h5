@@ -283,6 +283,16 @@
   color: var(--text-quaternary);
   background: var(--slate-100);
 }
+/* 只读输入框：值由系统返显、用户填不了（如个人账户按银行账号识别开户行）。
+   保留输入框形态，但去掉「可编辑」的观感：次要色文字、聚焦不点亮。 */
+.field-input[readonly] {
+  color: var(--text-secondary);
+  cursor: default;
+}
+.field-input[readonly]:focus {
+  border-color: var(--border-default);
+  box-shadow: none;
+}
 .field-hint {
   display: block;
   margin-top: 5px;
