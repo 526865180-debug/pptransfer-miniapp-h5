@@ -212,6 +212,180 @@ async function main() {
       check('消息列表已渲染', s.rows > 0 && s.nodes > 5, s.rows + ' 行 / ' + s.nodes + ' 节点')
     })
 
+    /* 8. 结汇提现表单 ---------------------------------------------- */
+    await step('结汇提现表单（双向计算与账户搜索）', cdp, async () => {
+      await cdp.eval(`PP.router.go('rmb-exchange-withdraw')`)
+      await cdp.waitFor(`PP.router.current() === 'rmb-exchange-withdraw'`, '进入结汇提现')
+      await sleep(200)
+
+      const setVal = async (sel, v) => {
+        await cdp.eval(`(function () {
+          var el = document.querySelector(${JSON.stringify(sel)});
+          el.value = ${JSON.stringify(v)};
+          el.dispatchEvent(new Event('input', { bubbles: true }))
+        })()`)
+      }
+
+      await setVal('#amount-input', '100')
+      await sleep(120)
+      let s = await cdp.eval(`({
+        arrival: document.querySelector('#arrival-input').value,
+        fee: document.querySelector('#fee-value').textContent
+      })`)
+      check('提现 100 → 到账 99.9、手续费 0.10 CNH',
+        parseFloat(s.arrival) === 99.9 && s.fee === '0.10 CNH', JSON.stringify(s))
+
+      await setVal('#arrival-input', '500')
+      await sleep(120)
+      s = await cdp.eval(`document.querySelector('#amount-input').value`)
+      check('到账 500 → 反算提现 500.5', parseFloat(s) === 500.5, s)
+
+      await click(cdp, '#fill-all')
+      await sleep(120)
+      s = await cdp.eval(`({
+        amount: document.querySelector('#amount-input').value,
+        arrival: document.querySelector('#arrival-input').value
+      })`)
+      check('全部提现 → 997 / 996', parseFloat(s.amount) === 997 && parseFloat(s.arrival) === 996, JSON.stringify(s))
+
+      // 未选账户时点下一步应给出原因而不是进确认页
+      await click(cdp, '#next-btn')
+      await sleep(150)
+      s = await cdp.eval(`document.querySelector('#toast-layer').textContent`)
+      check('未选账户 → toast 提示原因', /账户/.test(s), s)
+
+      // 账户搜索弹层（PP.ui.searchPicker）
+      await click(cdp, '#account-btn')
+      await cdp.waitFor(`!!document.querySelector('#layer-root .picker-list')`, '账户弹层出现')
+      s = await cdp.eval(`document.querySelectorAll('#layer-root .picker-item').length`)
+      check('弹层列出全部账户', s === 6, s)
+      await setVal('#picker-search', '工商')
+      await sleep(120)
+      s = await cdp.eval(`document.querySelectorAll('#layer-root .picker-item').length`)
+      check('搜索「工商」过滤为 1 条', s === 1, s)
+      await click(cdp, '.picker-item', 'document.querySelector("#layer-root .sheet")')
+      await sleep(200)
+      s = await cdp.eval(`({
+        value: document.querySelector('#account-value').textContent,
+        open: !!document.querySelector('#layer-root .mask')
+      })`)
+      check('选中后回填并关闭弹层', /工商银行/.test(s.value) && !s.open, JSON.stringify(s))
+
+      await click(cdp, '#next-btn')
+      await sleep(200)
+      s = await cdp.eval(`({
+        step: document.querySelector('.page[data-page="rmb-exchange-withdraw"] .wizard-step:not([hidden])').getAttribute('data-step'),
+        amount: document.querySelector('#confirm-amount').textContent,
+        account: document.querySelector('#confirm-account').textContent
+      })`)
+      check('进入确认步骤且金额/账户已同步',
+        s.step === '1' && /997/.test(s.amount) && /工商/.test(s.account), JSON.stringify(s))
+    })
+
+    /* 9. 添加人民币结汇账户 ---------------------------------------- */
+    await step('添加人民币结汇账户（三步向导）', cdp, async () => {
+      // 从结汇提现页的「添加结汇提现账户」入口进入
+      await cdp.eval(`PP.router.go('rmb-exchange-withdraw')`)
+      await cdp.waitFor(`PP.router.current() === 'rmb-exchange-withdraw'`, '回到结汇提现')
+      await sleep(200)
+      await click(cdp, '.link-btn[data-go="add-rmb-exchange-account"]')
+      await cdp.waitFor(`PP.router.current() === 'add-rmb-exchange-account'`, '进入添加账户页')
+      const head = await cdp.eval(`document.querySelector('#bar-title').textContent`)
+      check('入口跳转与标题正确', head === '添加人民币结汇账户', head)
+
+      const setVal = async (sel, v) => {
+        await cdp.eval(`(function () {
+          var el = document.querySelector(${JSON.stringify(sel)});
+          el.value = ${JSON.stringify(v)};
+          el.dispatchEvent(new Event('input', { bubbles: true }))
+        })()`)
+      }
+      const pageScope = 'document.querySelector(".page[data-page=\'add-rmb-exchange-account\']")'
+
+      // 空表单直接下一步 → 校验提示
+      await click(cdp, '#add-next-btn')
+      await sleep(150)
+      let s = await cdp.eval(`document.querySelector('#toast-layer').textContent`)
+      check('空表单校验 → toast 提示', /请填写/.test(s), s)
+
+      // 切到个人账户：专属字段出现
+      await click(cdp, '.radio-pill[data-type="personal"]')
+      await sleep(120)
+      s = await cdp.eval(`({
+        visible: [].slice.call(document.querySelectorAll('.page[data-page="add-rmb-exchange-account"] [data-only="personal"]')).filter(function (el) { return !el.hidden }).length,
+        warn: document.querySelector('.page[data-page="add-rmb-exchange-account"] .hint-warn').hidden
+      })`)
+      check('个人账户字段全部显示（5 处）', s.visible === 5 && s.warn === false, JSON.stringify(s))
+
+      // 切回企业账户：专属字段隐藏
+      await click(cdp, '.radio-pill[data-type="enterprise"]')
+      await sleep(120)
+      s = await cdp.eval(`[].slice.call(document.querySelectorAll('.page[data-page="add-rmb-exchange-account"] [data-only="personal"]')).filter(function (el) { return !el.hidden }).length`)
+      check('切回企业账户后字段隐藏', s === 0, String(s))
+
+      // 开户地区 picker
+      await click(cdp, '#add-region-btn')
+      await cdp.waitFor(`!!document.querySelector('#layer-root .option-row')`, '地区弹层出现')
+      s = await cdp.eval(`document.querySelectorAll('#layer-root .option-row').length`)
+      check('地区弹层 4 项', s === 4, s)
+      await click(cdp, '.option-row[data-value="香港地区"]', 'document.querySelector("#layer-root .sheet")')
+      await sleep(200)
+      s = await cdp.eval(`document.querySelector('#add-region-value').textContent`)
+      check('地区选中回填', s === '香港地区', s)
+
+      // 银行名称 searchPicker
+      await click(cdp, '#add-bank-btn')
+      await cdp.waitFor(`!!document.querySelector('#layer-root .picker-list')`, '银行弹层出现')
+      await setVal('#picker-search', '招商')
+      await sleep(120)
+      s = await cdp.eval(`document.querySelectorAll('#layer-root .picker-item').length`)
+      check('银行搜索「招商」→ 1 条', s === 1, s)
+      await click(cdp, '.picker-item', 'document.querySelector("#layer-root .sheet")')
+      await sleep(200)
+      s = await cdp.eval(`document.querySelector('#add-bank-value').textContent`)
+      check('银行选中回填', s === '招商银行', s)
+
+      // 补齐必填项 → 进入授权步骤
+      await setVal('#add-acct-name', '深圳市极光贸易有限公司')
+      await setVal('#add-acct-no', '6222020200123456789')
+      await setVal('#add-branch-code', '308584000013')
+      await click(cdp, '#add-next-btn')
+      await sleep(200)
+      s = await cdp.eval(`({
+        step: document.querySelector('.page[data-page="add-rmb-exchange-account"] .wizard-step:not([hidden])').getAttribute('data-step'),
+        bank: document.querySelector('#add-auth-bank').textContent,
+        name: document.querySelector('#add-auth-name').textContent,
+        no: document.querySelector('#add-auth-no').textContent,
+        confirmDisabled: document.querySelector('#add-confirm-btn').getAttribute('aria-disabled')
+      })`)
+      check('进入授权步骤且账户信息回填',
+        s.step === '1' && s.bank === '招商银行' && /极光贸易/.test(s.name) && /6222/.test(s.no),
+        JSON.stringify(s))
+      check('未填密码/未勾选时提交置灰', s.confirmDisabled === 'true', s.confirmDisabled)
+
+      // 交易密码 + 同意授权 → 提交成功
+      await setVal('#add-trade-pwd', '123456')
+      await cdp.eval(`(function () {
+        var cb = document.querySelector('#add-agree');
+        cb.checked = true;
+        cb.dispatchEvent(new Event('change', { bubbles: true }))
+      })()`)
+      await sleep(120)
+      await click(cdp, '#add-confirm-btn')
+      await sleep(200)
+      s = await cdp.eval(`({
+        step: document.querySelector('.page[data-page="add-rmb-exchange-account"] .wizard-step:not([hidden])').getAttribute('data-step'),
+        no: document.querySelector('#add-result-no').textContent
+      })`)
+      check('提交进入成功页且账号脱敏展示',
+        s.step === '2' && s.no.indexOf('****') >= 0, JSON.stringify(s))
+
+      // 返回结汇提现
+      await click(cdp, '.page[data-page="add-rmb-exchange-account"] [data-back]')
+      await cdp.waitFor(`PP.router.current() === 'rmb-exchange-withdraw'`, '返回结汇提现')
+      check('返回结汇提现', true)
+    })
+
     /* 汇总 -------------------------------------------------------- */
     console.log('\n通过 %d 项断言', passed)
     if (problems.length) {

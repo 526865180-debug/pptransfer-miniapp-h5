@@ -99,75 +99,35 @@
 
   /* ---------------------------------------------- 账户搜索选择 */
 
-  function acctItemHTML(a) {
-    return (
-      '<button type="button" class="acct-item' +
-      (view.account === a.value ? ' is-active' : '') + '" data-value="' + dom.esc(a.value) + '"' +
-      ' aria-pressed="' + (view.account === a.value ? 'true' : 'false') + '">' +
-      '<span class="acct-body">' +
-      '<span class="acct-title num">' + dom.esc(a.title) + '</span>' +
-      '<span class="acct-sub">' + dom.esc(a.sub) + '</span>' +
-      '</span>' +
-      '<svg class="acct-check" aria-hidden="true"><use href="#i-check"/></svg>' +
-      '</button>'
-    )
-  }
-
   function pickAccount() {
-    var api
-    var body =
-      '<div class="acct-search-wrap">' +
-      '<input class="field-input acct-search" id="acct-search" type="search" autofocus' +
-      ' autocomplete="off" placeholder="账户名称/备注名/卡号/银行名称">' +
-      '</div>' +
-      '<div class="acct-list" id="acct-list"></div>'
-
-    api = PP.ui.sheet({
+    PP.ui.searchPicker({
       title: '选择结汇提现账户',
-      body: body,
-      onMount: function (root) {
-        var list = dom.qs('#acct-list', root)
-        var search = dom.qs('#acct-search', root)
-
-        function renderList() {
-          var kw = (search.value || '').trim().toLowerCase()
-          var rows = ACCOUNTS.filter(function (a) {
-            return !kw || (a.title + ' ' + a.sub).toLowerCase().indexOf(kw) >= 0
-          })
-          list.innerHTML = rows.length
-            ? rows.map(acctItemHTML).join('')
-            : '<p class="acct-empty">未找到匹配的账户</p>'
-        }
-
-        dom.on(root, 'input', '#acct-search', function () { renderList() })
-        dom.on(root, 'click', '.acct-item', function (e, el) {
-          var value = el.getAttribute('data-value')
-          view.account = value
-          ACCOUNTS.forEach(function (a) {
-            if (a.value === value) {
-              dom.qs('#account-value', view.root).textContent = a.title
-              dom.qs('#account-value', view.root).classList.remove('is-placeholder')
-            }
-          })
-          api.close()
-          dom.haptic()
-          refresh()
-        })
-
-        renderList()
-      }
+      placeholder: '账户名称/备注名/卡号/银行名称',
+      value: view.account,
+      items: ACCOUNTS
+    }).then(function (value) {
+      if (!value || !view) return
+      view.account = value
+      ACCOUNTS.forEach(function (a) {
+        if (a.value !== value) return
+        var el = dom.qs('#account-value', view.root)
+        el.textContent = a.title
+        el.classList.remove('is-placeholder')
+      })
+      dom.haptic()
+      refresh()
     })
   }
 
   /* ---------------------------------------------- 分步 */
 
   function syncSteps() {
-    dom.qsa('.step', view.root).forEach(function (li, i) {
+    dom.qsa('.wz-step', view.root).forEach(function (li, i) {
       li.setAttribute('data-tone', i < view.step ? 'success' : (i === view.step ? 'blue' : 'neutral'))
       if (i === view.step) li.setAttribute('aria-current', 'step')
       else li.removeAttribute('aria-current')
 
-      var dot = dom.qs('.step-dot', li)
+      var dot = dom.qs('.wz-dot', li)
       if (i < view.step) dom.setHTML(dot, dom.raw('<svg aria-hidden="true"><use href="#i-check"/></svg>'))
       else dot.textContent = String(i + 1)
     })

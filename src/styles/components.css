@@ -816,6 +816,301 @@ body[data-amount-hidden='true'] .bal-amount {
   filter: blur(5px);
 }
 
+/* ============ 表单行（堆叠式：标签在上，控件在下） ============
+   移动端宽度有限，不做桌面那种左标签右控件；
+   行间用 1px 分隔线，最后一行加 .frow--last 去掉。 */
+
+.frow {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--border-default);
+}
+.frow:first-child { padding-top: 0; }
+.frow--last {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.frow-label {
+  font-size: var(--text-md);
+  color: var(--text-secondary);
+}
+/* 必填星号：纯视觉提示，读屏语义由字段本身的 required/校验承担 */
+.frow-req {
+  margin-right: 3px;
+  color: var(--tone-danger-fg);
+  font-style: normal;
+}
+
+/* ============ 单选胶囊组（替代原生 radio 的移动端形态） ============ */
+
+.radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.radio-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-pill);
+  background: var(--surface-card);
+  font-size: var(--text-md);
+  color: var(--text-secondary);
+  transition: border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.radio-pill:active { background: var(--surface-sunken); }
+.radio-pill[aria-checked='true'] {
+  border-color: var(--color-brand);
+  background: var(--color-brand-soft);
+  color: var(--color-brand-strong);
+  font-weight: var(--weight-medium);
+}
+/* 选中圆点用伪元素画，读屏不会念出多余内容 */
+.radio-pill::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--text-placeholder);
+  border-radius: 50%;
+  background: var(--surface-card);
+  transition: border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+.radio-pill[aria-checked='true']::before {
+  border-color: var(--color-brand);
+  background: var(--color-brand);
+  box-shadow: inset 0 0 0 3px var(--surface-card);
+}
+
+/* ============ 伪选择框（点开弹层选择，而非原生 select） ============ */
+
+.select-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-inner);
+  background: var(--surface-card);
+  text-align: left;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+.select-field:active { border-color: var(--color-brand); }
+.select-value {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-md);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.select-value.is-placeholder { color: var(--text-placeholder); }
+.select-caret {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  color: var(--text-tertiary);
+}
+.select-hint {
+  font-size: var(--text-xs);
+  color: var(--text-quaternary);
+}
+
+/* 行内文字链（去换汇 / 添加账户 …）：靠 ::after 撑到 44px 命中区 */
+.link-btn {
+  position: relative;
+  padding: 2px 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  color: var(--color-brand);
+}
+.link-btn::after { content: ''; position: absolute; inset: -10px; }
+.link-btn:active { opacity: 0.7; }
+.link-btn--end { align-self: flex-end; }
+
+/* ============ 向导步骤条 ============
+   结构：<ol class="wz-steps"><li class="wz-step" data-tone="blue|success|neutral">
+           <span class="wz-dot">1</span><span class="wz-text">…</span></li>…
+   连接线由 ::after 从本步圆心指向下一步，末步不画。 */
+
+.wz-steps {
+  display: flex;
+  padding: 0 var(--gutter) var(--space-2);
+}
+.wz-step {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.wz-step::after {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  width: 100%;
+  height: 1px;
+  background: var(--border-default);
+}
+.wz-step:last-child::after { display: none; }
+.wz-dot {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-family: var(--font-num);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+.wz-dot > svg {
+  width: 14px;
+  height: 14px;
+}
+.wz-text {
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+.wz-step[data-tone='blue'] .wz-dot {
+  background: var(--color-brand);
+  color: var(--text-on-brand);
+}
+.wz-step[data-tone='success'] .wz-dot {
+  background: var(--tone-success-bg);
+  color: var(--tone-success-fg);
+}
+.wz-step[data-tone='neutral'] .wz-dot {
+  background: var(--border-default);
+  color: var(--text-secondary);
+}
+.wz-step[data-tone='blue'] .wz-text,
+.wz-step[data-tone='success'] .wz-text {
+  color: var(--text-secondary);
+  font-weight: var(--weight-medium);
+}
+
+/* ============ 底部操作条 ============ */
+
+.footbar {
+  display: flex;
+  gap: var(--space-2);
+  margin: var(--space-4) var(--gutter) 0;
+}
+.footbar > .btn { flex: 1; }
+
+/* ============ 提交结果页 ============ */
+
+.result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px var(--gutter) 0;
+}
+.result-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--tone-success-bg);
+  color: var(--tone-success-fg);
+}
+.result-icon > svg {
+  width: 46px;
+  height: 46px;
+}
+.result-title {
+  margin-top: var(--space-4);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  text-align: center;
+}
+.result-desc {
+  margin-top: 6px;
+  font-size: var(--text-sm);
+  color: var(--text-quaternary);
+  text-align: center;
+}
+.result-card {
+  width: 100%;
+  margin-top: var(--space-5);
+  padding: var(--space-4);
+}
+
+/* ============ 搜索选择弹层（挂在 #layer-root） ============ */
+
+#layer-root .picker-search-wrap { padding: var(--space-2) 0 var(--space-3); }
+#layer-root .picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 320px;
+  overflow-y: auto;
+}
+#layer-root .picker-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-inner);
+  background: var(--surface-card);
+  text-align: left;
+  transition: border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+#layer-root .picker-item:active { background: var(--surface-sunken); }
+#layer-root .picker-item.is-active {
+  border-color: var(--color-brand);
+  background: var(--color-brand-soft);
+}
+#layer-root .picker-body { flex: 1; min-width: 0; }
+#layer-root .picker-title {
+  display: block;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+#layer-root .picker-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+#layer-root .picker-check {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--color-brand);
+  opacity: 0;
+}
+#layer-root .picker-item.is-active .picker-check { opacity: 1; }
+#layer-root .picker-empty {
+  padding: var(--space-6) 0;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
 /* ============ 通用工具类 ============ */
 .stack-2 { display: flex; flex-direction: column; gap: var(--space-2); }
 .stack-4 { display: flex; flex-direction: column; gap: var(--space-4); }

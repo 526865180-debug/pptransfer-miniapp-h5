@@ -9,18 +9,18 @@
 -->
 
 <!-- 步骤指示器：data-tone 由 JS 按当前进度刷新 -->
-<ol class="steps" id="steps" aria-label="结汇提现流程">
-  <li class="step" data-tone="blue" aria-current="step">
-    <span class="step-dot">1</span>
-    <span class="step-text">填写信息</span>
+<ol class="wz-steps" id="steps" aria-label="结汇提现流程">
+  <li class="wz-step" data-tone="blue" aria-current="step">
+    <span class="wz-dot">1</span>
+    <span class="wz-text">填写信息</span>
   </li>
-  <li class="step" data-tone="neutral">
-    <span class="step-dot">2</span>
-    <span class="step-text">确认信息</span>
+  <li class="wz-step" data-tone="neutral">
+    <span class="wz-dot">2</span>
+    <span class="wz-text">确认信息</span>
   </li>
-  <li class="step" data-tone="neutral">
-    <span class="step-dot">3</span>
-    <span class="step-text">提交完成</span>
+  <li class="wz-step" data-tone="neutral">
+    <span class="wz-dot">3</span>
+    <span class="wz-text">提交完成</span>
   </li>
 </ol>
 
@@ -36,9 +36,9 @@
 
   <div class="card wizard-card">
     <!-- 提现金额 -->
-    <div class="xfield">
-      <label class="xfield-label" for="amount-input">
-        <i class="req" aria-hidden="true">*</i>提现金额：
+    <div class="frow">
+      <label class="frow-label" for="amount-input">
+        <i class="frow-req" aria-hidden="true">*</i>提现金额：
       </label>
       <div class="amt-wrap">
         <input class="field-input amt-input num" id="amount-input" type="text"
@@ -49,8 +49,8 @@
     </div>
 
     <!-- 提现至 -->
-    <div class="xfield">
-      <span class="xfield-label" id="to-label"><i class="req" aria-hidden="true">*</i>提现至：</span>
+    <div class="frow">
+      <span class="frow-label" id="to-label"><i class="frow-req" aria-hidden="true">*</i>提现至：</span>
       <div class="radio-group" role="radiogroup" aria-labelledby="to-label">
         <button type="button" class="radio-pill" role="radio" aria-checked="true"  data-value="company">本公司</button>
         <button type="button" class="radio-pill" role="radio" aria-checked="false" data-value="supplier">供应商</button>
@@ -58,15 +58,15 @@
     </div>
 
     <!-- 结汇提现账户 -->
-    <div class="xfield">
-      <span class="xfield-label" id="acct-label"><i class="req" aria-hidden="true">*</i>结汇提现账户：</span>
+    <div class="frow">
+      <span class="frow-label" id="acct-label"><i class="frow-req" aria-hidden="true">*</i>结汇提现账户：</span>
       <button type="button" class="select-field" id="account-btn"
               aria-haspopup="dialog" aria-labelledby="acct-label">
         <span class="select-value is-placeholder" id="account-value">请选择结汇提现账户</span>
         <svg class="select-caret" aria-hidden="true"><use href="#i-chevron-down"/></svg>
       </button>
       <span class="select-hint">可输入账户名称/备注名/卡号/银行名称搜索</span>
-      <button type="button" class="link-btn" data-demo="添加结汇提现账户即将上线">添加结汇提现账户</button>
+      <button type="button" class="link-btn link-btn--end" data-go="add-rmb-exchange-account">添加结汇提现账户</button>
     </div>
 
     <!-- 基础手续费 -->
@@ -76,9 +76,9 @@
     </div>
 
     <!-- 到账金额 -->
-    <div class="xfield">
-      <label class="xfield-label" for="arrival-input">
-        <i class="req" aria-hidden="true">*</i>到账金额：
+    <div class="frow">
+      <label class="frow-label" for="arrival-input">
+        <i class="frow-req" aria-hidden="true">*</i>到账金额：
       </label>
       <input class="field-input num" id="arrival-input" type="text"
              inputmode="decimal" autocomplete="off"
@@ -86,8 +86,8 @@
     </div>
 
     <!-- 转账附言 -->
-    <div class="xfield xfield--last">
-      <label class="xfield-label" for="memo-input">转账附言：</label>
+    <div class="frow frow--last">
+      <label class="frow-label" for="memo-input">转账附言：</label>
       <textarea class="memo-input" id="memo-input" rows="3" maxlength="50"
                 placeholder="选填，将随款项展示给收款方"></textarea>
     </div>

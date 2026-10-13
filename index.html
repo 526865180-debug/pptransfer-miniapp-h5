@@ -1134,6 +1134,301 @@
     filter: blur(5px);
   }
 
+  /* ============ 表单行（堆叠式：标签在上，控件在下） ============
+     移动端宽度有限，不做桌面那种左标签右控件；
+     行间用 1px 分隔线，最后一行加 .frow--last 去掉。 */
+
+  .frow {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .frow:first-child { padding-top: 0; }
+  .frow--last {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .frow-label {
+    font-size: var(--text-md);
+    color: var(--text-secondary);
+  }
+  /* 必填星号：纯视觉提示，读屏语义由字段本身的 required/校验承担 */
+  .frow-req {
+    margin-right: 3px;
+    color: var(--tone-danger-fg);
+    font-style: normal;
+  }
+
+  /* ============ 单选胶囊组（替代原生 radio 的移动端形态） ============ */
+
+  .radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .radio-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-pill);
+    background: var(--surface-card);
+    font-size: var(--text-md);
+    color: var(--text-secondary);
+    transition: border-color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .radio-pill:active { background: var(--surface-sunken); }
+  .radio-pill[aria-checked='true'] {
+    border-color: var(--color-brand);
+    background: var(--color-brand-soft);
+    color: var(--color-brand-strong);
+    font-weight: var(--weight-medium);
+  }
+  /* 选中圆点用伪元素画，读屏不会念出多余内容 */
+  .radio-pill::before {
+    content: '';
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--text-placeholder);
+    border-radius: 50%;
+    background: var(--surface-card);
+    transition: border-color var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-fast) var(--ease-out);
+  }
+  .radio-pill[aria-checked='true']::before {
+    border-color: var(--color-brand);
+    background: var(--color-brand);
+    box-shadow: inset 0 0 0 3px var(--surface-card);
+  }
+
+  /* ============ 伪选择框（点开弹层选择，而非原生 select） ============ */
+
+  .select-field {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    min-height: var(--tap-min);
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-inner);
+    background: var(--surface-card);
+    text-align: left;
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+  .select-field:active { border-color: var(--color-brand); }
+  .select-value {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--text-md);
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .select-value.is-placeholder { color: var(--text-placeholder); }
+  .select-caret {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    color: var(--text-tertiary);
+  }
+  .select-hint {
+    font-size: var(--text-xs);
+    color: var(--text-quaternary);
+  }
+
+  /* 行内文字链（去换汇 / 添加账户 …）：靠 ::after 撑到 44px 命中区 */
+  .link-btn {
+    position: relative;
+    padding: 2px 0;
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+    color: var(--color-brand);
+  }
+  .link-btn::after { content: ''; position: absolute; inset: -10px; }
+  .link-btn:active { opacity: 0.7; }
+  .link-btn--end { align-self: flex-end; }
+
+  /* ============ 向导步骤条 ============
+     结构：<ol class="wz-steps"><li class="wz-step" data-tone="blue|success|neutral">
+             <span class="wz-dot">1</span><span class="wz-text">…</span></li>…
+     连接线由 ::after 从本步圆心指向下一步，末步不画。 */
+
+  .wz-steps {
+    display: flex;
+    padding: 0 var(--gutter) var(--space-2);
+  }
+  .wz-step {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .wz-step::after {
+    content: '';
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    width: 100%;
+    height: 1px;
+    background: var(--border-default);
+  }
+  .wz-step:last-child::after { display: none; }
+  .wz-dot {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-family: var(--font-num);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+  }
+  .wz-dot > svg {
+    width: 14px;
+    height: 14px;
+  }
+  .wz-text {
+    font-size: var(--text-xs);
+    line-height: var(--leading-snug);
+    color: var(--text-tertiary);
+    text-align: center;
+  }
+  .wz-step[data-tone='blue'] .wz-dot {
+    background: var(--color-brand);
+    color: var(--text-on-brand);
+  }
+  .wz-step[data-tone='success'] .wz-dot {
+    background: var(--tone-success-bg);
+    color: var(--tone-success-fg);
+  }
+  .wz-step[data-tone='neutral'] .wz-dot {
+    background: var(--border-default);
+    color: var(--text-secondary);
+  }
+  .wz-step[data-tone='blue'] .wz-text,
+  .wz-step[data-tone='success'] .wz-text {
+    color: var(--text-secondary);
+    font-weight: var(--weight-medium);
+  }
+
+  /* ============ 底部操作条 ============ */
+
+  .footbar {
+    display: flex;
+    gap: var(--space-2);
+    margin: var(--space-4) var(--gutter) 0;
+  }
+  .footbar > .btn { flex: 1; }
+
+  /* ============ 提交结果页 ============ */
+
+  .result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px var(--gutter) 0;
+  }
+  .result-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: var(--tone-success-bg);
+    color: var(--tone-success-fg);
+  }
+  .result-icon > svg {
+    width: 46px;
+    height: 46px;
+  }
+  .result-title {
+    margin-top: var(--space-4);
+    font-size: var(--text-xl);
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
+    text-align: center;
+  }
+  .result-desc {
+    margin-top: 6px;
+    font-size: var(--text-sm);
+    color: var(--text-quaternary);
+    text-align: center;
+  }
+  .result-card {
+    width: 100%;
+    margin-top: var(--space-5);
+    padding: var(--space-4);
+  }
+
+  /* ============ 搜索选择弹层（挂在 #layer-root） ============ */
+
+  #layer-root .picker-search-wrap { padding: var(--space-2) 0 var(--space-3); }
+  #layer-root .picker-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  #layer-root .picker-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    padding: var(--space-3);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-inner);
+    background: var(--surface-card);
+    text-align: left;
+    transition: border-color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
+  }
+  #layer-root .picker-item:active { background: var(--surface-sunken); }
+  #layer-root .picker-item.is-active {
+    border-color: var(--color-brand);
+    background: var(--color-brand-soft);
+  }
+  #layer-root .picker-body { flex: 1; min-width: 0; }
+  #layer-root .picker-title {
+    display: block;
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
+  }
+  #layer-root .picker-sub {
+    display: block;
+    margin-top: 2px;
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+  }
+  #layer-root .picker-check {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    color: var(--color-brand);
+    opacity: 0;
+  }
+  #layer-root .picker-item.is-active .picker-check { opacity: 1; }
+  #layer-root .picker-empty {
+    padding: var(--space-6) 0;
+    font-size: var(--text-sm);
+    color: var(--text-tertiary);
+    text-align: center;
+  }
+
   /* ============ 通用工具类 ============ */
   .stack-2 { display: flex; flex-direction: column; gap: var(--space-2); }
   .stack-4 { display: flex; flex-direction: column; gap: var(--space-4); }
@@ -3379,9 +3674,10 @@
   /* ============================================================
      pages/rmb-exchange-withdraw.css · 结汇提现
      ------------------------------------------------------------
-     全部规则都收在 .page[data-page='rmb-exchange-withdraw'] 作用域内
-     （账户选择弹层内容挂在 #layer-root，用该前缀），卡片、按钮、
-     字段、键值行等通用样式复用 components.css。
+     只保留本页特有样式：可提现金额卡、金额输入（全部提现后缀）、
+     手续费行、转账附言。步骤条 / 表单行 / 单选胶囊 / 选择框 / 结果页 /
+     底部操作条 / 搜索弹层都是共享组件，见 components.css。
+     全部规则收在 .page[data-page='rmb-exchange-withdraw'] 作用域内。
      尺寸 375px 基准，一律 px。
      ============================================================ */
 
@@ -3389,75 +3685,7 @@
     padding: 12px 0 24px;
   }
 
-  /* ============ 步骤指示器 ============ */
-  .page[data-page='rmb-exchange-withdraw'] .steps {
-    display: flex;
-    padding: 0 12px 8px;
-  }
-  .page[data-page='rmb-exchange-withdraw'] .step {
-    position: relative;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    /* 圆点与文案间距显式写死：.step 是通用类名，别处也可能给同名类加 gap */
-    gap: 6px;
-  }
-  /* 连接线：从本步圆心指向下一步，末步不画 */
-  .page[data-page='rmb-exchange-withdraw'] .step::after {
-    content: '';
-    position: absolute;
-    top: 14px;
-    left: 50%;
-    width: 100%;
-    height: 1px;
-    background: var(--border-default);
-  }
-  .page[data-page='rmb-exchange-withdraw'] .step:last-child::after { display: none; }
-
-  .page[data-page='rmb-exchange-withdraw'] .step-dot {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    font-family: var(--font-num);
-    font-size: var(--text-sm);
-    font-weight: var(--weight-semibold);
-  }
-  .page[data-page='rmb-exchange-withdraw'] .step-dot > svg {
-    width: 14px;
-    height: 14px;
-  }
-  .page[data-page='rmb-exchange-withdraw'] .step-text {
-    font-size: var(--text-xs);
-    line-height: var(--leading-snug);
-    color: var(--text-tertiary);
-    text-align: center;
-  }
-
-  .page[data-page='rmb-exchange-withdraw'] .step[data-tone='blue'] .step-dot {
-    background: var(--color-brand);
-    color: var(--text-on-brand);
-  }
-  .page[data-page='rmb-exchange-withdraw'] .step[data-tone='success'] .step-dot {
-    background: var(--tone-success-bg);
-    color: var(--tone-success-fg);
-  }
-  .page[data-page='rmb-exchange-withdraw'] .step[data-tone='neutral'] .step-dot {
-    background: var(--border-default);
-    color: var(--text-secondary);
-  }
-  .page[data-page='rmb-exchange-withdraw'] .step[data-tone='blue'] .step-text,
-  .page[data-page='rmb-exchange-withdraw'] .step[data-tone='success'] .step-text {
-    color: var(--text-secondary);
-    font-weight: var(--weight-medium);
-  }
-
-  /* ============ 步骤内容容器 ============ */
+  /* ============ 步骤内容卡片 ============ */
   .page[data-page='rmb-exchange-withdraw'] .wizard-card {
     margin: var(--space-4) var(--gutter) 0;
     padding: var(--space-5) var(--space-4);
@@ -3486,41 +3714,6 @@
     font-weight: var(--weight-semibold);
     color: var(--color-brand);
   }
-  /* 「去换汇」文字链；小于 44px 命中区用 ::after 撑大 */
-  .page[data-page='rmb-exchange-withdraw'] .quota-link {
-    position: relative;
-    flex-shrink: 0;
-    padding: 4px 0;
-    font-size: var(--text-md);
-    font-weight: var(--weight-medium);
-    color: var(--color-brand);
-  }
-  .page[data-page='rmb-exchange-withdraw'] .quota-link::after { content: ''; position: absolute; inset: -10px; }
-  .page[data-page='rmb-exchange-withdraw'] .quota-link:active { opacity: 0.7; }
-
-  /* ============ 表单行 ============ */
-  .page[data-page='rmb-exchange-withdraw'] .xfield {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-    padding: var(--space-4) 0;
-    border-bottom: 1px solid var(--border-default);
-  }
-  .page[data-page='rmb-exchange-withdraw'] .xfield:first-child { padding-top: 0; }
-  .page[data-page='rmb-exchange-withdraw'] .xfield--last {
-    border-bottom: 0;
-    padding-bottom: 0;
-  }
-  .page[data-page='rmb-exchange-withdraw'] .xfield-label {
-    font-size: var(--text-md);
-    color: var(--text-secondary);
-  }
-  /* 必填星号：视觉提示，读屏由 required 语义承担，这里 aria-hidden */
-  .page[data-page='rmb-exchange-withdraw'] .req {
-    margin-right: 3px;
-    color: var(--tone-danger-fg);
-    font-style: normal;
-  }
 
   /* 提现金额：输入框 + 「全部提现」后缀链 */
   .page[data-page='rmb-exchange-withdraw'] .amt-wrap {
@@ -3540,102 +3733,11 @@
     font-weight: var(--weight-medium);
     color: var(--color-brand);
   }
+  /* 撑到 44px 命中区 */
   .page[data-page='rmb-exchange-withdraw'] .amt-all::after { content: ''; position: absolute; inset: -12px; }
   .page[data-page='rmb-exchange-withdraw'] .amt-all:active { opacity: 0.7; }
 
-  /* 提现至：单选胶囊组 */
-  .page[data-page='rmb-exchange-withdraw'] .radio-group {
-    display: flex;
-    gap: var(--space-2);
-  }
-  .page[data-page='rmb-exchange-withdraw'] .radio-pill {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-pill, 999px);
-    background: var(--surface-card);
-    font-size: var(--text-md);
-    color: var(--text-secondary);
-    transition: border-color var(--dur-fast) var(--ease-out),
-      background-color var(--dur-fast) var(--ease-out),
-      color var(--dur-fast) var(--ease-out);
-  }
-  .page[data-page='rmb-exchange-withdraw'] .radio-pill:active { background: var(--surface-sunken); }
-  .page[data-page='rmb-exchange-withdraw'] .radio-pill[aria-checked='true'] {
-    border-color: var(--color-brand);
-    background: var(--color-brand-soft);
-    color: var(--color-brand-strong);
-    font-weight: var(--weight-medium);
-  }
-  /* 选中态圆点 */
-  .page[data-page='rmb-exchange-withdraw'] .radio-pill::before {
-    content: '';
-    width: 14px;
-    height: 14px;
-    border: 1px solid var(--text-placeholder);
-    border-radius: 50%;
-    background: var(--surface-card);
-    transition: border-color var(--dur-fast) var(--ease-out),
-      box-shadow var(--dur-fast) var(--ease-out);
-  }
-  .page[data-page='rmb-exchange-withdraw'] .radio-pill[aria-checked='true']::before {
-    border-color: var(--color-brand);
-    background: var(--color-brand);
-    box-shadow: inset 0 0 0 3px var(--surface-card);
-  }
-
-  /* 结汇提现账户：伪选择框 + 搜索提示 + 添加入口 */
-  .page[data-page='rmb-exchange-withdraw'] .select-field {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    width: 100%;
-    min-height: var(--tap-min);
-    padding: 0 var(--space-3);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-inner);
-    background: var(--surface-card);
-    text-align: left;
-    transition: border-color var(--dur-fast) var(--ease-out);
-  }
-  .page[data-page='rmb-exchange-withdraw'] .select-field:active { border-color: var(--color-brand); }
-  .page[data-page='rmb-exchange-withdraw'] .select-value {
-    flex: 1;
-    min-width: 0;
-    font-size: var(--text-md);
-    color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .page[data-page='rmb-exchange-withdraw'] .select-value.is-placeholder {
-    color: var(--text-placeholder);
-  }
-  .page[data-page='rmb-exchange-withdraw'] .select-caret {
-    flex-shrink: 0;
-    width: 14px;
-    height: 14px;
-    color: var(--text-tertiary);
-  }
-  .page[data-page='rmb-exchange-withdraw'] .select-hint {
-    font-size: var(--text-xs);
-    color: var(--text-quaternary);
-  }
-  /* 「添加结汇提现账户」右对齐文字链 */
-  .page[data-page='rmb-exchange-withdraw'] .link-btn {
-    position: relative;
-    align-self: flex-end;
-    padding: 2px 0;
-    font-size: var(--text-md);
-    font-weight: var(--weight-medium);
-    color: var(--color-brand);
-  }
-  .page[data-page='rmb-exchange-withdraw'] .link-btn::after { content: ''; position: absolute; inset: -10px; }
-  .page[data-page='rmb-exchange-withdraw'] .link-btn:active { opacity: 0.7; }
-
-  /* 基础手续费：键值行，上下留白与表单行呼应 */
+  /* 基础手续费：键值行，留白与表单行呼应 */
   .page[data-page='rmb-exchange-withdraw'] .fee-row {
     padding: var(--space-4) 0;
   }
@@ -3644,6 +3746,7 @@
   /* 转账附言 */
   .page[data-page='rmb-exchange-withdraw'] .memo-input {
     width: 100%;
+    min-height: 84px;
     padding: var(--space-3);
     border: 1px solid var(--border-default);
     border-radius: var(--radius-inner);
@@ -3652,7 +3755,6 @@
     font-size: var(--text-md);
     color: var(--text-primary);
     resize: vertical;
-    min-height: 84px;
   }
   .page[data-page='rmb-exchange-withdraw'] .memo-input::placeholder { color: var(--text-placeholder); }
   .page[data-page='rmb-exchange-withdraw'] .memo-input:focus {
@@ -3660,112 +3762,200 @@
     border-color: var(--color-brand);
   }
 
-  /* ============ 底部操作条 ============ */
-  .page[data-page='rmb-exchange-withdraw'] .footbar {
-    display: flex;
-    gap: var(--space-2);
-    margin: var(--space-4) var(--gutter) 0;
-  }
-  .page[data-page='rmb-exchange-withdraw'] .footbar > .btn { flex: 1; }
-
-  /* ============ 步骤 2：到账金额用状态色强调 ============ */
+  /* 步骤 2：到账金额用状态色强调 */
   .page[data-page='rmb-exchange-withdraw'] .detail-value[data-tone='success'] {
     color: var(--tone-success-fg);
   }
+  </style><style data-bundle-from="styles/pages/add-rmb-exchange-account.css">
+  /* ===== 样式 · styles/pages/add-rmb-exchange-account.css ===== */
+  /* ============================================================
+     pages/add-rmb-exchange-account.css · 添加人民币结汇账户
+     ------------------------------------------------------------
+     只保留本页特有样式：步骤容器卡片、个人账户提示、合同上传、
+     授权声明书版式、同意勾选行。
+     步骤条 / 表单行 / 单选胶囊 / 选择框 / 结果页 / 底部操作条 /
+     搜索弹层都是共享组件，见 components.css。
+     全部规则收在 .page[data-page='add-rmb-exchange-account'] 作用域内。
+     尺寸 375px 基准，一律 px。
+     ============================================================ */
 
-  /* ============ 步骤 3：结果 ============ */
-  .page[data-page='rmb-exchange-withdraw'] .result {
+  .page[data-page='add-rmb-exchange-account'] {
+    padding: 12px 0 24px;
+  }
+
+  /* ============ 步骤内容卡片 ============ */
+  .page[data-page='add-rmb-exchange-account'] .wizard-card {
+    margin: var(--space-4) var(--gutter) 0;
+    padding: var(--space-5) var(--space-4);
+  }
+  .page[data-page='add-rmb-exchange-account'] .wizard-card .section-head { margin-bottom: var(--space-4); }
+
+  /* 银行账号下方的橙色提示（个人账户专属） */
+  .page[data-page='add-rmb-exchange-account'] .hint-warn {
+    font-size: var(--text-xs);
+    line-height: var(--leading-snug);
+    color: var(--tone-orange-fg);
+  }
+
+  /* ============ 历史采购合同上传 ============ */
+  .page[data-page='add-rmb-exchange-account'] .upload-box {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border: 1px dashed var(--border-default);
+    border-radius: var(--radius-inner);
+    background: var(--surface-card);
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
+    color: var(--text-tertiary);
+    cursor: pointer;
+  }
+  .page[data-page='add-rmb-exchange-account'] .upload-box:active {
+    border-color: var(--color-brand);
+    background: var(--color-brand-tint);
+  }
+  .page[data-page='add-rmb-exchange-account'] .upload-box > svg {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    color: var(--color-brand);
+  }
+
+  .page[data-page='add-rmb-exchange-account'] .upload-list {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    padding: 30px var(--gutter) 0;
+    gap: 6px;
   }
-  .page[data-page='rmb-exchange-withdraw'] .result-icon {
+  .page[data-page='add-rmb-exchange-account'] .upload-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 7px 9px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-sunken);
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+  }
+  .page[data-page='add-rmb-exchange-account'] .upload-icon {
+    flex-shrink: 0;
+    width: 15px;
+    height: 15px;
+    color: var(--color-brand);
+  }
+  .page[data-page='add-rmb-exchange-account'] .upload-name { flex: 1; }
+  .page[data-page='add-rmb-exchange-account'] .upload-size {
+    flex-shrink: 0;
+    color: var(--text-quaternary);
+  }
+  .page[data-page='add-rmb-exchange-account'] .upload-remove {
+    position: relative;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: var(--tone-success-bg);
-    color: var(--tone-success-fg);
-  }
-  .page[data-page='rmb-exchange-withdraw'] .result-icon > svg {
-    width: 46px;
-    height: 46px;
-  }
-  .page[data-page='rmb-exchange-withdraw'] .result-title {
-    margin-top: var(--space-4);
-    font-size: var(--text-xl);
-    font-weight: var(--weight-semibold);
-    color: var(--text-primary);
-    text-align: center;
-  }
-  .page[data-page='rmb-exchange-withdraw'] .result-desc {
-    margin-top: 6px;
-    font-size: var(--text-sm);
+    width: 18px;
+    height: 18px;
     color: var(--text-quaternary);
-    text-align: center;
   }
-  .page[data-page='rmb-exchange-withdraw'] .result-card {
-    width: 100%;
-    margin-top: var(--space-5);
-    padding: var(--space-4);
+  .page[data-page='add-rmb-exchange-account'] .upload-remove > svg {
+    width: 15px;
+    height: 15px;
   }
+  /* 撑到 44px 命中区 */
+  .page[data-page='add-rmb-exchange-account'] .upload-remove::after {
+    content: '';
+    position: absolute;
+    inset: -13px;
+  }
+  .page[data-page='add-rmb-exchange-account'] .upload-remove:active { color: var(--tone-danger-fg); }
 
-  /* ============ 账户搜索弹层（挂在 #layer-root） ============ */
-  #layer-root .acct-search-wrap { padding: var(--space-2) 0 var(--space-3); }
-  #layer-root .acct-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    max-height: 320px;
-    overflow-y: auto;
+  /* ============ 授权声明书 ============ */
+  .page[data-page='add-rmb-exchange-account'] .auth-box {
+    margin-bottom: var(--space-5);
+    padding: var(--space-4);
+    border: 1px solid var(--color-brand-tint);
+    border-radius: var(--radius-inner);
+    background: var(--color-brand-tint);
   }
-  #layer-root .acct-item {
+  .page[data-page='add-rmb-exchange-account'] .auth-title {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
-    width: 100%;
-    padding: var(--space-3);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-inner);
-    background: var(--surface-card);
-    text-align: left;
-    transition: border-color var(--dur-fast) var(--ease-out),
-      background-color var(--dur-fast) var(--ease-out);
-  }
-  #layer-root .acct-item:active { background: var(--surface-sunken); }
-  #layer-root .acct-item.is-active {
-    border-color: var(--color-brand);
-    background: var(--color-brand-soft);
-  }
-  #layer-root .acct-body { flex: 1; min-width: 0; }
-  #layer-root .acct-title {
-    display: block;
-    font-size: var(--text-md);
+    gap: 5px;
+    margin-bottom: var(--space-2);
+    font-size: var(--text-base);
     font-weight: var(--weight-semibold);
     color: var(--text-primary);
   }
-  #layer-root .acct-sub {
-    display: block;
-    margin-top: 2px;
-    font-size: var(--text-xs);
-    color: var(--text-tertiary);
-  }
-  #layer-root .acct-check {
-    flex-shrink: 0;
+  .page[data-page='add-rmb-exchange-account'] .auth-title > svg {
     width: 16px;
     height: 16px;
     color: var(--color-brand);
-    opacity: 0;
   }
-  #layer-root .acct-item.is-active .acct-check { opacity: 1; }
-  #layer-root .acct-empty {
-    padding: var(--space-6) 0;
+  .page[data-page='add-rmb-exchange-account'] .auth-text {
+    margin-bottom: var(--space-3);
     font-size: var(--text-sm);
-    color: var(--text-tertiary);
-    text-align: center;
+    line-height: var(--leading-normal);
+    color: var(--text-secondary);
+  }
+  .page[data-page='add-rmb-exchange-account'] .auth-text:last-child { margin-bottom: 0; }
+  .page[data-page='add-rmb-exchange-account'] .auth-company {
+    font-weight: var(--weight-semibold);
+    color: var(--color-brand);
+  }
+
+  .page[data-page='add-rmb-exchange-account'] .auth-grid {
+    margin-bottom: var(--space-3);
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+    background: var(--surface-card);
+  }
+  .page[data-page='add-rmb-exchange-account'] .auth-row + .auth-row {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border-default);
+  }
+  .page[data-page='add-rmb-exchange-account'] .auth-label {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0 var(--space-2);
+  }
+  .page[data-page='add-rmb-exchange-account'] .auth-label .cn {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+  }
+  .page[data-page='add-rmb-exchange-account'] .auth-label .en {
+    font-size: var(--text-2xs);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--text-placeholder);
+  }
+  .page[data-page='add-rmb-exchange-account'] .auth-value {
+    display: block;
+    margin-top: 3px;
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    color: var(--text-primary);
+    word-break: break-all;
+  }
+
+  /* ============ 同意勾选行 ============ */
+  .page[data-page='add-rmb-exchange-account'] .agree-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+  .page[data-page='add-rmb-exchange-account'] .agree-row input {
+    flex-shrink: 0;
+    width: 17px;
+    height: 17px;
+    accent-color: var(--color-brand);
+    cursor: pointer;
   }
   </style><style data-bundle-from="styles/pages/rmb-exchange-records.css">
   /* ===== 样式 · styles/pages/rmb-exchange-records.css ===== */
@@ -4665,6 +4855,17 @@
     <circle cx="16.2" cy="16.2" r="2.4"/>
   </symbol>
 
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9"/>
+    <path d="M12 11v5.5"/>
+    <path d="M12 7.8v.4"/>
+  </symbol>
+
+  <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7 7l10 10"/>
+    <path d="M17 7L7 17"/>
+  </symbol>
+
   </svg>
 </div>
 
@@ -5174,6 +5375,74 @@
       })
     }
 
+    /**
+     * 带搜索的单选弹层（账户、银行这类需要检索的长列表）
+     *   items: [{ value, title, sub }]，检索范围是 title + sub
+     *   value 当前值 / placeholder 搜索框占位 / emptyText 无结果文案
+     * 返回 Promise<value|null>
+     */
+    function searchPicker(opts) {
+      var o = opts || {}
+      var items = o.items || []
+      return new Promise(function (resolve) {
+        var settled = false
+        function done(v) {
+          if (settled) return
+          settled = true
+          resolve(v)
+        }
+
+        function rowHTML(item) {
+          var active = String(item.value) === String(o.value)
+          return (
+            '<button type="button" class="picker-item' + (active ? ' is-active' : '') + '"' +
+            ' data-value="' + dom.esc(item.value) + '"' +
+            ' aria-pressed="' + (active ? 'true' : 'false') + '">' +
+            '<span class="picker-body">' +
+            '<span class="picker-title">' + dom.esc(item.title) + '</span>' +
+            (item.sub ? '<span class="picker-sub">' + dom.esc(item.sub) + '</span>' : '') +
+            '</span>' +
+            '<svg class="picker-check" aria-hidden="true"><use href="#i-check"/></svg>' +
+            '</button>'
+          )
+        }
+
+        var body =
+          '<div class="picker-search-wrap">' +
+          '<input class="field-input picker-search" id="picker-search" type="search" autofocus' +
+          ' autocomplete="off" placeholder="' + dom.esc(o.placeholder || '搜索') + '">' +
+          '</div>' +
+          '<div class="picker-list" id="picker-list"></div>'
+
+        var sheet = openSheet({
+          title: o.title || '请选择',
+          body: body,
+          onMount: function (root) {
+            var search = dom.qs('#picker-search', root)
+            var list = dom.qs('#picker-list', root)
+
+            function render() {
+              var kw = (search.value || '').trim().toLowerCase()
+              var rows = items.filter(function (it) {
+                return !kw || (it.title + ' ' + (it.sub || '')).toLowerCase().indexOf(kw) >= 0
+              })
+              list.innerHTML = rows.length
+                ? rows.map(rowHTML).join('')
+                : '<p class="picker-empty">' + dom.esc(o.emptyText || '没有匹配的结果') + '</p>'
+            }
+
+            dom.on(root, 'input', '#picker-search', render)
+            dom.on(root, 'click', '.picker-item', function (e, el) {
+              done(el.getAttribute('data-value'))
+              sheet.close()
+            })
+            render()
+          },
+          onClose: function () { done(null) }
+        })
+      })
+    }
+
     /** 动作面板：options 为 [{ label, tone }]，返回被选项的 index 或 null */
     function actionSheet(opts) {
       var o = opts || {}
@@ -5215,6 +5484,7 @@
       sheet: openSheet,
       confirm: confirmDialog,
       picker: picker,
+      searchPicker: searchPicker,
       actions: actionSheet
     }
   })((window.PP = window.PP || {}))
@@ -5526,6 +5796,7 @@
       { name: 'international-remittance', title: '国际汇款' },
       { name: 'rmb-exchange', title: '人民币结汇' },
       { name: 'rmb-exchange-withdraw', title: '结汇提现' },
+      { name: 'add-rmb-exchange-account', title: '添加人民币结汇账户' },
       { name: 'rmb-exchange-records', title: '结汇记录' },
       { name: 'wallet', title: '我的资产' },
       { name: 'collection', title: '外贸收款账户' },
@@ -8761,75 +9032,35 @@
 
     /* ---------------------------------------------- 账户搜索选择 */
 
-    function acctItemHTML(a) {
-      return (
-        '<button type="button" class="acct-item' +
-        (view.account === a.value ? ' is-active' : '') + '" data-value="' + dom.esc(a.value) + '"' +
-        ' aria-pressed="' + (view.account === a.value ? 'true' : 'false') + '">' +
-        '<span class="acct-body">' +
-        '<span class="acct-title num">' + dom.esc(a.title) + '</span>' +
-        '<span class="acct-sub">' + dom.esc(a.sub) + '</span>' +
-        '</span>' +
-        '<svg class="acct-check" aria-hidden="true"><use href="#i-check"/></svg>' +
-        '</button>'
-      )
-    }
-
     function pickAccount() {
-      var api
-      var body =
-        '<div class="acct-search-wrap">' +
-        '<input class="field-input acct-search" id="acct-search" type="search" autofocus' +
-        ' autocomplete="off" placeholder="账户名称/备注名/卡号/银行名称">' +
-        '</div>' +
-        '<div class="acct-list" id="acct-list"></div>'
-
-      api = PP.ui.sheet({
+      PP.ui.searchPicker({
         title: '选择结汇提现账户',
-        body: body,
-        onMount: function (root) {
-          var list = dom.qs('#acct-list', root)
-          var search = dom.qs('#acct-search', root)
-
-          function renderList() {
-            var kw = (search.value || '').trim().toLowerCase()
-            var rows = ACCOUNTS.filter(function (a) {
-              return !kw || (a.title + ' ' + a.sub).toLowerCase().indexOf(kw) >= 0
-            })
-            list.innerHTML = rows.length
-              ? rows.map(acctItemHTML).join('')
-              : '<p class="acct-empty">未找到匹配的账户</p>'
-          }
-
-          dom.on(root, 'input', '#acct-search', function () { renderList() })
-          dom.on(root, 'click', '.acct-item', function (e, el) {
-            var value = el.getAttribute('data-value')
-            view.account = value
-            ACCOUNTS.forEach(function (a) {
-              if (a.value === value) {
-                dom.qs('#account-value', view.root).textContent = a.title
-                dom.qs('#account-value', view.root).classList.remove('is-placeholder')
-              }
-            })
-            api.close()
-            dom.haptic()
-            refresh()
-          })
-
-          renderList()
-        }
+        placeholder: '账户名称/备注名/卡号/银行名称',
+        value: view.account,
+        items: ACCOUNTS
+      }).then(function (value) {
+        if (!value || !view) return
+        view.account = value
+        ACCOUNTS.forEach(function (a) {
+          if (a.value !== value) return
+          var el = dom.qs('#account-value', view.root)
+          el.textContent = a.title
+          el.classList.remove('is-placeholder')
+        })
+        dom.haptic()
+        refresh()
       })
     }
 
     /* ---------------------------------------------- 分步 */
 
     function syncSteps() {
-      dom.qsa('.step', view.root).forEach(function (li, i) {
+      dom.qsa('.wz-step', view.root).forEach(function (li, i) {
         li.setAttribute('data-tone', i < view.step ? 'success' : (i === view.step ? 'blue' : 'neutral'))
         if (i === view.step) li.setAttribute('aria-current', 'step')
         else li.removeAttribute('aria-current')
 
-        var dot = dom.qs('.step-dot', li)
+        var dot = dom.qs('.wz-dot', li)
         if (i < view.step) dom.setHTML(dot, dom.raw('<svg aria-hidden="true"><use href="#i-check"/></svg>'))
         else dot.textContent = String(i + 1)
       })
@@ -8991,6 +9222,292 @@
         })
 
         /* -------- 初始状态 -------- */
+        goStep(0)
+        refresh()
+
+        ctx.onCleanup(function () {
+          offs.forEach(function (off) { off() })
+          view = null
+        })
+      }
+    })
+  })((window.PP = window.PP || {}))
+  </script><!-- js/pages/add-rmb-exchange-account.js -->
+  <script data-bundle-from="js/pages/add-rmb-exchange-account.js">
+  /* ===== 脚本 · js/pages/add-rmb-exchange-account.js ===== */
+  /* ============================================================
+     pages/add-rmb-exchange-account.js · 添加人民币结汇账户
+     ------------------------------------------------------------
+     参考 desktop 版 pages/add_rmb_exchange_account.html：
+       步骤 1 账户所属 / 账户类型 / 开户地区 / 账户名称 / 银行账号 /
+              银行名称 / 开户行支行号 / 别名，个人账户额外要 公司名称、
+              统一信用代码、身份证号、历史采购合同
+       步骤 2 授权声明（回填步骤 1 的账户信息）+ 交易密码 + 同意勾选
+       步骤 3 申请成功
+     账户类型切换只改 data-only="personal" 行的显隐，已填值留在 DOM 里，
+     来回切换不会丢；提交时按类型决定是否校验个人账户字段。
+     弹层统一走 PP.ui（picker / searchPicker / toast）。
+     ============================================================ */
+  (function (PP) {
+    'use strict'
+
+    var dom = PP.dom
+
+    /** 开户地区 */
+    var REGIONS = [
+      { value: '中国内地', title: '中国内地' },
+      { value: '香港地区', title: '香港地区' },
+      { value: '澳门地区', title: '澳门地区' },
+      { value: '台湾地区', title: '台湾地区' }
+    ]
+
+    /** 银行（演示数据，sub 参与搜索：银行名称 / CNAPS 行号） */
+    var BANKS = [
+      { value: '招商银行', title: '招商银行', sub: 'CNAPS 308584000013' },
+      { value: '工商银行', title: '工商银行', sub: 'CNAPS 102100099996' },
+      { value: '建设银行', title: '建设银行', sub: 'CNAPS 105100000017' },
+      { value: '中国银行', title: '中国银行', sub: 'CNAPS 104100000004' },
+      { value: '农业银行', title: '农业银行', sub: 'CNAPS 103100000026' },
+      { value: '交通银行', title: '交通银行', sub: 'CNAPS 301290000007' },
+      { value: '浦发银行', title: '浦发银行', sub: 'CNAPS 310290000013' },
+      { value: '中信银行', title: '中信银行', sub: 'CNAPS 302100011000' },
+      { value: '民生银行', title: '民生银行', sub: 'CNAPS 305100000013' },
+      { value: '兴业银行', title: '兴业银行', sub: 'CNAPS 309391000011' }
+    ]
+
+    /** 当前页面实例的可变状态；未挂载时为 null */
+    var view = null
+
+    /* ---------------------------------------------- 工具 */
+
+    function val(sel) {
+      var el = dom.qs(sel, view.root)
+      return el ? el.value.trim() : ''
+    }
+
+    function setText(sel, text) {
+      var el = dom.qs(sel, view.root)
+      if (el) el.textContent = text
+    }
+
+    /** 个人账户专属行（企业账户时隐藏且不参与校验） */
+    function isPersonal() { return view.type === 'personal' }
+
+    function visibleRows() {
+      return dom.qsa('[data-only="personal"]', view.root)
+    }
+
+    function syncTypeRows() {
+      var personal = isPersonal()
+      visibleRows().forEach(function (el) { el.hidden = !personal })
+    }
+
+    /** 步骤 1 的必填校验：返回第一个缺失项的提示文案 */
+    function firstMissing() {
+      if (!val('#add-acct-name')) return '请填写账户名称'
+      if (!val('#add-acct-no')) return '请填写银行账号'
+      if (!view.bank) return '请选择银行名称'
+      if (!val('#add-branch-code')) return '请填写开户行支行号'
+      if (isPersonal()) {
+        if (!val('#add-company-name')) return '请填写公司名称'
+        if (!val('#add-credit-code')) return '请填写统一信用代码'
+        if (!val('#add-id-card')) return '请填写收款人身份证号'
+      }
+      return ''
+    }
+
+    /** 把步骤 1 的账户信息同步到授权声明 */
+    function syncAuth() {
+      setText('#add-auth-bank', view.bank || '—')
+      setText('#add-auth-name', val('#add-acct-name') || '—')
+      setText('#add-auth-no', val('#add-acct-no') || '—')
+    }
+
+    /* ---------------------------------------------- 列表渲染 */
+
+    function fileRow(file, index) {
+      var size = file.size > 1024 * 1024
+        ? (file.size / 1024 / 1024).toFixed(1) + 'MB'
+        : Math.ceil(file.size / 1024) + 'KB'
+      return (
+        '<li class="upload-item">' +
+        '<svg class="upload-icon" aria-hidden="true"><use href="#i-doc"/></svg>' +
+        '<span class="upload-name truncate">' + dom.esc(file.name) + '</span>' +
+        '<span class="upload-size">' + dom.esc(size) + '</span>' +
+        '<button type="button" class="upload-remove" data-index="' + index + '"' +
+        ' aria-label="移除 ' + dom.esc(file.name) + '">' +
+        '<svg aria-hidden="true"><use href="#i-close"/></svg>' +
+        '</button>' +
+        '</li>'
+      )
+    }
+
+    function renderFiles() {
+      var list = dom.qs('#add-upload-list', view.root)
+      if (!list) return
+      dom.setHTML(list, dom.raw(view.files.map(fileRow).join('')))
+    }
+
+    /* ---------------------------------------------- 分步 */
+
+    function syncSteps() {
+      dom.qsa('.wz-step', view.root).forEach(function (li, i) {
+        li.setAttribute('data-tone', i < view.step ? 'success' : (i === view.step ? 'blue' : 'neutral'))
+        if (i === view.step) li.setAttribute('aria-current', 'step')
+        else li.removeAttribute('aria-current')
+
+        var dot = dom.qs('.wz-dot', li)
+        if (i < view.step) dom.setHTML(dot, dom.raw('<svg aria-hidden="true"><use href="#i-check"/></svg>'))
+        else dot.textContent = String(i + 1)
+      })
+    }
+
+    function goStep(step) {
+      view.step = step
+      dom.qsa('.wizard-step', view.root).forEach(function (el) {
+        el.hidden = Number(el.getAttribute('data-step')) !== step
+      })
+      syncSteps()
+      var body = dom.qs('#app-body')
+      if (body) body.scrollTop = 0
+    }
+
+    function refresh() {
+      if (!view || !view.root) return
+      dom.qs('#add-confirm-btn', view.root)
+        .setAttribute('aria-disabled', (view.pwd.length === 6 && view.agreed) ? 'false' : 'true')
+    }
+
+    /* ---------------------------------------------- 选择器 */
+
+    function pickRegion() {
+      PP.ui.picker({
+        title: '选择开户地区',
+        value: view.region,
+        options: REGIONS
+      }).then(function (value) {
+        if (!value || !view) return
+        view.region = value
+        setText('#add-region-value', value)
+      })
+    }
+
+    function pickBank() {
+      PP.ui.searchPicker({
+        title: '选择银行名称',
+        placeholder: '银行名称 / CNAPS 行号',
+        value: view.bank,
+        items: BANKS
+      }).then(function (value) {
+        if (!value || !view) return
+        view.bank = value
+        var el = dom.qs('#add-bank-value', view.root)
+        el.textContent = value
+        el.classList.remove('is-placeholder')
+      })
+    }
+
+    /* ---------------------------------------------- 页面定义 */
+
+    PP.definePage('add-rmb-exchange-account', {
+      mount: function (root, ctx) {
+        view = {
+          root: root,
+          step: 0,
+          owner: 'company',
+          type: 'enterprise',
+          region: '中国内地',
+          bank: '',
+          files: [],
+          pwd: '',
+          agreed: false
+        }
+
+        var offs = []
+        function listen(type, sel, fn) { offs.push(dom.on(root, type, sel, fn)) }
+
+        /* -------- 单选：账户所属 / 账户类型 -------- */
+
+        listen('click', '[data-owner]', function (e, el) {
+          if (el.getAttribute('aria-checked') === 'true') return
+          dom.qsa('[data-owner]', root).forEach(function (b) {
+            b.setAttribute('aria-checked', b === el ? 'true' : 'false')
+          })
+          view.owner = el.getAttribute('data-owner')
+        })
+
+        listen('click', '[data-type]', function (e, el) {
+          if (el.getAttribute('aria-checked') === 'true') return
+          dom.qsa('[data-type]', root).forEach(function (b) {
+            b.setAttribute('aria-checked', b === el ? 'true' : 'false')
+          })
+          view.type = el.getAttribute('data-type')
+          syncTypeRows()
+        })
+
+        /* -------- 开户地区 / 银行名称 -------- */
+
+        listen('click', '#add-region-btn', pickRegion)
+        listen('click', '#add-bank-btn', pickBank)
+
+        /* -------- 历史采购合同上传 -------- */
+
+        listen('change', '#add-contract-file', function (e, el) {
+          Array.prototype.slice.call(el.files || []).forEach(function (f) {
+            view.files.push(f)
+          })
+          el.value = ''
+          renderFiles()
+        })
+
+        listen('click', '.upload-remove', function (e, el) {
+          view.files.splice(Number(el.getAttribute('data-index')), 1)
+          renderFiles()
+        })
+
+        /* -------- 分步 -------- */
+
+        listen('click', '#add-next-btn', function () {
+          var missing = firstMissing()
+          if (missing) {
+            PP.ui.toast(missing)
+            return
+          }
+          syncAuth()
+          goStep(1)
+        })
+
+        listen('click', '#add-prev-btn', function () { goStep(0) })
+
+        listen('input', '#add-trade-pwd', function (e, el) {
+          view.pwd = el.value
+          refresh()
+        })
+
+        listen('change', '#add-agree', function (e, el) {
+          view.agreed = el.checked
+          refresh()
+        })
+
+        listen('click', '#add-confirm-btn', function () {
+          if (view.pwd.length !== 6) {
+            PP.ui.toast('请输入 6 位交易密码')
+            return
+          }
+          if (!view.agreed) {
+            PP.ui.toast('请阅读并同意授权声明')
+            return
+          }
+          setText('#add-result-name', val('#add-acct-name'))
+          setText('#add-result-no', PP.format.maskAccount(val('#add-acct-no')))
+          setText('#add-result-region', view.region)
+          goStep(2)
+          dom.haptic()
+        })
+
+        /* -------- 初始状态 -------- */
+        syncTypeRows()
+        renderFiles()
         goStep(0)
         refresh()
 
@@ -10014,6 +10531,244 @@
     }
   })((window.PP = window.PP || {}))
   </script><!-- ============ 页面片段 ============ -->
+  <!-- 页面片段：add-rmb-exchange-account -->
+  <template id="frag-add-rmb-exchange-account">
+    <!--
+      pages/add-rmb-exchange-account.html · 添加人民币结汇账户
+      ---------------------------------------------------------------
+      参考 desktop 版 pages/add_rmb_exchange_account.html，改造成移动端三步向导：
+        1 填写账户信息（企业/个人账户字段动态切换）
+        2 授权并确认（授权声明 + 交易密码 + 同意勾选）
+        3 添加成功
+      页面内所有 id 都带 add- 前缀：多个页面实例会同时存在于页面栈里，
+      不加前缀会和结汇提现页的 #next-btn / #amount-input 之类撞车。
+    -->
+
+    <ol class="wz-steps" id="add-steps" aria-label="添加人民币结汇账户流程">
+      <li class="wz-step" data-tone="blue" aria-current="step">
+        <span class="wz-dot">1</span>
+        <span class="wz-text">填写账户信息</span>
+      </li>
+      <li class="wz-step" data-tone="neutral">
+        <span class="wz-dot">2</span>
+        <span class="wz-text">授权并确认</span>
+      </li>
+      <li class="wz-step" data-tone="neutral">
+        <span class="wz-dot">3</span>
+        <span class="wz-text">添加成功</span>
+      </li>
+    </ol>
+
+    <!-- ===== 步骤 1：填写账户信息 ===== -->
+    <section class="wizard-step" data-step="0">
+      <div class="card wizard-card">
+        <div class="frow">
+          <span class="frow-label" id="add-owner-label"><i class="frow-req" aria-hidden="true">*</i>账户所属：</span>
+          <div class="radio-group" role="radiogroup" aria-labelledby="add-owner-label">
+            <button type="button" class="radio-pill" role="radio" aria-checked="true"  data-owner="company">本公司</button>
+            <button type="button" class="radio-pill" role="radio" aria-checked="false" data-owner="supplier">供应商</button>
+          </div>
+        </div>
+
+        <div class="frow">
+          <span class="frow-label" id="add-type-label"><i class="frow-req" aria-hidden="true">*</i>账户类型：</span>
+          <div class="radio-group" role="radiogroup" aria-labelledby="add-type-label">
+            <button type="button" class="radio-pill" role="radio" aria-checked="true"  data-type="enterprise">企业账户</button>
+            <button type="button" class="radio-pill" role="radio" aria-checked="false" data-type="personal">个人账户</button>
+          </div>
+        </div>
+
+        <!-- 个人账户专属：公司名称 / 统一信用代码 -->
+        <div class="frow" data-only="personal" hidden>
+          <label class="frow-label" for="add-company-name">公司名称：</label>
+          <input class="field-input" id="add-company-name" type="text" autocomplete="off"
+                 placeholder="请输入公司名称">
+        </div>
+        <div class="frow" data-only="personal" hidden>
+          <label class="frow-label" for="add-credit-code">统一信用代码：</label>
+          <input class="field-input" id="add-credit-code" type="text" autocomplete="off"
+                 placeholder="请输入统一信用代码">
+        </div>
+
+        <div class="frow">
+          <span class="frow-label"><i class="frow-req" aria-hidden="true">*</i>开户地区：</span>
+          <button type="button" class="select-field" id="add-region-btn"
+                  aria-haspopup="dialog" aria-label="选择开户地区">
+            <span class="select-value" id="add-region-value">中国内地</span>
+            <svg class="select-caret" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+          </button>
+        </div>
+
+        <div class="frow">
+          <label class="frow-label" for="add-acct-name"><i class="frow-req" aria-hidden="true">*</i>账户名称：</label>
+          <input class="field-input" id="add-acct-name" type="text" autocomplete="off"
+                 placeholder="请输入账户名称">
+        </div>
+
+        <div class="frow">
+          <label class="frow-label" for="add-acct-no"><i class="frow-req" aria-hidden="true">*</i>银行账号：</label>
+          <input class="field-input num" id="add-acct-no" type="text" inputmode="numeric"
+                 autocomplete="off" placeholder="请输入银行账号">
+          <span class="hint-warn" data-only="personal" hidden>
+            温馨提示：仅支持 I 类银行账户卡，不支持信用卡，请和开户行确认账户类型
+          </span>
+        </div>
+
+        <div class="frow">
+          <span class="frow-label"><i class="frow-req" aria-hidden="true">*</i>银行名称：</span>
+          <button type="button" class="select-field" id="add-bank-btn"
+                  aria-haspopup="dialog" aria-label="选择银行名称">
+            <span class="select-value is-placeholder" id="add-bank-value">请输入搜索选择</span>
+            <svg class="select-caret" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+          </button>
+        </div>
+
+        <div class="frow">
+          <label class="frow-label" for="add-branch-code"><i class="frow-req" aria-hidden="true">*</i>开户行支行号：</label>
+          <input class="field-input num" id="add-branch-code" type="text" autocomplete="off"
+                 placeholder="请输入搜索选择">
+        </div>
+
+        <!-- 个人账户专属：身份证号 / 历史采购合同 -->
+        <div class="frow" data-only="personal" hidden>
+          <label class="frow-label" for="add-id-card">收款人身份证号：</label>
+          <input class="field-input num" id="add-id-card" type="text" autocomplete="off"
+                 placeholder="请输入">
+        </div>
+        <div class="frow" data-only="personal" hidden>
+          <span class="frow-label">历史采购合同：</span>
+          <label class="upload-box" for="add-contract-file">
+            <svg aria-hidden="true"><use href="#i-upload"/></svg>
+            <span>采购合同加盖双方公章，支持 png、jpg、jpeg、pdf 文件</span>
+            <input type="file" id="add-contract-file" accept=".png,.jpg,.jpeg,.pdf" multiple hidden>
+          </label>
+          <ul class="upload-list" id="add-upload-list"></ul>
+        </div>
+
+        <div class="frow frow--last">
+          <label class="frow-label" for="add-alias">别名/昵称：</label>
+          <input class="field-input" id="add-alias" type="text" autocomplete="off"
+                 placeholder="选填，便于在提现账户列表里识别">
+        </div>
+      </div>
+
+      <div class="footbar">
+        <button type="button" class="btn btn--ghost" data-back>取消</button>
+        <button type="button" class="btn btn--primary" id="add-next-btn">下一步</button>
+      </div>
+    </section>
+
+    <!-- ===== 步骤 2：授权并确认 ===== -->
+    <section class="wizard-step" data-step="1" hidden>
+      <div class="card wizard-card">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">授权声明</h2>
+            <span class="section-sub">请仔细阅读并确认以下授权信息</span>
+          </div>
+        </div>
+
+        <div class="auth-box">
+          <h3 class="auth-title">
+            <svg aria-hidden="true"><use href="#i-info"/></svg>银行账户授权
+          </h3>
+
+          <p class="auth-text">
+            本公司（<span class="auth-company">极光科技(香港)有限公司</span>）同意 PPTransfer
+            将本公司的外汇收款提现至以下银行账户：
+          </p>
+
+          <div class="auth-grid">
+            <div class="auth-row">
+              <span class="auth-label">
+                <span class="cn">收款银行名称</span>
+                <span class="en">Beneficiary's Bank Name</span>
+              </span>
+              <span class="auth-value" id="add-auth-bank">—</span>
+            </div>
+            <div class="auth-row">
+              <span class="auth-label">
+                <span class="cn">收款人银行地址</span>
+                <span class="en">Beneficiary's Bank Address</span>
+              </span>
+              <span class="auth-value">—</span>
+            </div>
+            <div class="auth-row">
+              <span class="auth-label">
+                <span class="cn">收款人账户名称</span>
+                <span class="en">Beneficiary's Account Name</span>
+              </span>
+              <span class="auth-value" id="add-auth-name">—</span>
+            </div>
+            <div class="auth-row">
+              <span class="auth-label">
+                <span class="cn">收款账号</span>
+                <span class="en">Beneficiary's Account Number</span>
+              </span>
+              <span class="auth-value num" id="add-auth-no">—</span>
+            </div>
+          </div>
+
+          <p class="auth-text">
+            PPTransfer 按照上述方式完成款项的划转后，本公司视同 PPTransfer
+            已完成跨境收付款的结算服务，PPTransfer 对本公司不再承担任何付款业务。
+          </p>
+          <p class="auth-text">
+            本公司将承担上述行为的全部法律责任和后果，PPTransfer 无须为此承担法律责任，
+            本委托授权自本公司向 PPTransfer 申请解除上述银行账户绑定起终止。
+          </p>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="add-trade-pwd">交易密码</label>
+          <input class="field-input" id="add-trade-pwd" type="password" inputmode="numeric"
+                 maxlength="6" autocomplete="off" placeholder="请输入 6 位交易密码">
+        </div>
+
+        <label class="agree-row" for="add-agree">
+          <input type="checkbox" id="add-agree">
+          <span>我已阅读此声明并同意授权</span>
+        </label>
+      </div>
+
+      <div class="footbar">
+        <button type="button" class="btn btn--ghost" id="add-prev-btn">返回上一步</button>
+        <button type="button" class="btn btn--primary" id="add-confirm-btn" aria-disabled="true">确认提交</button>
+      </div>
+    </section>
+
+    <!-- ===== 步骤 3：添加成功 ===== -->
+    <section class="wizard-step" data-step="2" hidden>
+      <div class="result">
+        <span class="result-icon" aria-hidden="true">
+          <svg aria-hidden="true"><use href="#i-check-circle"/></svg>
+        </span>
+        <h2 class="result-title">添加人民币结汇账户申请成功</h2>
+        <p class="result-desc">我们会在一到两个工作日完成审核，请关注自己的短信或邮箱</p>
+
+        <div class="card result-card">
+          <div class="detail-row">
+            <span class="detail-label">账户名称</span>
+            <span class="detail-value" id="add-result-name">—</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">银行账号</span>
+            <span class="detail-value num" id="add-result-no">—</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">开户地区</span>
+            <span class="detail-value" id="add-result-region">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="footbar">
+        <button type="button" class="btn btn--ghost" data-back>返回结汇提现</button>
+        <button type="button" class="btn btn--primary" data-go="rmb-exchange-withdraw">去提现</button>
+      </div>
+    </section>
+  </template>
+
   <!-- 页面片段：collection -->
   <template id="frag-collection">
     <!--
@@ -10923,18 +11678,18 @@
     -->
 
     <!-- 步骤指示器：data-tone 由 JS 按当前进度刷新 -->
-    <ol class="steps" id="steps" aria-label="结汇提现流程">
-      <li class="step" data-tone="blue" aria-current="step">
-        <span class="step-dot">1</span>
-        <span class="step-text">填写信息</span>
+    <ol class="wz-steps" id="steps" aria-label="结汇提现流程">
+      <li class="wz-step" data-tone="blue" aria-current="step">
+        <span class="wz-dot">1</span>
+        <span class="wz-text">填写信息</span>
       </li>
-      <li class="step" data-tone="neutral">
-        <span class="step-dot">2</span>
-        <span class="step-text">确认信息</span>
+      <li class="wz-step" data-tone="neutral">
+        <span class="wz-dot">2</span>
+        <span class="wz-text">确认信息</span>
       </li>
-      <li class="step" data-tone="neutral">
-        <span class="step-dot">3</span>
-        <span class="step-text">提交完成</span>
+      <li class="wz-step" data-tone="neutral">
+        <span class="wz-dot">3</span>
+        <span class="wz-text">提交完成</span>
       </li>
     </ol>
 
@@ -10950,9 +11705,9 @@
 
       <div class="card wizard-card">
         <!-- 提现金额 -->
-        <div class="xfield">
-          <label class="xfield-label" for="amount-input">
-            <i class="req" aria-hidden="true">*</i>提现金额：
+        <div class="frow">
+          <label class="frow-label" for="amount-input">
+            <i class="frow-req" aria-hidden="true">*</i>提现金额：
           </label>
           <div class="amt-wrap">
             <input class="field-input amt-input num" id="amount-input" type="text"
@@ -10963,8 +11718,8 @@
         </div>
 
         <!-- 提现至 -->
-        <div class="xfield">
-          <span class="xfield-label" id="to-label"><i class="req" aria-hidden="true">*</i>提现至：</span>
+        <div class="frow">
+          <span class="frow-label" id="to-label"><i class="frow-req" aria-hidden="true">*</i>提现至：</span>
           <div class="radio-group" role="radiogroup" aria-labelledby="to-label">
             <button type="button" class="radio-pill" role="radio" aria-checked="true"  data-value="company">本公司</button>
             <button type="button" class="radio-pill" role="radio" aria-checked="false" data-value="supplier">供应商</button>
@@ -10972,15 +11727,15 @@
         </div>
 
         <!-- 结汇提现账户 -->
-        <div class="xfield">
-          <span class="xfield-label" id="acct-label"><i class="req" aria-hidden="true">*</i>结汇提现账户：</span>
+        <div class="frow">
+          <span class="frow-label" id="acct-label"><i class="frow-req" aria-hidden="true">*</i>结汇提现账户：</span>
           <button type="button" class="select-field" id="account-btn"
                   aria-haspopup="dialog" aria-labelledby="acct-label">
             <span class="select-value is-placeholder" id="account-value">请选择结汇提现账户</span>
             <svg class="select-caret" aria-hidden="true"><use href="#i-chevron-down"/></svg>
           </button>
           <span class="select-hint">可输入账户名称/备注名/卡号/银行名称搜索</span>
-          <button type="button" class="link-btn" data-demo="添加结汇提现账户即将上线">添加结汇提现账户</button>
+          <button type="button" class="link-btn link-btn--end" data-go="add-rmb-exchange-account">添加结汇提现账户</button>
         </div>
 
         <!-- 基础手续费 -->
@@ -10990,9 +11745,9 @@
         </div>
 
         <!-- 到账金额 -->
-        <div class="xfield">
-          <label class="xfield-label" for="arrival-input">
-            <i class="req" aria-hidden="true">*</i>到账金额：
+        <div class="frow">
+          <label class="frow-label" for="arrival-input">
+            <i class="frow-req" aria-hidden="true">*</i>到账金额：
           </label>
           <input class="field-input num" id="arrival-input" type="text"
                  inputmode="decimal" autocomplete="off"
@@ -11000,8 +11755,8 @@
         </div>
 
         <!-- 转账附言 -->
-        <div class="xfield xfield--last">
-          <label class="xfield-label" for="memo-input">转账附言：</label>
+        <div class="frow frow--last">
+          <label class="frow-label" for="memo-input">转账附言：</label>
           <textarea class="memo-input" id="memo-input" rows="3" maxlength="50"
                     placeholder="选填，将随款项展示给收款方"></textarea>
         </div>

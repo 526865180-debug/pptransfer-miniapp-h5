@@ -1,0 +1,283 @@
+/* ============================================================
+   pages/add-rmb-exchange-account.js · 添加人民币结汇账户
+   ------------------------------------------------------------
+   参考 desktop 版 pages/add_rmb_exchange_account.html：
+     步骤 1 账户所属 / 账户类型 / 开户地区 / 账户名称 / 银行账号 /
+            银行名称 / 开户行支行号 / 别名，个人账户额外要 公司名称、
+            统一信用代码、身份证号、历史采购合同
+     步骤 2 授权声明（回填步骤 1 的账户信息）+ 交易密码 + 同意勾选
+     步骤 3 申请成功
+   账户类型切换只改 data-only="personal" 行的显隐，已填值留在 DOM 里，
+   来回切换不会丢；提交时按类型决定是否校验个人账户字段。
+   弹层统一走 PP.ui（picker / searchPicker / toast）。
+   ============================================================ */
+(function (PP) {
+  'use strict'
+
+  var dom = PP.dom
+
+  /** 开户地区 */
+  var REGIONS = [
+    { value: '中国内地', title: '中国内地' },
+    { value: '香港地区', title: '香港地区' },
+    { value: '澳门地区', title: '澳门地区' },
+    { value: '台湾地区', title: '台湾地区' }
+  ]
+
+  /** 银行（演示数据，sub 参与搜索：银行名称 / CNAPS 行号） */
+  var BANKS = [
+    { value: '招商银行', title: '招商银行', sub: 'CNAPS 308584000013' },
+    { value: '工商银行', title: '工商银行', sub: 'CNAPS 102100099996' },
+    { value: '建设银行', title: '建设银行', sub: 'CNAPS 105100000017' },
+    { value: '中国银行', title: '中国银行', sub: 'CNAPS 104100000004' },
+    { value: '农业银行', title: '农业银行', sub: 'CNAPS 103100000026' },
+    { value: '交通银行', title: '交通银行', sub: 'CNAPS 301290000007' },
+    { value: '浦发银行', title: '浦发银行', sub: 'CNAPS 310290000013' },
+    { value: '中信银行', title: '中信银行', sub: 'CNAPS 302100011000' },
+    { value: '民生银行', title: '民生银行', sub: 'CNAPS 305100000013' },
+    { value: '兴业银行', title: '兴业银行', sub: 'CNAPS 309391000011' }
+  ]
+
+  /** 当前页面实例的可变状态；未挂载时为 null */
+  var view = null
+
+  /* ---------------------------------------------- 工具 */
+
+  function val(sel) {
+    var el = dom.qs(sel, view.root)
+    return el ? el.value.trim() : ''
+  }
+
+  function setText(sel, text) {
+    var el = dom.qs(sel, view.root)
+    if (el) el.textContent = text
+  }
+
+  /** 个人账户专属行（企业账户时隐藏且不参与校验） */
+  function isPersonal() { return view.type === 'personal' }
+
+  function visibleRows() {
+    return dom.qsa('[data-only="personal"]', view.root)
+  }
+
+  function syncTypeRows() {
+    var personal = isPersonal()
+    visibleRows().forEach(function (el) { el.hidden = !personal })
+  }
+
+  /** 步骤 1 的必填校验：返回第一个缺失项的提示文案 */
+  function firstMissing() {
+    if (!val('#add-acct-name')) return '请填写账户名称'
+    if (!val('#add-acct-no')) return '请填写银行账号'
+    if (!view.bank) return '请选择银行名称'
+    if (!val('#add-branch-code')) return '请填写开户行支行号'
+    if (isPersonal()) {
+      if (!val('#add-company-name')) return '请填写公司名称'
+      if (!val('#add-credit-code')) return '请填写统一信用代码'
+      if (!val('#add-id-card')) return '请填写收款人身份证号'
+    }
+    return ''
+  }
+
+  /** 把步骤 1 的账户信息同步到授权声明 */
+  function syncAuth() {
+    setText('#add-auth-bank', view.bank || '—')
+    setText('#add-auth-name', val('#add-acct-name') || '—')
+    setText('#add-auth-no', val('#add-acct-no') || '—')
+  }
+
+  /* ---------------------------------------------- 列表渲染 */
+
+  function fileRow(file, index) {
+    var size = file.size > 1024 * 1024
+      ? (file.size / 1024 / 1024).toFixed(1) + 'MB'
+      : Math.ceil(file.size / 1024) + 'KB'
+    return (
+      '<li class="upload-item">' +
+      '<svg class="upload-icon" aria-hidden="true"><use href="#i-doc"/></svg>' +
+      '<span class="upload-name truncate">' + dom.esc(file.name) + '</span>' +
+      '<span class="upload-size">' + dom.esc(size) + '</span>' +
+      '<button type="button" class="upload-remove" data-index="' + index + '"' +
+      ' aria-label="移除 ' + dom.esc(file.name) + '">' +
+      '<svg aria-hidden="true"><use href="#i-close"/></svg>' +
+      '</button>' +
+      '</li>'
+    )
+  }
+
+  function renderFiles() {
+    var list = dom.qs('#add-upload-list', view.root)
+    if (!list) return
+    dom.setHTML(list, dom.raw(view.files.map(fileRow).join('')))
+  }
+
+  /* ---------------------------------------------- 分步 */
+
+  function syncSteps() {
+    dom.qsa('.wz-step', view.root).forEach(function (li, i) {
+      li.setAttribute('data-tone', i < view.step ? 'success' : (i === view.step ? 'blue' : 'neutral'))
+      if (i === view.step) li.setAttribute('aria-current', 'step')
+      else li.removeAttribute('aria-current')
+
+      var dot = dom.qs('.wz-dot', li)
+      if (i < view.step) dom.setHTML(dot, dom.raw('<svg aria-hidden="true"><use href="#i-check"/></svg>'))
+      else dot.textContent = String(i + 1)
+    })
+  }
+
+  function goStep(step) {
+    view.step = step
+    dom.qsa('.wizard-step', view.root).forEach(function (el) {
+      el.hidden = Number(el.getAttribute('data-step')) !== step
+    })
+    syncSteps()
+    var body = dom.qs('#app-body')
+    if (body) body.scrollTop = 0
+  }
+
+  function refresh() {
+    if (!view || !view.root) return
+    dom.qs('#add-confirm-btn', view.root)
+      .setAttribute('aria-disabled', (view.pwd.length === 6 && view.agreed) ? 'false' : 'true')
+  }
+
+  /* ---------------------------------------------- 选择器 */
+
+  function pickRegion() {
+    PP.ui.picker({
+      title: '选择开户地区',
+      value: view.region,
+      options: REGIONS
+    }).then(function (value) {
+      if (!value || !view) return
+      view.region = value
+      setText('#add-region-value', value)
+    })
+  }
+
+  function pickBank() {
+    PP.ui.searchPicker({
+      title: '选择银行名称',
+      placeholder: '银行名称 / CNAPS 行号',
+      value: view.bank,
+      items: BANKS
+    }).then(function (value) {
+      if (!value || !view) return
+      view.bank = value
+      var el = dom.qs('#add-bank-value', view.root)
+      el.textContent = value
+      el.classList.remove('is-placeholder')
+    })
+  }
+
+  /* ---------------------------------------------- 页面定义 */
+
+  PP.definePage('add-rmb-exchange-account', {
+    mount: function (root, ctx) {
+      view = {
+        root: root,
+        step: 0,
+        owner: 'company',
+        type: 'enterprise',
+        region: '中国内地',
+        bank: '',
+        files: [],
+        pwd: '',
+        agreed: false
+      }
+
+      var offs = []
+      function listen(type, sel, fn) { offs.push(dom.on(root, type, sel, fn)) }
+
+      /* -------- 单选：账户所属 / 账户类型 -------- */
+
+      listen('click', '[data-owner]', function (e, el) {
+        if (el.getAttribute('aria-checked') === 'true') return
+        dom.qsa('[data-owner]', root).forEach(function (b) {
+          b.setAttribute('aria-checked', b === el ? 'true' : 'false')
+        })
+        view.owner = el.getAttribute('data-owner')
+      })
+
+      listen('click', '[data-type]', function (e, el) {
+        if (el.getAttribute('aria-checked') === 'true') return
+        dom.qsa('[data-type]', root).forEach(function (b) {
+          b.setAttribute('aria-checked', b === el ? 'true' : 'false')
+        })
+        view.type = el.getAttribute('data-type')
+        syncTypeRows()
+      })
+
+      /* -------- 开户地区 / 银行名称 -------- */
+
+      listen('click', '#add-region-btn', pickRegion)
+      listen('click', '#add-bank-btn', pickBank)
+
+      /* -------- 历史采购合同上传 -------- */
+
+      listen('change', '#add-contract-file', function (e, el) {
+        Array.prototype.slice.call(el.files || []).forEach(function (f) {
+          view.files.push(f)
+        })
+        el.value = ''
+        renderFiles()
+      })
+
+      listen('click', '.upload-remove', function (e, el) {
+        view.files.splice(Number(el.getAttribute('data-index')), 1)
+        renderFiles()
+      })
+
+      /* -------- 分步 -------- */
+
+      listen('click', '#add-next-btn', function () {
+        var missing = firstMissing()
+        if (missing) {
+          PP.ui.toast(missing)
+          return
+        }
+        syncAuth()
+        goStep(1)
+      })
+
+      listen('click', '#add-prev-btn', function () { goStep(0) })
+
+      listen('input', '#add-trade-pwd', function (e, el) {
+        view.pwd = el.value
+        refresh()
+      })
+
+      listen('change', '#add-agree', function (e, el) {
+        view.agreed = el.checked
+        refresh()
+      })
+
+      listen('click', '#add-confirm-btn', function () {
+        if (view.pwd.length !== 6) {
+          PP.ui.toast('请输入 6 位交易密码')
+          return
+        }
+        if (!view.agreed) {
+          PP.ui.toast('请阅读并同意授权声明')
+          return
+        }
+        setText('#add-result-name', val('#add-acct-name'))
+        setText('#add-result-no', PP.format.maskAccount(val('#add-acct-no')))
+        setText('#add-result-region', view.region)
+        goStep(2)
+        dom.haptic()
+      })
+
+      /* -------- 初始状态 -------- */
+      syncTypeRows()
+      renderFiles()
+      goStep(0)
+      refresh()
+
+      ctx.onCleanup(function () {
+        offs.forEach(function (off) { off() })
+        view = null
+      })
+    }
+  })
+})((window.PP = window.PP || {}))

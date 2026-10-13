@@ -45,7 +45,7 @@ src/
     ├── store.js           全局状态（用户信息 / 未读数 / 金额可见性）
     ├── ui.js              反馈与弹层统一收口（toast / sheet / confirm / picker / actions）
     ├── chart.js           原生 Canvas 折线图（平滑曲线 + 渐变面积 + 当前价标注）
-    ├── routes.js          13 页路由表（唯一真源）
+    ├── routes.js          14 页路由表（唯一真源）
     ├── router.js          hash 路由 + 页面栈（switchTab / navigateTo / back 语义）
     ├── app.js             启动引导 + 声明式交互委托
     └── pages/<name>.js    页面控制器（PP.definePage 注册）
@@ -86,7 +86,7 @@ python3 tools/bundle.py         # src/ → ./index.html
 
 ```bash
 python3 tools/verify.py                          # 静态校验，6 项
-node tools/render_check.js                       # 产物 13 页渲染 + 截图 → tools/.render-out/
+node tools/render_check.js                       # 产物 14 页渲染 + 截图 → tools/.render-out/
 node tools/render_check.js http://localhost:8080/index.html   # 同上，但验证开发态
 node tools/interact_check.js                     # 交互冒烟，23 项断言
 ```
@@ -101,7 +101,7 @@ node tools/interact_check.js                     # 交互冒烟，23 项断言
 - **页面注册制**：`PP.definePage(name, { mount, show, hide, unmount })`，
   可变状态放模块作用域闭包，清理走 `ctx.onCleanup(fn)`（定时器 / 事件解绑 / 图表销毁）。
 - **声明式交互**：`data-go="wallet"` / `data-back` / `data-demo="文案"` 由 `app.js` 全局委托，
-  13 个页面不需要各写一遍导航代码。
+  14 个页面不需要各写一遍导航代码。
   ⚠ `data-go` / `data-back` 是保留属性名，页面根元素不要挪作他用
   （曾与路由的进场动画属性撞名，导致二级页点哪都返回）。
 - **路由**：hash 路由 + 页面栈。tab 页 `switchTab` 清栈，二级页 `navigateTo` 入栈并显示返回键，
@@ -116,7 +116,7 @@ node tools/interact_check.js                     # 交互冒烟，23 项断言
 
 ---
 
-## 页面清单（13 页）
+## 页面清单（14 页）
 
 | 路由 | 页面 | 底部 tab |
 |---|---|---|
@@ -129,6 +129,7 @@ node tools/interact_check.js                     # 交互冒烟，23 项断言
 | `international-remittance` | 国际汇款 | — |
 | `rmb-exchange` | 人民币结汇 | — |
 | `rmb-exchange-withdraw` | 结汇提现 | — |
+| `add-rmb-exchange-account` | 添加人民币结汇账户（三步向导） | — |
 | `rmb-exchange-records` | 结汇记录 | — |
 | `wallet` | 我的资产 | — |
 | `collection` | 外贸收款账户（无入口，保留页） | — |

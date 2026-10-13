@@ -27,6 +27,7 @@
     { name: 'international-remittance', title: '国际汇款' },
     { name: 'rmb-exchange', title: '人民币结汇' },
     { name: 'rmb-exchange-withdraw', title: '结汇提现' },
+    { name: 'add-rmb-exchange-account', title: '添加人民币结汇账户' },
     { name: 'rmb-exchange-records', title: '结汇记录' },
     { name: 'wallet', title: '我的资产' },
     { name: 'collection', title: '外贸收款账户' },

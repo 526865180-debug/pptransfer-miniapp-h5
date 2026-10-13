@@ -238,6 +238,74 @@
     })
   }
 
+  /**
+   * 带搜索的单选弹层（账户、银行这类需要检索的长列表）
+   *   items: [{ value, title, sub }]，检索范围是 title + sub
+   *   value 当前值 / placeholder 搜索框占位 / emptyText 无结果文案
+   * 返回 Promise<value|null>
+   */
+  function searchPicker(opts) {
+    var o = opts || {}
+    var items = o.items || []
+    return new Promise(function (resolve) {
+      var settled = false
+      function done(v) {
+        if (settled) return
+        settled = true
+        resolve(v)
+      }
+
+      function rowHTML(item) {
+        var active = String(item.value) === String(o.value)
+        return (
+          '<button type="button" class="picker-item' + (active ? ' is-active' : '') + '"' +
+          ' data-value="' + dom.esc(item.value) + '"' +
+          ' aria-pressed="' + (active ? 'true' : 'false') + '">' +
+          '<span class="picker-body">' +
+          '<span class="picker-title">' + dom.esc(item.title) + '</span>' +
+          (item.sub ? '<span class="picker-sub">' + dom.esc(item.sub) + '</span>' : '') +
+          '</span>' +
+          '<svg class="picker-check" aria-hidden="true"><use href="#i-check"/></svg>' +
+          '</button>'
+        )
+      }
+
+      var body =
+        '<div class="picker-search-wrap">' +
+        '<input class="field-input picker-search" id="picker-search" type="search" autofocus' +
+        ' autocomplete="off" placeholder="' + dom.esc(o.placeholder || '搜索') + '">' +
+        '</div>' +
+        '<div class="picker-list" id="picker-list"></div>'
+
+      var sheet = openSheet({
+        title: o.title || '请选择',
+        body: body,
+        onMount: function (root) {
+          var search = dom.qs('#picker-search', root)
+          var list = dom.qs('#picker-list', root)
+
+          function render() {
+            var kw = (search.value || '').trim().toLowerCase()
+            var rows = items.filter(function (it) {
+              return !kw || (it.title + ' ' + (it.sub || '')).toLowerCase().indexOf(kw) >= 0
+            })
+            list.innerHTML = rows.length
+              ? rows.map(rowHTML).join('')
+              : '<p class="picker-empty">' + dom.esc(o.emptyText || '没有匹配的结果') + '</p>'
+          }
+
+          dom.on(root, 'input', '#picker-search', render)
+          dom.on(root, 'click', '.picker-item', function (e, el) {
+            done(el.getAttribute('data-value'))
+            sheet.close()
+          })
+          render()
+        },
+        onClose: function () { done(null) }
+      })
+    })
+  }
+
   /** 动作面板：options 为 [{ label, tone }]，返回被选项的 index 或 null */
   function actionSheet(opts) {
     var o = opts || {}
@@ -279,6 +347,7 @@
     sheet: openSheet,
     confirm: confirmDialog,
     picker: picker,
+    searchPicker: searchPicker,
     actions: actionSheet
   }
 })((window.PP = window.PP || {}))

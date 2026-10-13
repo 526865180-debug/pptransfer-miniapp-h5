@@ -1,0 +1,189 @@
+/* ============================================================
+   pages/add-rmb-exchange-account.css · 添加人民币结汇账户
+   ------------------------------------------------------------
+   只保留本页特有样式：步骤容器卡片、个人账户提示、合同上传、
+   授权声明书版式、同意勾选行。
+   步骤条 / 表单行 / 单选胶囊 / 选择框 / 结果页 / 底部操作条 /
+   搜索弹层都是共享组件，见 components.css。
+   全部规则收在 .page[data-page='add-rmb-exchange-account'] 作用域内。
+   尺寸 375px 基准，一律 px。
+   ============================================================ */
+
+.page[data-page='add-rmb-exchange-account'] {
+  padding: 12px 0 24px;
+}
+
+/* ============ 步骤内容卡片 ============ */
+.page[data-page='add-rmb-exchange-account'] .wizard-card {
+  margin: var(--space-4) var(--gutter) 0;
+  padding: var(--space-5) var(--space-4);
+}
+.page[data-page='add-rmb-exchange-account'] .wizard-card .section-head { margin-bottom: var(--space-4); }
+
+/* 银行账号下方的橙色提示（个人账户专属） */
+.page[data-page='add-rmb-exchange-account'] .hint-warn {
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--tone-orange-fg);
+}
+
+/* ============ 历史采购合同上传 ============ */
+.page[data-page='add-rmb-exchange-account'] .upload-box {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-inner);
+  background: var(--surface-card);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+.page[data-page='add-rmb-exchange-account'] .upload-box:active {
+  border-color: var(--color-brand);
+  background: var(--color-brand-tint);
+}
+.page[data-page='add-rmb-exchange-account'] .upload-box > svg {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--color-brand);
+}
+
+.page[data-page='add-rmb-exchange-account'] .upload-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.page[data-page='add-rmb-exchange-account'] .upload-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 7px 9px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+.page[data-page='add-rmb-exchange-account'] .upload-icon {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  color: var(--color-brand);
+}
+.page[data-page='add-rmb-exchange-account'] .upload-name { flex: 1; }
+.page[data-page='add-rmb-exchange-account'] .upload-size {
+  flex-shrink: 0;
+  color: var(--text-quaternary);
+}
+.page[data-page='add-rmb-exchange-account'] .upload-remove {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: var(--text-quaternary);
+}
+.page[data-page='add-rmb-exchange-account'] .upload-remove > svg {
+  width: 15px;
+  height: 15px;
+}
+/* 撑到 44px 命中区 */
+.page[data-page='add-rmb-exchange-account'] .upload-remove::after {
+  content: '';
+  position: absolute;
+  inset: -13px;
+}
+.page[data-page='add-rmb-exchange-account'] .upload-remove:active { color: var(--tone-danger-fg); }
+
+/* ============ 授权声明书 ============ */
+.page[data-page='add-rmb-exchange-account'] .auth-box {
+  margin-bottom: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--color-brand-tint);
+  border-radius: var(--radius-inner);
+  background: var(--color-brand-tint);
+}
+.page[data-page='add-rmb-exchange-account'] .auth-title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: var(--space-2);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.page[data-page='add-rmb-exchange-account'] .auth-title > svg {
+  width: 16px;
+  height: 16px;
+  color: var(--color-brand);
+}
+.page[data-page='add-rmb-exchange-account'] .auth-text {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--text-secondary);
+}
+.page[data-page='add-rmb-exchange-account'] .auth-text:last-child { margin-bottom: 0; }
+.page[data-page='add-rmb-exchange-account'] .auth-company {
+  font-weight: var(--weight-semibold);
+  color: var(--color-brand);
+}
+
+.page[data-page='add-rmb-exchange-account'] .auth-grid {
+  margin-bottom: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+}
+.page[data-page='add-rmb-exchange-account'] .auth-row + .auth-row {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-default);
+}
+.page[data-page='add-rmb-exchange-account'] .auth-label {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 var(--space-2);
+}
+.page[data-page='add-rmb-exchange-account'] .auth-label .cn {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+.page[data-page='add-rmb-exchange-account'] .auth-label .en {
+  font-size: var(--text-2xs);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-placeholder);
+}
+.page[data-page='add-rmb-exchange-account'] .auth-value {
+  display: block;
+  margin-top: 3px;
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+/* ============ 同意勾选行 ============ */
+.page[data-page='add-rmb-exchange-account'] .agree-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.page[data-page='add-rmb-exchange-account'] .agree-row input {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  accent-color: var(--color-brand);
+  cursor: pointer;
+}
