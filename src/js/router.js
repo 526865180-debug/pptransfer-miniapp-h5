@@ -169,8 +169,11 @@
 
   /* ---------------------------------------------- 导航 */
 
-  /** 切换到 tab 页：清空栈，页面常驻 */
-  function switchTab(name) {
+  /** 切换到 tab 页：清空栈，页面常驻
+   *  params 为可选的进入意图（如 { view: 'fund' } 直达收款页的在途视图）：
+   *  页面可实现可选的 onParams(el, params) 钩子来响应，钩子在 show 之前调用，
+   *  视图先切好再亮相，避免先闪默认视图。 */
+  function switchTab(name, params) {
     var route = PP.routeOf(name)
     if (!route || !route.tab) return Promise.reject(new Error('不是 tab 页：' + name))
 
@@ -185,6 +188,7 @@
     stack = stack.filter(function (inst) { return inst.name === name })
 
     function reveal(inst) {
+      if (params && inst.mod.onParams) inst.mod.onParams(inst.el, params)
       if (stack.indexOf(inst) < 0) stack.push(inst)
       inst.scrollTop = inst.scrollTop || 0
       show(inst, false)
@@ -202,7 +206,7 @@
   function navigate(name, params) {
     var route = PP.routeOf(name)
     if (!route) return Promise.reject(new Error('路由不存在：' + name))
-    if (route.tab) return switchTab(name)
+    if (route.tab) return switchTab(name, params)
 
     var top = stack[stack.length - 1]
     if (top && top.name === name) return Promise.resolve(top) // 防重复进入

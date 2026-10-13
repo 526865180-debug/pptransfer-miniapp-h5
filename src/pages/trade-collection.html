@@ -1,59 +1,121 @@
 <!--
   pages/trade-collection.html · 外贸收款管理（tabBar「收款」）
   ---------------------------------------------------------------
-  静态结构与文案写在这里；收款卡片是同构列表，由 JS 从 COLLECTIONS 渲染。
-  筛选 / 详情 / 分配三个弹层统一交给 PP.ui.sheet 生成，
+  本页含两个视图，由顶部 .tc-viewseg 分段切换：
+    #tc-pane-collection  收款记录 —— 状态统计 + 搜索筛选 + 收款卡片列表
+    #tc-pane-fund        在途资金 —— 合计 Hero + 状态页签 + 资金列表
+  原「在途资金」一级页已并入此处：首页在途资金「详情 ›」带 data-view="fund"
+  直达第二个视图，tabBar 因此从四栏收为三栏。
+
+  静态结构与文案写在这里；两个列表都由 JS 从常量渲染。
+  筛选 / 收款详情 / 分配业务员 / 在途详情四个弹层统一交给 PP.ui.sheet，
   页面里只保留触发按钮，不再手写 mask + sheet 骨架。
+
+  两个视图共存于同一页面根元素下，属性名必须互不干扰：
+    收款用 data-status（状态统计）、data-act + data-id（卡片动作）
+    在途用 data-fstatus（状态页签）、data-fid（条目点击）
 -->
 
-<!-- ===== 收款状态统计（点击即筛选） ===== -->
-<div class="stat-bar" role="group" aria-label="按收款状态筛选">
-  <button type="button" class="stat-item" data-status="" aria-pressed="true">
-    <span class="stat-num num" data-count="all">10</span>
-    <span class="stat-label">全部</span>
-  </button>
-  <button type="button" class="stat-item" data-status="已入账" data-tone="success" aria-pressed="false">
-    <span class="stat-num num" data-count="credited">4</span>
-    <span class="stat-label">已入账</span>
-  </button>
-  <button type="button" class="stat-item" data-status="审核中" data-tone="warning" aria-pressed="false">
-    <span class="stat-num num" data-count="reviewing">3</span>
-    <span class="stat-label">审核中</span>
-  </button>
-  <button type="button" class="stat-item" data-status="已驳回" data-tone="danger" aria-pressed="false">
-    <span class="stat-num num" data-count="rejected">3</span>
-    <span class="stat-label">已驳回</span>
-  </button>
+<!-- ===== 视图切换：收款记录 / 在途资金 ===== -->
+<div class="seg tc-viewseg" id="tc-viewseg" role="tablist" aria-label="收款记录与在途资金">
+  <button type="button" class="seg-item" role="tab" data-view="collection" aria-selected="true">收款记录</button>
+  <button type="button" class="seg-item" role="tab" data-view="fund" aria-selected="false">在途资金</button>
 </div>
 
-<!-- ===== 搜索 + 筛选 ===== -->
-<div class="toolbar">
-  <div class="search-box">
-    <svg class="search-icon" aria-hidden="true"><use href="#i-search"/></svg>
-    <input type="text" class="search-input" id="tc-search" enterkeyhint="search"
-           placeholder="搜索收款编号 / 付款方 / 附言"
-           aria-label="搜索收款编号、付款方或附言">
-    <button type="button" class="search-clear" id="tc-clear" hidden>清除</button>
+<!-- ==================== 视图一 · 收款记录 ==================== -->
+<div class="tc-pane" id="tc-pane-collection">
+
+  <!-- 收款状态统计（点击即筛选） -->
+  <div class="stat-bar" role="group" aria-label="按收款状态筛选">
+    <button type="button" class="stat-item" data-status="" aria-pressed="true">
+      <span class="stat-num num" data-count="all">10</span>
+      <span class="stat-label">全部</span>
+    </button>
+    <button type="button" class="stat-item" data-status="已入账" data-tone="success" aria-pressed="false">
+      <span class="stat-num num" data-count="credited">4</span>
+      <span class="stat-label">已入账</span>
+    </button>
+    <button type="button" class="stat-item" data-status="审核中" data-tone="warning" aria-pressed="false">
+      <span class="stat-num num" data-count="reviewing">3</span>
+      <span class="stat-label">审核中</span>
+    </button>
+    <button type="button" class="stat-item" data-status="已驳回" data-tone="danger" aria-pressed="false">
+      <span class="stat-num num" data-count="rejected">3</span>
+      <span class="stat-label">已驳回</span>
+    </button>
   </div>
-  <button type="button" class="filter-btn" id="tc-filter" data-active="false"
-          aria-haspopup="dialog" aria-label="筛选">
-    <svg aria-hidden="true"><use href="#i-filter"/></svg>
-    <span class="filter-badge" id="tc-filter-badge" hidden>0</span>
-  </button>
+
+  <!-- 搜索 + 筛选 -->
+  <div class="toolbar">
+    <div class="search-box">
+      <svg class="search-icon" aria-hidden="true"><use href="#i-search"/></svg>
+      <input type="text" class="search-input" id="tc-search" enterkeyhint="search"
+             placeholder="搜索收款编号 / 付款方 / 附言"
+             aria-label="搜索收款编号、付款方或附言">
+      <button type="button" class="search-clear" id="tc-clear" hidden>清除</button>
+    </div>
+    <button type="button" class="filter-btn" id="tc-filter" data-active="false"
+            aria-haspopup="dialog" aria-label="筛选">
+      <svg aria-hidden="true"><use href="#i-filter"/></svg>
+      <span class="filter-badge" id="tc-filter-badge" hidden>0</span>
+    </button>
+  </div>
+
+  <!-- 列表头 -->
+  <div class="list-head">
+    <span class="list-count" id="tc-count">共 10 条收款记录</span>
+    <button type="button" class="btn-text" id="tc-export">导出明细</button>
+  </div>
+
+  <!-- 收款卡片列表（JS 渲染） -->
+  <ul class="coll-list" id="tc-list" aria-label="收款记录"></ul>
+
+  <!-- 空状态 -->
+  <div class="card empty tc-empty" id="tc-empty" hidden>
+    <svg class="empty-icon" aria-hidden="true"><use href="#i-inbox"/></svg>
+    <p class="empty-text">未找到匹配的收款记录</p>
+    <p class="empty-sub">试试调整搜索关键词或筛选条件</p>
+  </div>
 </div>
 
-<!-- ===== 列表头 ===== -->
-<div class="list-head">
-  <span class="list-count" id="tc-count">共 10 条收款记录</span>
-  <button type="button" class="btn-text" id="tc-export">导出明细</button>
-</div>
+<!-- ==================== 视图二 · 在途资金 ==================== -->
+<div class="tc-pane" id="tc-pane-fund" hidden>
 
-<!-- ===== 收款卡片列表（JS 渲染） ===== -->
-<ul class="coll-list" id="tc-list" aria-label="收款记录"></ul>
+  <!-- 汇总 Hero -->
+  <section class="hero fund-hero">
+    <span class="hero-deco hero-deco--a" aria-hidden="true"></span>
+    <span class="hero-deco hero-deco--b" aria-hidden="true"></span>
 
-<!-- ===== 空状态 ===== -->
-<div class="card empty tc-empty" id="tc-empty" hidden>
-  <svg class="empty-icon" aria-hidden="true"><use href="#i-inbox"/></svg>
-  <p class="empty-text">未找到匹配的收款记录</p>
-  <p class="empty-sub">试试调整搜索关键词或筛选条件</p>
+    <span class="hero-label">在途资金合计 (USD)</span>
+    <span class="hero-amount num" data-amount id="fund-total">$ 0.00</span>
+
+    <span class="hero-divider" aria-hidden="true"></span>
+
+    <div class="hero-meta">
+      <div class="hero-meta-item">
+        <span class="hero-meta-label">全部笔数</span>
+        <span class="hero-meta-value num" id="fund-all-count">0 笔</span>
+      </div>
+      <span class="hero-meta-split" aria-hidden="true"></span>
+      <div class="hero-meta-item">
+        <span class="hero-meta-label">在途中</span>
+        <span class="hero-meta-value num" id="fund-transit-count">0 笔</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 状态筛选；由 JS 渲染 -->
+  <div class="seg fund-filter" id="fund-status" role="tablist" aria-label="资金状态筛选"></div>
+
+  <!-- 资金列表；由 JS 渲染 -->
+  <section class="card card--section" id="fund-list-card">
+    <ul class="fund-list" id="fund-list" role="list"></ul>
+    <p class="fund-count" id="fund-count">共 0 条记录</p>
+  </section>
+
+  <!-- 空状态 -->
+  <section class="card card--section empty" id="fund-empty" hidden>
+    <svg class="empty-icon" aria-hidden="true"><use href="#i-inbox"/></svg>
+    <span class="empty-text">未找到匹配的资金记录</span>
+  </section>
 </div>

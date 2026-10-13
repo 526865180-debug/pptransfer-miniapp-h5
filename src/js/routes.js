@@ -15,10 +15,11 @@
   }
 
   PP.ROUTES = [
-    /* ---------- tabBar 四页 ---------- */
+    /* ---------- tabBar 三页 ---------- */
+    /* 「在途资金」已并入收款页：页内顶部分段切换「收款记录 / 在途资金」两个视图，
+       不再单列一级页。首页在途资金「详情 ›」用 { view: 'fund' } 直达该视图。 */
     { name: 'index', title: 'PPTransfer 商户端', tab: { text: '首页', icon: 'i-home' } },
     { name: 'trade-collection', title: '外贸收款管理', tab: { text: '收款', icon: 'i-banknote' } },
-    { name: 'in-transit-funds', title: '在途资金', tab: { text: '在途资金', icon: 'i-clock' } },
     { name: 'rights-center', title: '权益中心', tab: { text: '权益中心', icon: 'i-crown' } },
 
     /* ---------- 二级页 ---------- */

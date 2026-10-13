@@ -61,6 +61,8 @@
   /**
    * 声明式交互：页面里只写属性，不用绑事件。
    *   data-go="wallet"         → 跳转页面（tab 页自动走 switchTab）
+   *   data-go="trade-collection" data-view="fund"
+   *                            → 进入 tab 页并指定视图（页面按 onParams 响应）
    *   data-back                → 返回上一页
    *   data-demo="文案"          → 演示环境占位提示
    * 13 个页面因此不需要各写一遍导航代码。
@@ -75,7 +77,8 @@
 
       var go = target.closest('[data-go]')
       if (go) {
-        PP.router.go(go.getAttribute('data-go'))
+        var view = go.getAttribute('data-view')
+        PP.router.go(go.getAttribute('data-go'), view ? { view: view } : null)
         return
       }
       if (target.closest('[data-back]')) {

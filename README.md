@@ -101,7 +101,8 @@ node tools/interact_check.js                     # 交互冒烟，23 项断言
 - **页面注册制**：`PP.definePage(name, { mount, show, hide, unmount })`，
   可变状态放模块作用域闭包，清理走 `ctx.onCleanup(fn)`（定时器 / 事件解绑 / 图表销毁）。
 - **声明式交互**：`data-go="wallet"` / `data-back` / `data-demo="文案"` 由 `app.js` 全局委托，
-  14 个页面不需要各写一遍导航代码。
+  13 个页面不需要各写一遍导航代码。带视图意图进入 tab 页用
+  `data-go="trade-collection" data-view="fund"`（页面按 `onParams` 钩子落位）。
   ⚠ `data-go` / `data-back` 是保留属性名，页面根元素不要挪作他用
   （曾与路由的进场动画属性撞名，导致二级页点哪都返回）。
 - **路由**：hash 路由 + 页面栈。tab 页 `switchTab` 清栈，二级页 `navigateTo` 入栈并显示返回键，
@@ -116,13 +117,12 @@ node tools/interact_check.js                     # 交互冒烟，23 项断言
 
 ---
 
-## 页面清单（14 页）
+## 页面清单（13 页）
 
 | 路由 | 页面 | 底部 tab |
 |---|---|---|
 | `index` | 商户首页 | 首页 |
-| `trade-collection` | 外贸收款管理（收款流水） | 收款 |
-| `in-transit-funds` | 在途资金 | 在途资金 |
+| `trade-collection` | 外贸收款管理（页内分段切换「收款记录 / 在途资金」两个视图） | 收款 |
 | `rights-center` | 权益中心 | 权益中心 |
 | `order-management` | 订单管理 | — |
 | `exchange` | 换汇中心 | — |
@@ -134,6 +134,9 @@ node tools/interact_check.js                     # 交互冒烟，23 项断言
 | `wallet` | 我的资产 | — |
 | `collection` | 外贸收款账户（无入口，保留页） | — |
 | `notifications` | 消息通知（经首页「通知」入口进入） | — |
+
+> 原「在途资金」一级页（`in-transit-funds`）已并入 `trade-collection`：
+> tabBar 从四栏收敛为三栏，首页在途资金的「详情 ›」带 `data-view="fund"` 直达该视图。
 
 首页为**自然流布局**：图表定高 160px，矮屏退化为可滚动而不是丢内容。
 

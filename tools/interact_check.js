@@ -6,7 +6,9 @@
  * 这里用真实点击驱动一条最常用的用户路径，逐项断言：
  *
  *   1. 金额脱敏开关     —— body[data-amount-hidden] 与 aria-pressed 联动，图标换 eye/eye-off
- *   2. tabBar 切换      —— 点击「收款」进入 trade-collection，aria-selected 正确
+ *   2. tabBar 切换      —— 三栏 tabBar，点击「收款」进入 trade-collection，aria-selected 正确
+ *   2.5 收款页双视图    —— 页内分段切换「收款记录 / 在途资金」，在途筛选与详情弹层，
+ *                          首页「详情 ›」带 data-view 直达在途视图
  *   3. 进入二级页       —— 快捷入口「换汇」→ exchange，导航栏出现返回键
  *   4. 返回             —— 点返回键回到原 tab，滚动容器只有一页可见
  *   5. 表单校验         —— exchange 直接提交应给出错误提示而不是静默失败
@@ -110,6 +112,75 @@ async function main() {
       check('同屏只有一页', s.pages === 1, s.pages)
       check('tab 页 tabBar 可见', s.tabbarHidden === false, String(s.tabbarHidden))
       check('tab 页无返回键', s.back === false, String(s.back))
+    })
+
+    /* 2.5 收款页双视图：在途资金已并入本页 ------------------------- */
+    await step('收款页内切换「在途资金」视图', cdp, async () => {
+      // tabBar 收敛为三栏（在途资金不再是独立一级页）
+      const tabs = await cdp.eval(
+        `[].slice.call(document.querySelectorAll('#tabbar .tab')).map(function (t) { return t.getAttribute('data-name') })`)
+      check('tabBar 收敛为三栏',
+        tabs.length === 3 && tabs.join(',') === 'index,trade-collection,rights-center', JSON.stringify(tabs))
+
+      // 分段切换到在途视图
+      await click(cdp, '#tc-viewseg [data-view="fund"]')
+      await sleep(200)
+      let s = await cdp.eval(`({
+        fundVisible: !document.querySelector('#tc-pane-fund').hidden,
+        collHidden: document.querySelector('#tc-pane-collection').hidden,
+        total: document.querySelector('#fund-total').textContent,
+        all: document.querySelector('#fund-all-count').textContent,
+        transit: document.querySelector('#fund-transit-count').textContent,
+        rows: document.querySelectorAll('#fund-list .fund').length
+      })`)
+      check('切到在途视图且收款视图隐藏', s.fundVisible && s.collHidden, JSON.stringify(s))
+      check('在途合计与笔数按全量统计',
+        /23,128\.37/.test(s.total) && s.all === '6 笔' && s.transit === '2 笔', JSON.stringify(s))
+      check('在途列表渲染 6 条', s.rows === 6, String(s.rows))
+
+      // 状态页签筛选：只影响列表，不影响 Hero 汇总
+      await click(cdp, '#fund-status [data-fstatus="transit"]')
+      await sleep(150)
+      s = await cdp.eval(`({
+        rows: document.querySelectorAll('#fund-list .fund').length,
+        count: document.querySelector('#fund-count').textContent,
+        hero: document.querySelector('#fund-all-count').textContent
+      })`)
+      check('在途筛选「在途中」→ 2 条且 Hero 不变',
+        s.rows === 2 && /2 条/.test(s.count) && s.hero === '6 笔', JSON.stringify(s))
+
+      // 条目详情弹层
+      await click(cdp, '#fund-list .fund')
+      await sleep(250)
+      s = await cdp.eval(`({
+        title: (document.querySelector('#layer-root .sheet-title') || {}).textContent || '',
+        body: (document.querySelector('#layer-root .sheet') || {}).textContent || ''
+      })`)
+      check('在途详情弹层打开',
+        s.title === '在途资金详情' && /TRADE CORP LTD200AC/.test(s.body), JSON.stringify(s))
+
+      await click(cdp, '#layer-root .sheet-close')
+      await sleep(200)
+
+      // 切回收款视图
+      await click(cdp, '#tc-viewseg [data-view="collection"]')
+      await sleep(150)
+      s = await cdp.eval(`({
+        collVisible: !document.querySelector('#tc-pane-collection').hidden,
+        fundHidden: document.querySelector('#tc-pane-fund').hidden,
+        cards: document.querySelectorAll('#tc-list .coll-card').length
+      })`)
+      check('切回收款视图', s.collVisible && s.fundHidden && s.cards === 10, JSON.stringify(s))
+
+      // 首页在途资金「详情 ›」带 data-view 直达在途视图
+      await cdp.eval(`PP.router.go('index')`)
+      await cdp.waitFor(`PP.router.current() === 'index'`, '回首页')
+      await sleep(200)
+      await click(cdp, '.intransit-tag')
+      await cdp.waitFor(
+        `PP.router.current() === 'trade-collection' && !document.querySelector('#tc-pane-fund').hidden`,
+        '详情直达在途视图')
+      check('首页「详情 ›」直达收款页在途视图', true)
     })
 
     /* 3. 进入二级页 ------------------------------------------------ */

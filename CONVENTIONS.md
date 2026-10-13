@@ -30,9 +30,13 @@ PP.definePage('trade-collection', {
   mount: function (root, ctx) { ... },  // 片段已注入 root 之后调用
   show:  function (root) { ... },       // 从其他页面返回时
   hide:  function (root) { ... },       // 被其他页覆盖时（可选）
-  unmount: function (root) { ... }      // 出栈销毁（可选）
+  unmount: function (root) { ... },     // 出栈销毁（可选）
+  onParams: function (el, params) { ... } // 带意图进入本页时（可选，show 之前调用）
 })
 ```
+
+`onParams` 只在调用方显式传了 params 时触发（如 `data-go="trade-collection" data-view="fund"`），
+用于让 tab 页落位到指定视图；hash 直达与 tabBar 点击不传 params，不会触发。
 
 `ctx` 提供：
 
@@ -53,6 +57,7 @@ PP.definePage('trade-collection', {
 
 ```html
 <button data-go="wallet">我的资产</button>
+<button data-go="trade-collection" data-view="fund">在途资金详情</button>  <!-- 进入 tab 页并指定视图 -->
 <button data-back>返回</button>
 <button data-demo="收款账户管理待接入">…</button>   <!-- 演示占位提示 -->
 ```

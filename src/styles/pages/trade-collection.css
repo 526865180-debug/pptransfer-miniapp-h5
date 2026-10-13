@@ -205,3 +205,124 @@
   overflow-y: auto;
   overscroll-behavior: contain;
 }
+
+/* ============ 视图切换（收款记录 / 在途资金） ============ */
+.tc-viewseg {
+  margin: 0 var(--gutter) 12px;
+}
+
+/* ============ 视图二：在途资金 ============
+   原 pages/in-transit-funds.css 整体迁入。前缀收窄到 #tc-pane-fund，
+   与收款视图的同名类互不干扰（页面根前缀已由本页统一持有）。
+   渐变 Hero 底座 / 图标块 / 徽章 / 分段切换 / 键值行 / 空状态见 components.css。
+   条目整行可点，按约定用 <button> 而非 div，因此这里要重置
+   按钮默认的居中与内边距、并补上按压反馈。 */
+.page[data-page='trade-collection'] #tc-pane-fund {
+  padding-bottom: var(--space-6);
+}
+
+/* ------------ 汇总 Hero ------------ */
+.page[data-page='trade-collection'] #tc-pane-fund .fund-hero {
+  margin: 0 var(--gutter);
+}
+.page[data-page='trade-collection'] #tc-pane-fund .hero-amount {
+  display: block;
+  margin-top: 6px;
+  font-size: var(--text-5xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+}
+.page[data-page='trade-collection'] #tc-pane-fund .hero-meta {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.page[data-page='trade-collection'] #tc-pane-fund .hero-meta-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.page[data-page='trade-collection'] #tc-pane-fund .hero-meta-label {
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.68);
+}
+.page[data-page='trade-collection'] #tc-pane-fund .hero-meta-value {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-on-brand);
+}
+.page[data-page='trade-collection'] #tc-pane-fund .hero-meta-split {
+  width: 1px;
+  height: 28px;
+  margin: 0 var(--space-4);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* ------------ 状态筛选 ------------ */
+.page[data-page='trade-collection'] #tc-pane-fund .fund-filter {
+  margin: var(--space-4) var(--gutter) 0;
+}
+
+/* ------------ 资金条目 ------------ */
+.page[data-page='trade-collection'] #tc-pane-fund .fund {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: left;
+}
+.page[data-page='trade-collection'] #tc-pane-fund .fund-list > li:last-child .fund { border-bottom: 0; }
+.page[data-page='trade-collection'] #tc-pane-fund .fund:active { background: var(--surface-sunken); }
+
+.page[data-page='trade-collection'] #tc-pane-fund .fund-body {
+  flex: 1;
+  min-width: 0;
+}
+.page[data-page='trade-collection'] #tc-pane-fund .fund-line1,
+.page[data-page='trade-collection'] #tc-pane-fund .fund-line2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.page[data-page='trade-collection'] #tc-pane-fund .fund-line2 { margin-top: 5px; }
+
+.page[data-page='trade-collection'] #tc-pane-fund .fund-payer {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+}
+.page[data-page='trade-collection'] #tc-pane-fund .fund-amount {
+  flex-shrink: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.page[data-page='trade-collection'] #tc-pane-fund .fund-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-xs);
+  color: var(--text-quaternary);
+}
+.page[data-page='trade-collection'] #tc-pane-fund .fund-line2 .pill { flex-shrink: 0; }
+.page[data-page='trade-collection'] #tc-pane-fund .fund-time {
+  display: block;
+  margin-top: 5px;
+  font-size: var(--text-2xs);
+  color: var(--text-quaternary);
+}
+
+.page[data-page='trade-collection'] #tc-pane-fund .fund-count {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-quaternary);
+  text-align: center;
+}

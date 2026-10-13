@@ -1,13 +1,20 @@
 /* ============================================================
    pages/trade-collection.js · 外贸收款管理
    ------------------------------------------------------------
-   职责：按状态分段 / 搜索词 / 筛选条件过滤收款记录并渲染卡片列表，
-   以及详情、分配业务员、回单、导出明细四个动作。
-   演示数据放在文件顶部的大写常量里，字段名与小程序源码保持一致，
-   换成接口数据时只需替换 COLLECTIONS 与 decorate()。
+   本页含两个视图，由顶部 .tc-viewseg 分段切换：
+     collection  收款记录 —— 按状态 / 搜索词 / 筛选条件过滤并渲染卡片列表，
+                            以及详情、分配业务员、回单、导出明细四个动作
+     fund        在途资金 —— 合计 Hero、状态页签、资金列表与详情弹层
+                            （原 in-transit-funds 一级页整体迁入，
+                              首页「详情 ›」带 { view: 'fund' } 直达）
+   两套演示数据各自放在文件顶部的大写常量里，字段名与源码保持一致，
+   换成接口数据时只需替换 COLLECTIONS / FUNDS 与各自的 decorate()。
 
    筛选弹层内编辑的是 draft（草稿），点「查询」才写回 filters ——
    与小程序一致，避免边改边筛导致列表跳动。
+
+   两个视图共存于同一页面根元素下，事件委托的属性名必须互不重叠：
+   收款用 data-status / data-act / data-id，在途用 data-fstatus / data-fid。
    ============================================================ */
 (function (PP) {
   'use strict'
@@ -39,6 +46,77 @@
 
   /** 当前页面实例的可变状态；未挂载时为 null */
   var view = null
+
+  /* =============================================== 在途资金（第二个视图）
+     以下是原 in-transit-funds 页的内容，整体迁入本页。
+     汇总口径与原实现一致：合计与笔数始终按全量数据统计，
+     不随状态筛选变化（筛选只影响下面的列表）。 */
+
+  /** 在途资金明细（演示数据，字段与资金接口同名） */
+  var FUNDS = [
+    { id: 'f1', time: '2026-07-02 02:39:00', payer: 'DEBTOR NAME100ACC', amount: 888.10, currency: 'USD', country: 'SE', bank: 'ESSESESSXXX', note: 'INVOICE12300 PAYMENT', status: '收款行已到账' },
+    { id: 'f2', time: '2026-07-01 18:22:15', payer: 'TRADE CORP LTD200AC', amount: 9960.10, currency: 'USD', country: 'PA', bank: 'BAGEPAPAXXX', note: 'INVOICE20260701 TRADE', status: '在途中' },
+    { id: 'f3', time: '2026-06-30 14:55:42', payer: 'GLOBAL TRADING INC', amount: 860.10, currency: 'USD', country: 'DE', bank: 'DEUTDEFFXXX', note: 'INVOICE0630 PAYMENT', status: '收款行已到账' },
+    { id: 'f4', time: '2026-06-29 09:12:33', payer: 'SUNRISE IMPORT EXP', amount: 1550.00, currency: 'EUR', country: 'FR', bank: 'BNPAFRPPXXX', note: 'INVOICE290624', status: '在途中' },
+    { id: 'f5', time: '2026-06-28 16:44:08', payer: 'EASTERN MERCHANT CO', amount: 7200.00, currency: 'GBP', country: 'GB', bank: 'BARCGB22XXX', note: 'INVOICE2806', status: '收款行已到账' },
+    { id: 'f6', time: '2026-06-27 11:30:55', payer: 'NORTH SEA TRADING', amount: 4300.50, currency: 'CNH', country: 'HK', bank: 'HSBCHKHHXXX', note: 'INVOICE0627 PAYMENT', status: '已退款' }
+  ]
+
+  /** 币种符号 */
+  var FUND_SYMBOL = { USD: '$', EUR: '€', GBP: '£', CNH: '¥' }
+
+  /** 折算汇率（演示口径，合计按 USD 计价） */
+  var FUND_RATE = { USD: 1, EUR: 1.08, GBP: 1.27, CNH: 0.14 }
+
+  /** 在途资金状态页签 */
+  var FUND_STATUS_TABS = [
+    { key: 'all', label: '全部' },
+    { key: 'transit', label: '在途中' },
+    { key: 'arrived', label: '已到账' },
+    { key: 'refund', label: '已退款' }
+  ]
+
+  /** 在途列表状态文案 → 页签 key */
+  function fundKeyOf(status) {
+    if (status === '在途中') return 'transit'
+    if (status === '已退款') return 'refund'
+    return 'arrived'
+  }
+
+  /** 在途条目图标块色调：退款中转为中性，避免和正常到账混在一起 */
+  function fundToneOf(status) {
+    if (status === '已退款') return 'neutral'
+    if (status === '在途中') return 'blue'
+    return 'success'
+  }
+
+  /** 在途条目徽章色调 */
+  function fundBadgeToneOf(status) {
+    if (status === '已退款') return 'danger'
+    if (status === '在途中') return 'blue'
+    return 'success'
+  }
+
+  /** 补齐在途条目的展示字段：金额文案 / 页签 key / 色调 */
+  function decorateFund(r) {
+    return {
+      id: r.id,
+      time: r.time,
+      payer: r.payer,
+      amount: r.amount,
+      currency: r.currency,
+      country: r.country,
+      bank: r.bank,
+      note: r.note,
+      status: r.status,
+      key: fundKeyOf(r.status),
+      tone: fundToneOf(r.status),
+      badgeTone: fundBadgeToneOf(r.status),
+      amountText: (FUND_SYMBOL[r.currency] || '') + ' ' + PP.format.fmtNum(r.amount) + ' ' + r.currency
+    }
+  }
+
+  var FUND_ROWS = FUNDS.map(decorateFund)
 
   /* ---------------------------------------------- 数据 */
 
@@ -442,29 +520,153 @@
     })
   }
 
+  /* =============================================== 在途资金 · 渲染与交互 */
+
+  function fundListOf() {
+    return FUND_ROWS.filter(function (r) {
+      return view.fundStatus === 'all' || r.key === view.fundStatus
+    })
+  }
+
+  function fundRowOf(id) {
+    for (var i = 0; i < FUND_ROWS.length; i++) {
+      if (FUND_ROWS[i].id === id) return FUND_ROWS[i]
+    }
+    return null
+  }
+
+  /** 汇总 Hero：合计与笔数始终按全量统计，不随下方状态筛选变化 */
+  function renderFundHero() {
+    var total = FUND_ROWS.reduce(function (acc, r) {
+      return acc + r.amount * (FUND_RATE[r.currency] || 1)
+    }, 0)
+
+    var setText = function (sel, text) {
+      var el = dom.qs(sel, view.root)
+      if (el) el.textContent = text
+    }
+    setText('#fund-total', PP.format.withSymbol('$', total))
+    setText('#fund-all-count', FUND_ROWS.length + ' 笔')
+    setText('#fund-transit-count', FUND_ROWS.filter(function (r) {
+      return r.status === '在途中'
+    }).length + ' 笔')
+  }
+
+  function renderFundTabs() {
+    dom.renderList(dom.qs('#fund-status', view.root), FUND_STATUS_TABS, function (t) {
+      return (
+        '<button type="button" class="seg-item" role="tab"' +
+        ' aria-selected="' + (t.key === view.fundStatus ? 'true' : 'false') + '"' +
+        ' data-fstatus="' + t.key + '">' + dom.esc(t.label) + '</button>'
+      )
+    })
+  }
+
+  function fundRowHTML(r) {
+    return (
+      '<li>' +
+      '<button type="button" class="fund" data-fid="' + dom.esc(r.id) + '">' +
+      '<span class="tile" data-tone="' + r.tone + '">' +
+      '<svg aria-hidden="true"><use href="#i-globe"/></svg></span>' +
+      '<span class="fund-body">' +
+      '<span class="fund-line1">' +
+      '<span class="fund-payer">' + dom.esc(r.payer) + '</span>' +
+      '<span class="fund-amount num">' + dom.esc(r.amountText) + '</span>' +
+      '</span>' +
+      '<span class="fund-line2">' +
+      '<span class="fund-sub">' + dom.esc(r.country + ' · ' + r.bank) + '</span>' +
+      '<span class="pill" data-tone="' + r.badgeTone + '">' + dom.esc(r.status) + '</span>' +
+      '</span>' +
+      '<span class="fund-time">' + dom.esc(r.time) + '</span>' +
+      '</span>' +
+      '</button>' +
+      '</li>'
+    )
+  }
+
+  function renderFundList() {
+    var list = fundListOf()
+    dom.renderList(dom.qs('#fund-list', view.root), list, fundRowHTML)
+    dom.toggle(dom.qs('#fund-list-card', view.root), list.length > 0)
+    dom.toggle(dom.qs('#fund-empty', view.root), list.length === 0)
+
+    var count = dom.qs('#fund-count', view.root)
+    if (count) count.textContent = '共 ' + list.length + ' 条记录'
+  }
+
+  function fundDetailRow(label, value, isNum) {
+    return '<div class="detail-row">' +
+      '<span class="detail-label">' + dom.esc(label) + '</span>' +
+      '<span class="detail-value"' + (isNum ? ' data-num' : '') + '>' +
+      dom.esc(value) + '</span>' +
+      '</div>'
+  }
+
+  function openFundDetail(id) {
+    var r = fundRowOf(id)
+    if (!r) return
+
+    var body =
+      fundDetailRow('到账时间', r.time) +
+      fundDetailRow('付款人', r.payer) +
+      fundDetailRow('付款金额', r.amountText, true) +
+      fundDetailRow('付款币种', r.currency) +
+      fundDetailRow('付款国家/地区', r.country) +
+      fundDetailRow('付款银行', r.bank) +
+      fundDetailRow('附言', r.note) +
+      fundDetailRow('状态', r.status)
+
+    if (view.fundSheet) view.fundSheet.close()
+    view.fundSheet = PP.ui.sheet({ title: '在途资金详情', body: body })
+  }
+
+  /** 切换页面内两个视图（收款记录 / 在途资金），同步分段控件的选中态 */
+  function switchView(mode) {
+    if (mode !== 'collection' && mode !== 'fund') return
+    view.mode = mode
+    dom.qsa('[data-view]', view.root).forEach(function (btn) {
+      btn.setAttribute('aria-selected', btn.getAttribute('data-view') === mode ? 'true' : 'false')
+    })
+    dom.toggle(dom.qs('#tc-pane-collection', view.root), mode === 'collection')
+    dom.toggle(dom.qs('#tc-pane-fund', view.root), mode === 'fund')
+  }
+
   /* ---------------------------------------------- 页面定义 */
 
   PP.definePage('trade-collection', {
     mount: function (root, ctx) {
       view = {
         root: root,
+        /** 当前视图：collection 收款记录 / fund 在途资金 */
+        mode: 'collection',
         // 每次挂载都从常量复制一份，编辑（分配业务员）不会污染演示数据
         list: COLLECTIONS.map(decorate),
         rows: [],
         searchText: '',
         statusSeg: '',
-        filters: emptyFilters()
+        filters: emptyFilters(),
+        /** 在途资金视图状态（与收款的状态筛选各自独立） */
+        fundStatus: 'all',
+        fundSheet: null
       }
 
       refreshCounts()
+      renderFundHero()
+      renderFundTabs()
+      renderFundList()
 
       var offs = [
+        // 视图切换：收款记录 / 在途资金
+        dom.on(root, 'click', '#tc-viewseg [data-view]', function (e, el) {
+          switchView(el.getAttribute('data-view'))
+        }),
+
         // 状态统计：点击即筛选
-        dom.on(root, 'click', '[data-status]', function (e, el) {
+        dom.on(root, 'click', '#tc-pane-collection [data-status]', function (e, el) {
           var next = el.getAttribute('data-status')
           if (next === view.statusSeg) return
           view.statusSeg = next
-          dom.qsa('[data-status]', root).forEach(function (btn) {
+          dom.qsa('#tc-pane-collection [data-status]', root).forEach(function (btn) {
             btn.setAttribute('aria-pressed', btn.getAttribute('data-status') === next ? 'true' : 'false')
           })
           applyFilters()
@@ -496,6 +698,20 @@
           if (act === 'detail') openDetail(a)
           else if (act === 'receipt') sendReceipt(a)
           else if (act === 'assign') openAssign(a)
+        }),
+
+        // 在途资金：状态页签（只影响列表，不影响 Hero 汇总）
+        dom.on(root, 'click', '#tc-pane-fund [data-fstatus]', function (e, el) {
+          var key = el.getAttribute('data-fstatus')
+          if (key === view.fundStatus) return
+          view.fundStatus = key
+          renderFundTabs()
+          renderFundList()
+        }),
+
+        // 在途资金：条目整行可点，打开详情弹层
+        dom.on(root, 'click', '[data-fid]', function (e, el) {
+          openFundDetail(el.getAttribute('data-fid'))
         })
       ]
 
@@ -503,8 +719,15 @@
 
       ctx.onCleanup(function () {
         offs.forEach(function (off) { off() })
+        // 页面出栈时若在途详情弹层还开着，一并收掉，避免遮罩留在界面上
+        if (view && view.fundSheet) view.fundSheet.close()
         view = null
       })
+    },
+
+    /** 带视图意图进入本页时直接落位（如首页在途资金「详情 ›」→ { view: 'fund' }） */
+    onParams: function (el, params) {
+      if (view && params && params.view) switchView(params.view)
     }
   })
 })((window.PP = window.PP || {}))
