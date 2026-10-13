@@ -3,12 +3,17 @@
    ------------------------------------------------------------
    参考 desktop 版 pages/add_rmb_exchange_account.html：
      步骤 1 账户所属 / 账户类型 / 开户地区 / 账户名称 / 银行账号 /
-            银行名称 / 开户行支行号 / 别名，个人账户额外要 公司名称、
-            统一信用代码、身份证号、历史采购合同
+            银行名称 / 别名，按 所属 × 类型 动态显示条件字段
      步骤 2 授权声明（回填步骤 1 的账户信息）+ 交易密码 + 同意勾选
      步骤 3 申请成功
-   账户类型切换只改 data-only="personal" 行的显隐，已填值留在 DOM 里，
-   来回切换不会丢；提交时按类型决定是否校验个人账户字段。
+   条件字段（见 RULES）：
+     personal          仅个人账户        → I 类银行账户卡提示
+     supplier          仅供应商          → 开户行支行号（CNAPS 行号）
+     supplier-personal 供应商的个人账户  → 公司名称 / 统一信用代码 /
+                                          收款人身份证号 / 历史采购合同
+   即本公司的账户只填基础银行信息，扩展材料只对「供应商 + 个人账户」收集。
+   切换所属/类型只改 data-only 行的显隐，已填值留在 DOM 里，来回切换不丢；
+   校验按同一套规则决定是否检查条件字段。
    弹层统一走 PP.ui（picker / searchPicker / toast）。
    ============================================================ */
 (function (PP) {
@@ -76,20 +81,43 @@
     if (el) el.textContent = text
   }
 
-  /** 个人账户专属行（企业账户时隐藏且不参与校验） */
+  /** 账户所属 / 账户类型 */
+  function isSupplier() { return view.owner === 'supplier' }
   function isPersonal() { return view.type === 'personal' }
 
-  function visibleRows() {
-    return dom.qsa('[data-only="personal"]', view.root)
+  /**
+   * 条件字段规则：data-only 的取值 → 显示条件。
+   *   本公司账户只填基础银行信息；扩展材料只对「供应商 + 个人账户」收集。
+   */
+  var RULES = {
+    personal: function () { return isPersonal() },
+    supplier: function () { return isSupplier() },
+    'supplier-personal': function () { return isSupplier() && isPersonal() }
   }
 
-  function syncTypeRows() {
-    var personal = isPersonal()
-    visibleRows().forEach(function (el) { el.hidden = !personal })
+  /** 给每张分组卡的最后一行收掉分隔线（显隐会改变「最后一行」是谁） */
+  function markLastRow() {
+    dom.qsa('.wizard-card', view.root).forEach(function (card) {
+      var rows = dom.qsa('.frow', card)
+      var shown = rows.filter(function (r) { return !r.hidden })
+      rows.forEach(function (r) { r.classList.remove('frow--last') })
+      if (shown.length) shown[shown.length - 1].classList.add('frow--last')
+    })
+  }
+
+  function syncConditionalRows() {
+    Object.keys(RULES).forEach(function (key) {
+      var show = RULES[key]()
+      dom.qsa('[data-only="' + key + '"]', view.root).forEach(function (el) {
+        el.hidden = !show
+      })
+    })
+    markLastRow()
+
     /* 账户名称占位文案按类型切换（沿用 desktop 版细节） */
     var nameInput = dom.qs('#add-acct-name', view.root)
     if (nameInput) {
-      nameInput.placeholder = personal
+      nameInput.placeholder = isPersonal()
         ? '请输入'
         : '如：深圳市极光贸易有限公司'
     }
@@ -119,11 +147,13 @@
     if (!val('#add-acct-name')) return { msg: '请填写账户名称', sel: '#add-acct-name' }
     if (!rawNum('#add-acct-no')) return { msg: '请填写银行账号', sel: '#add-acct-no' }
     if (!view.bank) return { msg: '请选择银行名称', sel: '#add-bank-btn' }
-    if (!view.branch) return { msg: '请选择开户行支行号', sel: '#add-branch-btn' }
-    if (isPersonal()) {
-      if (!val('#add-company-name')) return { msg: '请填写公司名称', sel: '#add-company-name' }
-      if (!val('#add-credit-code')) return { msg: '请填写统一信用代码', sel: '#add-credit-code' }
-      if (!val('#add-id-card')) return { msg: '请填写收款人身份证号', sel: '#add-id-card' }
+    if (isSupplier()) {
+      if (!view.branch) return { msg: '请选择开户行支行号', sel: '#add-branch-btn' }
+      if (isPersonal()) {
+        if (!val('#add-company-name')) return { msg: '请填写公司名称', sel: '#add-company-name' }
+        if (!val('#add-credit-code')) return { msg: '请填写统一信用代码', sel: '#add-credit-code' }
+        if (!val('#add-id-card')) return { msg: '请填写收款人身份证号', sel: '#add-id-card' }
+      }
     }
     return null
   }
@@ -285,6 +315,7 @@
           b.setAttribute('aria-checked', b === el ? 'true' : 'false')
         })
         view.owner = el.getAttribute('data-owner')
+        syncConditionalRows()
       })
 
       listen('click', '[data-type]', function (e, el) {
@@ -293,7 +324,7 @@
           b.setAttribute('aria-checked', b === el ? 'true' : 'false')
         })
         view.type = el.getAttribute('data-type')
-        syncTypeRows()
+        syncConditionalRows()
       })
 
       /* -------- 开户地区 / 银行名称 -------- */
@@ -368,7 +399,7 @@
       })
 
       /* -------- 初始状态 -------- */
-      syncTypeRows()
+      syncConditionalRows()
       renderFiles()
       goStep(0)
       refresh()

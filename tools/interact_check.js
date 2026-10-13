@@ -300,13 +300,41 @@ async function main() {
           el.dispatchEvent(new Event('input', { bubbles: true }))
         })()`)
       }
-      const pageScope = 'document.querySelector(".page[data-page=\'add-rmb-exchange-account\']")'
+      /* 可见字段行：拿每个 .frow 的标签文本，用于断言条件显隐 */
+      const visibleFields = () => cdp.eval(`[].slice.call(document.querySelectorAll('.page[data-page="add-rmb-exchange-account"] .frow'))
+        .filter(function (f) { return !f.hidden })
+        .map(function (f) { var l = f.querySelector('.frow-label'); return l ? l.textContent.replace(/[*\\s]|选填/g, '') : '' })`)
+      const pickerItemClick = () => click(cdp, '.picker-item', 'document.querySelector("#layer-root .sheet")')
 
-      // 空表单直接下一步 → 校验提示 + 行内标红
+      // 本公司 + 企业（默认）：只留基础字段，扩展字段一律不显示
+      let s = await visibleFields()
+      check('本公司+企业 → 仅基础字段（7 行）',
+        s.length === 7 && s.indexOf('开户行支行号：') < 0 && s.indexOf('公司名称：') < 0, JSON.stringify(s))
+
+      // 本公司 + 个人：仍不显示公司名称/信用代码/支行号/身份证/合同
+      await click(cdp, '.radio-pill[data-type="personal"]')
+      await sleep(150)
+      s = await visibleFields()
+      check('本公司+个人 → 扩展字段仍全部隐藏',
+        s.length === 7 && ['公司名称：', '统一信用代码：', '开户行支行号：', '收款人身份证号：', '历史采购合同：']
+          .every(function (x) { return s.indexOf(x) < 0 }), JSON.stringify(s))
+      s = await cdp.eval(`document.querySelector('.page[data-page="add-rmb-exchange-account"] .hint-warn').hidden`)
+      check('本公司+个人 → I 类卡提示仍显示', s === false, String(s))
+
+      // 空表单下一步 → 校验提示
       await click(cdp, '#add-next-btn')
       await sleep(150)
-      let s = await cdp.eval(`document.querySelector('#toast-layer').textContent`)
+      s = await cdp.eval(`document.querySelector('#toast-layer').textContent`)
       check('空表单校验 → toast 提示', /请填写/.test(s), s)
+
+      // 供应商 + 个人：5 个扩展字段全部出现
+      await click(cdp, '.radio-pill[data-owner="supplier"]')
+      await sleep(150)
+      s = await visibleFields()
+      check('供应商+个人 → 扩展字段全部显示（12 行）',
+        s.length === 12 && ['公司名称：', '统一信用代码：', '开户行支行号：', '收款人身份证号：', '历史采购合同：']
+          .every(function (x) { return s.indexOf(x) >= 0 }), JSON.stringify(s))
+
       // 未选银行时点支行号 → toast 引导 + 银行行标红
       await click(cdp, '#add-branch-btn')
       await sleep(200)
@@ -317,20 +345,17 @@ async function main() {
       check('未选银行点支行号 → toast 引导并标红银行行',
         /先选择银行/.test(s.toast) && s.errRow, JSON.stringify(s))
 
-      // 切到个人账户：专属字段出现
-      await click(cdp, '.radio-pill[data-type="personal"]')
-      await sleep(120)
-      s = await cdp.eval(`({
-        visible: [].slice.call(document.querySelectorAll('.page[data-page="add-rmb-exchange-account"] [data-only="personal"]')).filter(function (el) { return !el.hidden }).length,
-        warn: document.querySelector('.page[data-page="add-rmb-exchange-account"] .hint-warn').hidden
-      })`)
-      check('个人账户字段全部显示（5 处）', s.visible === 5 && s.warn === false, JSON.stringify(s))
-
-      // 切回企业账户：专属字段隐藏
+      // 供应商 + 企业：只剩支行号这一项扩展字段
       await click(cdp, '.radio-pill[data-type="enterprise"]')
-      await sleep(120)
-      s = await cdp.eval(`[].slice.call(document.querySelectorAll('.page[data-page="add-rmb-exchange-account"] [data-only="personal"]')).filter(function (el) { return !el.hidden }).length`)
-      check('切回企业账户后字段隐藏', s === 0, String(s))
+      await sleep(150)
+      s = await visibleFields()
+      check('供应商+企业 → 仅保留支行号（8 行）',
+        s.length === 8 && s.indexOf('开户行支行号：') >= 0 && s.indexOf('公司名称：') < 0 && s.indexOf('历史采购合同：') < 0,
+        JSON.stringify(s))
+
+      // 回到供应商 + 个人，继续走完整流程
+      await click(cdp, '.radio-pill[data-type="personal"]')
+      await sleep(150)
 
       // 开户地区 picker
       await click(cdp, '#add-region-btn')
@@ -349,7 +374,7 @@ async function main() {
       await sleep(120)
       s = await cdp.eval(`document.querySelectorAll('#layer-root .picker-item').length`)
       check('银行搜索「招商」→ 1 条', s === 1, s)
-      await click(cdp, '.picker-item', 'document.querySelector("#layer-root .sheet")')
+      await pickerItemClick()
       await sleep(200)
       s = await cdp.eval(`document.querySelector('#add-bank-value').textContent`)
       check('银行选中回填', s === '招商银行', s)
@@ -361,14 +386,23 @@ async function main() {
       check('招商银行支行列表 3 条', s === 3, s)
       s = await cdp.eval(`[].slice.call(document.querySelectorAll('#layer-root .picker-item .picker-title')).some(function (t) { return /前海/.test(t.textContent) })`)
       check('支行列表含「前海支行」', s === true, String(s))
-      await click(cdp, '.picker-item', 'document.querySelector("#layer-root .sheet")')
+      await pickerItemClick()
       await sleep(200)
       s = await cdp.eval(`document.querySelector('#add-branch-value').textContent`)
       check('支行选中回填', /前海/.test(s), s)
 
-      // 补齐必填项 → 进入授权步骤（银行账号失焦后按 4 位分组展示）
-      await setVal('#add-acct-name', '深圳市极光贸易有限公司')
+      // 基础项填齐后，缺失的条件必填项先被拦下
+      await setVal('#add-acct-name', '罗炬')
       await setVal('#add-acct-no', '6222020200123456789')
+      await click(cdp, '#add-next-btn')
+      await sleep(200)
+      s = await cdp.eval(`document.querySelector('#toast-layer').textContent`)
+      check('供应商+个人 缺公司名称 → 拦下', /公司名称/.test(s), s)
+
+      // 补齐条件必填项 → 进入授权步骤（银行账号失焦后按 4 位分组展示）
+      await setVal('#add-company-name', '深圳市极光贸易有限公司')
+      await setVal('#add-credit-code', '91440300MA5F1234XY')
+      await setVal('#add-id-card', '440301199001011234')
       await click(cdp, '#add-next-btn')
       await sleep(200)
       s = await cdp.eval(`({
@@ -379,7 +413,7 @@ async function main() {
         confirmDisabled: document.querySelector('#add-confirm-btn').getAttribute('aria-disabled')
       })`)
       check('进入授权步骤且账户信息回填',
-        s.step === '1' && s.bank === '招商银行' && /极光贸易/.test(s.name) && s.no === '6222 0202 0012 3456 789',
+        s.step === '1' && s.bank === '招商银行' && s.name === '罗炬' && s.no === '6222 0202 0012 3456 789',
         JSON.stringify(s))
       check('未填密码/未勾选时提交置灰', s.confirmDisabled === 'true', s.confirmDisabled)
 
