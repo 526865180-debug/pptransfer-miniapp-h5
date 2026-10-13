@@ -1,12 +1,15 @@
 /* ============================================================
-   pages/rmb-exchange-withdraw.js · 结汇提现（3 步向导）
+   pages/rmb-exchange-withdraw.js · 结汇提现
    ------------------------------------------------------------
-   职责：分步切换、金额与申报金额校验、提现账户选择、确认弹层、结果页。
-   计算逻辑与文案逐行对齐小程序
-   pages/rmb-exchange-withdraw/rmb-exchange-withdraw.js：
-     手续费 = 金额 × 0.10%，到账 = 金额 − 手续费，
-     下一步条件 = 金额 ≥ 100 且 0 < 申报合计 ≤ 金额。
-   弹层统一走 PP.ui（confirm / picker / toast），页面不写遮罩结构。
+   职责：金额双向计算、提现至单选、结汇提现账户搜索选择、
+         分步切换、确认弹层、结果页。
+   金额规则：
+     基础手续费 = 提现金额 × 0.10%
+     到账金额   = 提现金额 − 手续费
+     反算       = 到账金额 ÷ (1 − 0.10%)
+   两个输入框「最后编辑的为准」：改提现金额 → 刷到账金额；
+   改到账金额 → 反算提现金额。手续费未定前显示 “-- CNH”。
+   弹层统一走 PP.ui（sheet / confirm / toast），页面不写遮罩结构。
    ============================================================ */
 (function (PP) {
   'use strict'
@@ -15,47 +18,37 @@
 
   /** 手续费率 0.10% */
   var FEE_RATE = 0.001
-  /** 单笔最低提现金额（CNH） */
-  var MIN_AMOUNT = 100
-  /** 可结汇提现金额（演示数据） */
-  var AVAILABLE = { symbol: '¥', value: 1000000 }
+  /** 可提现金额（CNH，演示数据） */
+  var AVAILABLE = 997
 
-  /** 申报订单（演示数据，字段与接口同名） */
-  var ORDER_ROWS = [
-    {
-      id: 'o1', no: 'ORD20260701001', contract: 'CT-2026-0701-A',
-      buyer: 'Global Trade GmbH', goods: '消费电子配件',
-      uploadTime: '2026-07-01', symbol: '$', amount: 12000
-    },
-    {
-      id: 'o2', no: 'ORD20260628007', contract: 'CT-2026-0628-C',
-      buyer: 'Sunrise Import LLC', goods: '家居家纺',
-      uploadTime: '2026-06-28', symbol: '$', amount: 8600
-    },
-    {
-      id: 'o3', no: 'ORD20260625013', contract: 'CT-2026-0625-B',
-      buyer: 'Nordic Supplies AB', goods: '户外用品',
-      uploadTime: '2026-06-25', symbol: '$', amount: 5200
-    }
+  /** 结汇提现账户（演示数据；sub 用于搜索：账户名称/备注名/卡号/银行名称） */
+  var ACCOUNTS = [
+    { value: 'cmb-8888', title: '招商银行 · 6225 **** 8888', sub: '顾人 · 备注：主账户' },
+    { value: 'icbc-6301', title: '工商银行 · 6212 **** 6301', sub: '对公账户 · 备注：货款' },
+    { value: 'ccb-2044', title: '建设银行 · 6217 **** 2044', sub: '顾人 · 备注：备用' },
+    { value: 'boc-7715', title: '中国银行 · 6216 **** 7715', sub: '财务部 · 备注：结算' },
+    { value: 'comm-0913', title: '交通银行 · 6222 **** 0913', sub: '顾人 · 备注：供应商付款' },
+    { value: 'spdb-3308', title: '浦发银行 · 6225 **** 3308', sub: '极光科技 · 备注：对私' }
   ]
 
-  /** 可选提现账户（演示数据；首项与小程序默认展示一致） */
-  var WITHDRAW_ACCOUNTS = [
-    { value: 'cmb-8888', title: '招商银行 · 6225 **** 8888（顾人）', sub: '默认提现账户' },
-    { value: 'icbc-6301', title: '工商银行 · 6212 **** 6301（顾人）', sub: '对公账户' }
-  ]
+  var TO_LABELS = { company: '本公司', supplier: '供应商' }
 
   /** 当前页面实例的可变状态；未挂载时为 null */
   var view = null
 
   /* ---------------------------------------------- 工具 */
 
-  /** '1,000,000.00' —— 提现相关金额一律两位小数 */
+  /** '997.00' —— 提现相关金额一律两位小数 */
   function num(n) {
     return PP.format.fmtNum(n, 2)
   }
 
-  /** 金额输入只保留数字与一个小数点，避免出现科学计数法一类的脏值 */
+  /** 保留两位的合法浮点 */
+  function round2(n) {
+    return Math.round(n * 100) / 100
+  }
+
+  /** 金额输入只保留数字与一个小数点 */
   function sanitize(raw) {
     var s = String(raw).replace(/[^\d.]/g, '')
     var dot = s.indexOf('.')
@@ -63,99 +56,107 @@
     return s
   }
 
-  function text(sel, value) {
-    var el = dom.qs(sel, view.root)
-    if (el) el.textContent = value
-  }
-
-  function amountValue() {
-    return parseFloat(view.amount) || 0
-  }
-
-  function declaredValue() {
-    return view.rows.reduce(function (sum, r) {
-      if (!r.checked || !r.declared) return sum
-      return sum + (parseFloat(r.declared) || 0)
-    }, 0)
-  }
-
-  function feeValue() {
-    return amountValue() * FEE_RATE
-  }
-
-  function arrivalValue() {
-    return Math.max(amountValue() - feeValue(), 0)
-  }
+  function amountValue() { return parseFloat(view.amount) || 0 }
+  function arrivalValue() { return parseFloat(view.arrival) || 0 }
+  function feeValue() { return round2(amountValue() * FEE_RATE) }
 
   function canNext() {
     var amount = amountValue()
-    var declared = declaredValue()
-    return amount >= MIN_AMOUNT && declared > 0 && declared <= amount
+    return amount > 0 && amount <= AVAILABLE &&
+      arrivalValue() > 0 && !!view.account
+  }
+
+  /** 下一步不可用时的原因，用于点击置灰按钮后的 toast */
+  function nextBlocker() {
+    if (amountValue() <= 0) return '请输入提现金额'
+    if (amountValue() > AVAILABLE) return '超过可提现金额 ' + num(AVAILABLE) + ' CNH'
+    if (!view.account) return '请选择结汇提现账户'
+    if (arrivalValue() <= 0) return '请确认到账金额'
+    return ''
   }
 
   /* ---------------------------------------------- 渲染 */
 
-  function orderHTML(r) {
-    var checked = !!r.checked
-    return (
-      '<li class="order" data-id="' + dom.esc(r.id) + '" data-selected="' + (checked ? 'true' : 'false') + '">' +
-      '<button type="button" class="order-head" data-id="' + dom.esc(r.id) + '"' +
-      ' aria-pressed="' + (checked ? 'true' : 'false') + '"' +
-      ' aria-label="' + dom.esc('选择申报订单 ' + r.no) + '">' +
-      '<span class="order-check" aria-hidden="true">' +
-      '<svg aria-hidden="true"><use href="#i-check"/></svg></span>' +
-      '<span class="order-head-body">' +
-      '<span class="order-no">' + dom.esc(r.no) + '</span>' +
-      '<span class="order-sub">合同编号 ' + dom.esc(r.contract) + '</span>' +
-      '</span>' +
-      '<span class="order-amount num">' + dom.esc(PP.format.withSymbol(r.symbol, r.amount)) + '</span>' +
-      '</button>' +
-
-      '<div class="order-meta">' +
-      '<span class="order-meta-item">买方 ' + dom.esc(r.buyer) + '</span>' +
-      '<span class="order-meta-item">商品 ' + dom.esc(r.goods) + '</span>' +
-      '<span class="order-meta-item">上传 ' + dom.esc(r.uploadTime) + '</span>' +
-      '</div>' +
-
-      '<div class="order-declared"' + (checked ? '' : ' hidden') + '>' +
-      '<label class="order-declared-label" for="declared-' + dom.esc(r.id) + '">订单申报金额</label>' +
-      '<input class="order-declared-input" id="declared-' + dom.esc(r.id) + '"' +
-      ' data-id="' + dom.esc(r.id) + '" type="text" inputmode="decimal" autocomplete="off"' +
-      ' placeholder="0.00" value="' + dom.esc(r.declared || '') + '">' +
-      '</div>' +
-      '</li>'
-    )
-  }
-
-  function renderOrders() {
-    dom.setHTML(dom.qs('#order-list', view.root), dom.raw(view.rows.map(orderHTML).join('')))
-    var checked = view.rows.filter(function (r) { return r.checked }).length
-    dom.qs('#order-count', view.root).textContent =
-      '共 ' + view.rows.length + ' 条 · 已选 ' + checked + ' 条'
-  }
-
-  /** 把所有派生金额与按钮可用态刷新一遍 */
   function refresh() {
     if (!view || !view.root) return
 
-    text('#declared-total', num(declaredValue()) + ' CNH')
-    text('#confirm-amount', num(amountValue()) + ' CNH')
-    text('#confirm-fee', num(feeValue()) + ' CNH')
-    text('#confirm-arrival', num(arrivalValue()) + ' CNH')
+    // 手续费：金额未填时保持截图中的 “-- CNH”
+    dom.qs('#fee-value', view.root).textContent =
+      amountValue() > 0 ? num(feeValue()) + ' CNH' : '-- CNH'
 
-    var bad = view.amount !== '' && amountValue() < MIN_AMOUNT
+    var bad = view.amount !== '' && amountValue() > AVAILABLE
     var input = dom.qs('#amount-input', view.root)
     var err = dom.qs('#amount-error', view.root)
     input.setAttribute('aria-invalid', bad ? 'true' : 'false')
     err.hidden = !bad
-    err.textContent = bad ? '单笔最低 100.00 CNH' : ''
+    err.textContent = bad ? '超过可提现金额 ' + num(AVAILABLE) + ' CNH' : ''
 
-    // 用 aria-disabled 而不是 disabled：保留点击后说明原因的提示，
-    // 与小程序里「按钮置灰但仍会 toast 原因」的行为一致
     dom.qs('#next-btn', view.root)
       .setAttribute('aria-disabled', canNext() ? 'false' : 'true')
     dom.qs('#submit-btn', view.root)
       .setAttribute('aria-disabled', view.pwd.length === 6 ? 'false' : 'true')
+  }
+
+  /* ---------------------------------------------- 账户搜索选择 */
+
+  function acctItemHTML(a) {
+    return (
+      '<button type="button" class="acct-item' +
+      (view.account === a.value ? ' is-active' : '') + '" data-value="' + dom.esc(a.value) + '"' +
+      ' aria-pressed="' + (view.account === a.value ? 'true' : 'false') + '">' +
+      '<span class="acct-body">' +
+      '<span class="acct-title num">' + dom.esc(a.title) + '</span>' +
+      '<span class="acct-sub">' + dom.esc(a.sub) + '</span>' +
+      '</span>' +
+      '<svg class="acct-check" aria-hidden="true"><use href="#i-check"/></svg>' +
+      '</button>'
+    )
+  }
+
+  function pickAccount() {
+    var api
+    var body =
+      '<div class="acct-search-wrap">' +
+      '<input class="field-input acct-search" id="acct-search" type="search" autofocus' +
+      ' autocomplete="off" placeholder="账户名称/备注名/卡号/银行名称">' +
+      '</div>' +
+      '<div class="acct-list" id="acct-list"></div>'
+
+    api = PP.ui.sheet({
+      title: '选择结汇提现账户',
+      body: body,
+      onMount: function (root) {
+        var list = dom.qs('#acct-list', root)
+        var search = dom.qs('#acct-search', root)
+
+        function renderList() {
+          var kw = (search.value || '').trim().toLowerCase()
+          var rows = ACCOUNTS.filter(function (a) {
+            return !kw || (a.title + ' ' + a.sub).toLowerCase().indexOf(kw) >= 0
+          })
+          list.innerHTML = rows.length
+            ? rows.map(acctItemHTML).join('')
+            : '<p class="acct-empty">未找到匹配的账户</p>'
+        }
+
+        dom.on(root, 'input', '#acct-search', function () { renderList() })
+        dom.on(root, 'click', '.acct-item', function (e, el) {
+          var value = el.getAttribute('data-value')
+          view.account = value
+          ACCOUNTS.forEach(function (a) {
+            if (a.value === value) {
+              dom.qs('#account-value', view.root).textContent = a.title
+              dom.qs('#account-value', view.root).classList.remove('is-placeholder')
+            }
+          })
+          api.close()
+          dom.haptic()
+          refresh()
+        })
+
+        renderList()
+      }
+    })
   }
 
   /* ---------------------------------------------- 分步 */
@@ -183,6 +184,19 @@
     if (body) body.scrollTop = 0
   }
 
+  /** 进入确认步骤前，把步骤 1 的选择同步到确认卡 */
+  function syncConfirm() {
+    dom.qs('#confirm-amount', view.root).textContent = num(amountValue()) + ' CNH'
+    dom.qs('#confirm-to', view.root).textContent = TO_LABELS[view.to]
+    var acct = ACCOUNTS.filter(function (a) { return a.value === view.account })[0]
+    dom.qs('#confirm-account', view.root).textContent = acct ? acct.title : '--'
+    dom.qs('#confirm-fee', view.root).textContent = num(feeValue()) + ' CNH'
+    dom.qs('#confirm-arrival', view.root).textContent = num(arrivalValue()) + ' CNH'
+    var memoRow = dom.qs('#confirm-memo-row', view.root)
+    memoRow.hidden = !view.memo
+    dom.qs('#confirm-memo', view.root).textContent = view.memo
+  }
+
   /* ---------------------------------------------- 提交 */
 
   function stamp() {
@@ -194,9 +208,9 @@
 
   function submit() {
     view.orderNo = 'EXC' + stamp()
-    text('#result-amount', num(amountValue()) + ' CNH')
-    text('#result-arrival', num(arrivalValue()) + ' CNH')
-    text('#result-order-no', view.orderNo)
+    dom.qs('#result-amount', view.root).textContent = num(amountValue()) + ' CNH'
+    dom.qs('#result-arrival', view.root).textContent = num(arrivalValue()) + ' CNH'
+    dom.qs('#result-order-no', view.root).textContent = view.orderNo
 
     var pwd = dom.qs('#pwd-input', view.root)
     pwd.value = ''
@@ -214,82 +228,84 @@
         root: root,
         step: 0,
         amount: '',
+        arrival: '',
+        to: 'company',
+        account: null,
+        memo: '',
         pwd: '',
-        account: WITHDRAW_ACCOUNTS[0].value,
-        orderNo: '',
-        rows: ORDER_ROWS.map(function (r) {
-          var row = Object.assign({}, r)
-          row.checked = false
-          row.declared = ''
-          return row
-        })
+        orderNo: ''
       }
 
       var offs = []
       function listen(type, sel, fn) { offs.push(dom.on(root, type, sel, fn)) }
 
-      /* -------- 步骤 1：金额与申报订单 -------- */
+      /* -------- 金额双向计算 -------- */
 
-      listen('click', '#fill-all', function () {
-        view.amount = String(AVAILABLE.value)
-        dom.qs('#amount-input', root).value = view.amount
-        dom.haptic()
-        refresh()
-      })
-
+      // 改提现金额 → 重算到账金额
       listen('input', '#amount-input', function (e, el) {
         var clean = sanitize(el.value)
         if (clean !== el.value) el.value = clean
         view.amount = clean
+        var amount = amountValue()
+        var arrival = amount > 0 ? String(round2(amount * (1 - FEE_RATE))) : ''
+        view.arrival = arrival
+        dom.qs('#arrival-input', root).value = arrival
         refresh()
       })
 
-      listen('click', '.order-head', function (e, btn) {
-        var id = btn.getAttribute('data-id')
-        view.rows = view.rows.map(function (r) {
-          if (r.id !== id) return r
-          var row = Object.assign({}, r)
-          row.checked = !r.checked
-          // 取消勾选时清掉已填的申报金额（与小程序一致）
-          if (r.checked) row.declared = ''
-          return row
-        })
-        renderOrders()
-        refresh()
-      })
-
-      listen('input', '.order-declared-input', function (e, el) {
-        var id = el.getAttribute('data-id')
+      // 改到账金额 → 反算提现金额
+      listen('input', '#arrival-input', function (e, el) {
         var clean = sanitize(el.value)
         if (clean !== el.value) el.value = clean
-        view.rows.forEach(function (r) { if (r.id === id) r.declared = clean })
+        view.arrival = clean
+        var arrival = arrivalValue()
+        var amount = arrival > 0 ? String(round2(arrival / (1 - FEE_RATE))) : ''
+        view.amount = amount
+        dom.qs('#amount-input', root).value = amount
         refresh()
       })
 
+      listen('click', '#fill-all', function () {
+        view.amount = String(AVAILABLE)
+        dom.qs('#amount-input', root).value = view.amount
+        var arrival = String(round2(AVAILABLE * (1 - FEE_RATE)))
+        view.arrival = arrival
+        dom.qs('#arrival-input', root).value = arrival
+        dom.haptic()
+        refresh()
+      })
+
+      /* -------- 提现至单选 -------- */
+
+      listen('click', '.radio-pill', function (e, el) {
+        if (el.getAttribute('aria-checked') === 'true') return
+        dom.qsa('.radio-pill', root).forEach(function (b) {
+          b.setAttribute('aria-checked', b === el ? 'true' : 'false')
+        })
+        view.to = el.getAttribute('data-value')
+        dom.haptic()
+      })
+
+      /* -------- 结汇提现账户 -------- */
+
+      listen('click', '#account-btn', pickAccount)
+
+      /* -------- 分步与提交 -------- */
+
       listen('click', '#next-btn', function () {
-        if (!canNext()) {
-          PP.ui.toast('请填写金额并关联申报订单')
+        var blocker = nextBlocker()
+        if (blocker) {
+          PP.ui.toast(blocker)
           return
         }
+        syncConfirm()
         goStep(1)
       })
 
-      /* -------- 步骤 2：确认信息 -------- */
-
       listen('click', '#prev-btn', function () { goStep(0) })
 
-      listen('click', '#account-btn', function () {
-        PP.ui.picker({
-          title: '选择提现账户',
-          value: view.account,
-          options: WITHDRAW_ACCOUNTS
-        }).then(function (value) {
-          if (!value || !view) return
-          view.account = value
-          WITHDRAW_ACCOUNTS.forEach(function (a) {
-            if (a.value === value) text('#confirm-account', a.title)
-          })
-        })
+      listen('input', '#memo-input', function (e, el) {
+        view.memo = el.value.trim()
       })
 
       listen('input', '#pwd-input', function (e, el) {
@@ -313,8 +329,6 @@
       })
 
       /* -------- 初始状态 -------- */
-      text('#available-amount', PP.format.withSymbol(AVAILABLE.symbol, AVAILABLE.value))
-      renderOrders()
       goStep(0)
       refresh()
 

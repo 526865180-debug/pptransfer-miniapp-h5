@@ -1,17 +1,18 @@
 <!--
-  pages/rmb-exchange-withdraw.html · 结汇提现（3 步向导）
+  pages/rmb-exchange-withdraw.html · 结汇提现
   ---------------------------------------------------------------
   三步在同一页内切换（section 的 hidden 属性），不新开路由。
-  步骤指示器、金额卡、申报订单卡为静态结构；订单行（3 条同构、带勾选与
-  申报金额输入）由 rmb-exchange-withdraw.js 渲染。
-  提现账户用 PP.ui.picker 选择，提交前用 PP.ui.confirm 二次确认。
+  步骤 1 对齐产品截图：可提现金额 / 提现金额(全部提现) / 提现至单选 /
+  结汇提现账户(搜索选择) / 基础手续费 / 到账金额(反算) / 转账附言。
+  步骤 2 确认信息 + 交易密码；步骤 3 提交成功。
+  账户搜索选择用 PP.ui.sheet；提交前用 PP.ui.confirm 二次确认。
 -->
 
 <!-- 步骤指示器：data-tone 由 JS 按当前进度刷新 -->
 <ol class="steps" id="steps" aria-label="结汇提现流程">
   <li class="step" data-tone="blue" aria-current="step">
     <span class="step-dot">1</span>
-    <span class="step-text">填写金额</span>
+    <span class="step-text">填写信息</span>
   </li>
   <li class="step" data-tone="neutral">
     <span class="step-dot">2</span>
@@ -23,41 +24,73 @@
   </li>
 </ol>
 
-<!-- ===== 步骤 1：填写金额与申报订单 ===== -->
+<!-- ===== 步骤 1：填写提现信息 ===== -->
 <section class="wizard-step" data-step="0">
   <div class="card quota">
     <div class="quota-body">
-      <span class="quota-label">可结汇提现金额</span>
-      <span class="quota-amount num" id="available-amount">¥ 1,000,000.00</span>
+      <span class="quota-label">可提现金额</span>
+      <span class="quota-amount num" id="available-amount">997.00 CNH</span>
     </div>
-    <button type="button" class="btn btn--ghost btn--sm" id="fill-all">一键填写</button>
+    <button type="button" class="quota-link" data-go="exchange">去换汇</button>
   </div>
 
   <div class="card wizard-card">
-    <div class="field">
-      <label class="field-label" for="amount-input">结汇提现金额 (CNH)</label>
-      <input class="field-input" id="amount-input" type="text" inputmode="decimal"
-             autocomplete="off" placeholder="请输入提现金额">
-      <span class="field-hint">单笔最低 100.00 CNH，提现手续费 0.10%</span>
+    <!-- 提现金额 -->
+    <div class="xfield">
+      <label class="xfield-label" for="amount-input">
+        <i class="req" aria-hidden="true">*</i>提现金额：
+      </label>
+      <div class="amt-wrap">
+        <input class="field-input amt-input num" id="amount-input" type="text"
+               inputmode="decimal" autocomplete="off" placeholder="请输入提现金额">
+        <button type="button" class="amt-all" id="fill-all">全部提现</button>
+      </div>
       <span class="field-error" id="amount-error" role="alert" hidden></span>
     </div>
 
-    <div class="declared">
-      <span class="declared-label">结汇申报金额</span>
-      <span class="declared-value num" id="declared-total">0.00 CNH</span>
-    </div>
-    <span class="field-hint">仅能关联一年内的订单</span>
-  </div>
-
-  <div class="card wizard-card">
-    <div class="section-head">
-      <div>
-        <h2 class="section-title">关联申报订单</h2>
-        <span class="section-sub">请选择本次提现对应的申报订单，并填写申报金额</span>
+    <!-- 提现至 -->
+    <div class="xfield">
+      <span class="xfield-label" id="to-label"><i class="req" aria-hidden="true">*</i>提现至：</span>
+      <div class="radio-group" role="radiogroup" aria-labelledby="to-label">
+        <button type="button" class="radio-pill" role="radio" aria-checked="true"  data-value="company">本公司</button>
+        <button type="button" class="radio-pill" role="radio" aria-checked="false" data-value="supplier">供应商</button>
       </div>
     </div>
-    <ul class="order-list" id="order-list"></ul>
-    <p class="order-count" id="order-count">共 3 条 · 已选 0 条</p>
+
+    <!-- 结汇提现账户 -->
+    <div class="xfield">
+      <span class="xfield-label" id="acct-label"><i class="req" aria-hidden="true">*</i>结汇提现账户：</span>
+      <button type="button" class="select-field" id="account-btn"
+              aria-haspopup="dialog" aria-labelledby="acct-label">
+        <span class="select-value is-placeholder" id="account-value">请选择结汇提现账户</span>
+        <svg class="select-caret" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+      </button>
+      <span class="select-hint">可输入账户名称/备注名/卡号/银行名称搜索</span>
+      <button type="button" class="link-btn" data-demo="添加结汇提现账户即将上线">添加结汇提现账户</button>
+    </div>
+
+    <!-- 基础手续费 -->
+    <div class="detail-row fee-row">
+      <span class="detail-label">基础手续费</span>
+      <span class="detail-value num" id="fee-value">-- CNH</span>
+    </div>
+
+    <!-- 到账金额 -->
+    <div class="xfield">
+      <label class="xfield-label" for="arrival-input">
+        <i class="req" aria-hidden="true">*</i>到账金额：
+      </label>
+      <input class="field-input num" id="arrival-input" type="text"
+             inputmode="decimal" autocomplete="off"
+             placeholder="您可输入到账金额，将为您自动计算提现金额">
+    </div>
+
+    <!-- 转账附言 -->
+    <div class="xfield xfield--last">
+      <label class="xfield-label" for="memo-input">转账附言：</label>
+      <textarea class="memo-input" id="memo-input" rows="3" maxlength="50"
+                placeholder="选填，将随款项展示给收款方"></textarea>
+    </div>
   </div>
 
   <div class="footbar">
@@ -73,27 +106,29 @@
       <h2 class="section-title">提现信息确认</h2>
     </div>
     <div class="detail-row">
-      <span class="detail-label">提现类型</span>
-      <span class="detail-value">结汇提现</span>
-    </div>
-    <div class="detail-row">
-      <span class="detail-label">申请金额</span>
+      <span class="detail-label">提现金额</span>
       <span class="detail-value num" id="confirm-amount">0.00 CNH</span>
     </div>
     <div class="detail-row">
-      <span class="detail-label">手续费</span>
+      <span class="detail-label">提现至</span>
+      <span class="detail-value" id="confirm-to">本公司</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">结汇提现账户</span>
+      <span class="detail-value" id="confirm-account">--</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">基础手续费</span>
       <span class="detail-value num" id="confirm-fee">0.00 CNH</span>
     </div>
     <div class="detail-row">
       <span class="detail-label">到账金额</span>
       <span class="detail-value num" data-tone="success" id="confirm-arrival">0.00 CNH</span>
     </div>
-    <button type="button" class="detail-row account-row" id="account-btn"
-            aria-label="选择提现账户">
-      <span class="detail-label">提现账户</span>
-      <span class="detail-value" id="confirm-account">招商银行 · 6225 **** 8888（顾人）</span>
-      <svg class="row-chev" aria-hidden="true"><use href="#i-chevron-right"/></svg>
-    </button>
+    <div class="detail-row" id="confirm-memo-row" hidden>
+      <span class="detail-label">转账附言</span>
+      <span class="detail-value" id="confirm-memo"></span>
+    </div>
   </div>
 
   <div class="card wizard-card">
