@@ -13,6 +13,10 @@
    筛选弹层内编辑的是 draft（草稿），点「查询」才写回 filters ——
    与小程序一致，避免边改边筛导致列表跳动。
 
+   两个列表都做客户端分页（每页 PAGE_SIZE 条，见 PP.ui.pager）：
+   数据本来就在内存里，翻页只换一段切片，不重新过滤。
+   筛选条件变化会把页码拨回第 1 页，否则会停在一个空页上。
+
    两个视图共存于同一页面根元素下，事件委托的属性名必须互不重叠：
    收款用 data-status / data-act / data-id，在途用 data-fstatus / data-fid。
    ============================================================ */
@@ -20,6 +24,9 @@
   'use strict'
 
   var dom = PP.dom
+
+  /** 每页条数：两个列表共用（演示数据量小，5 条即可看出翻页效果） */
+  var PAGE_SIZE = 5
 
   /** 收款状态 → 徽章色调（对应小程序 STATUS_CLASS 的 绿 / 橙 / 红） */
   var STATUS_TONE = { '已入账': 'success', '审核中': 'warning', '已驳回': 'danger' }
@@ -140,6 +147,36 @@
 
   /* ---------------------------------------------- 渲染 */
 
+  /** 总页数（至少 1，空列表也不出现「第 0 页」） */
+  function pageCount(total) {
+    return Math.max(1, Math.ceil(total / PAGE_SIZE))
+  }
+
+  /** 取当前页的数据切片 */
+  function pageSlice(list, page) {
+    var start = (page - 1) * PAGE_SIZE
+    return list.slice(start, start + PAGE_SIZE)
+  }
+
+  /** 渲染底部翻页控件（单页时组件自行清空并隐藏） */
+  function renderPager(sel, total, page, label, onGo) {
+    return PP.ui.pager({
+      el: dom.qs(sel, view.root),
+      total: total,
+      page: page,
+      pageSize: PAGE_SIZE,
+      label: label,
+      onGo: onGo
+    })
+  }
+
+  /** 翻页后把视图滚回顶部，用户从本页第一条继续往下看 */
+  function scrollViewTop() {
+    if (!view.root) return
+    if (view.root.scrollTo) view.root.scrollTo({ top: 0, behavior: 'smooth' })
+    else view.root.scrollTop = 0
+  }
+
   function rowHTML(a) {
     return (
       '<li class="coll-card">' +
@@ -175,11 +212,23 @@
   }
 
   function render() {
+    // 筛选后条数变少时，先把越界的页码收回来再切片，否则会渲染出一个空页
+    if (view.page > pageCount(view.rows.length)) view.page = pageCount(view.rows.length)
+
     var listEl = dom.qs('#tc-list', view.root)
-    dom.renderList(listEl, view.rows, rowHTML)
-    dom.toggle(listEl, view.rows.length > 0)
-    dom.toggle(dom.qs('#tc-empty', view.root), view.rows.length === 0)
+    var rows = pageSlice(view.rows, view.page)
+    dom.renderList(listEl, rows, rowHTML)
+    dom.toggle(listEl, rows.length > 0)
+    dom.toggle(dom.qs('#tc-empty', view.root), rows.length === 0)
+    // 计数始终是筛选后的总数，不受当前页影响
     dom.qs('#tc-count', view.root).textContent = '共 ' + view.rows.length + ' 条收款记录'
+
+    var p = renderPager('#tc-pager', view.rows.length, view.page, '收款记录分页', function (page) {
+      view.page = page
+      render()
+      scrollViewTop()
+    })
+    view.page = p.page
   }
 
   function refreshCounts() {
@@ -245,6 +294,8 @@
 
   function applyFilters() {
     view.rows = getFiltered()
+    // 条件一变，结果集就不是刚才那一批了，页码必须回到第 1 页
+    view.page = 1
     syncFilterBadge()
     render()
   }
@@ -493,7 +544,8 @@
         dom.on(root, 'click', '[data-save]', function () {
           a.sales = pick
           sheet.close()
-          applyFilters()
+          // 分配不改筛选结果，只重渲染，页码停在原处
+          render()
           PP.ui.toast('业务员已分配：' + pick, { icon: 'success' })
         })
       }
@@ -586,12 +638,21 @@
 
   function renderFundList() {
     var list = fundListOf()
-    dom.renderList(dom.qs('#fund-list', view.root), list, fundRowHTML)
+    if (view.fundPage > pageCount(list.length)) view.fundPage = pageCount(list.length)
+
+    dom.renderList(dom.qs('#fund-list', view.root), pageSlice(list, view.fundPage), fundRowHTML)
     dom.toggle(dom.qs('#fund-list-card', view.root), list.length > 0)
     dom.toggle(dom.qs('#fund-empty', view.root), list.length === 0)
 
     var count = dom.qs('#fund-count', view.root)
     if (count) count.textContent = '共 ' + list.length + ' 条记录'
+
+    var p = renderPager('#fund-pager', list.length, view.fundPage, '在途资金分页', function (page) {
+      view.fundPage = page
+      renderFundList()
+      scrollViewTop()
+    })
+    view.fundPage = p.page
   }
 
   function fundDetailRow(label, value, isNum) {
@@ -642,11 +703,15 @@
         // 每次挂载都从常量复制一份，编辑（分配业务员）不会污染演示数据
         list: COLLECTIONS.map(decorate),
         rows: [],
+        /** 收款列表当前页（1 起） */
+        page: 1,
         searchText: '',
         statusSeg: '',
         filters: emptyFilters(),
         /** 在途资金视图状态（与收款的状态筛选各自独立） */
         fundStatus: 'all',
+        /** 在途列表当前页（1 起） */
+        fundPage: 1,
         fundSheet: null
       }
 
@@ -700,11 +765,12 @@
           else if (act === 'assign') openAssign(a)
         }),
 
-        // 在途资金：状态页签（只影响列表，不影响 Hero 汇总）
+        // 在途资金：状态页签（只影响列表，不影响 Hero 汇总）；换状态即回第 1 页
         dom.on(root, 'click', '#tc-pane-fund [data-fstatus]', function (e, el) {
           var key = el.getAttribute('data-fstatus')
           if (key === view.fundStatus) return
           view.fundStatus = key
+          view.fundPage = 1
           renderFundTabs()
           renderFundList()
         }),

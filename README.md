@@ -43,7 +43,7 @@ src/
     ├── dom.js             查询 / 事件委托 / 安全插值 / 列表渲染
     ├── format.js          金额与日期格式化（千分位、涨跌、脱敏账号）
     ├── store.js           全局状态（用户信息 / 未读数 / 金额可见性）
-    ├── ui.js              反馈与弹层统一收口（toast / sheet / confirm / picker / actions）
+    ├── ui.js              反馈与弹层统一收口（toast / sheet / confirm / picker / searchPicker / actions / pager）
     ├── chart.js           原生 Canvas 折线图（平滑曲线 + 渐变面积 + 当前价标注）
     ├── routes.js          14 页路由表（唯一真源）
     ├── router.js          hash 路由 + 页面栈（switchTab / navigateTo / back 语义）
@@ -86,9 +86,9 @@ python3 tools/bundle.py         # src/ → ./index.html
 
 ```bash
 python3 tools/verify.py                          # 静态校验，6 项
-node tools/render_check.js                       # 产物 14 页渲染 + 截图 → tools/.render-out/
+node tools/render_check.js                       # 产物 13 页渲染 + 截图 → tools/.render-out/
 node tools/render_check.js http://localhost:8080/index.html   # 同上，但验证开发态
-node tools/interact_check.js                     # 交互冒烟，23 项断言
+node tools/interact_check.js                     # 交互冒烟，78 项断言
 ```
 
 `render_check.js` / `interact_check.js` 通过 DevTools Protocol 直连 headless Chrome
@@ -110,6 +110,9 @@ node tools/interact_check.js                     # 交互冒烟，23 项断言
 - **样式作用域**：页面 CSS 一律加 `.page[data-page='<name>']` 前缀（`tools/scope_pages_css.py` 可批量处理），
   避免同名类跨页覆盖；弹层内容挂在 `#layer-root`，相关选择器用 `#layer-root` 前缀。
 - **金额脱敏**：`data-amount` + `body[data-amount-hidden]` 全站联动，首页眼睛开关只切一个状态。
+- **列表分页**：`PP.ui.pager({ el, total, page, pageSize, label, onGo })` 客户端分页
+  （数据在内存，翻页只换切片）。总页数 ≤1 时自动收起；页码越界自动收敛；
+  容器级 `onclick` 覆盖绑定，重复渲染不会累积监听。
 - **无障碍**：语义化标签、`aria-*` 状态、44px 最小命中区（小控件用 `::after` 撑大）、
   弹层焦点管理、`prefers-reduced-motion` 降级。
 
@@ -122,7 +125,7 @@ node tools/interact_check.js                     # 交互冒烟，23 项断言
 | 路由 | 页面 | 底部 tab |
 |---|---|---|
 | `index` | 商户首页 | 首页 |
-| `trade-collection` | 外贸收款管理（页内分段切换「收款记录 / 在途资金」两个视图） | 收款 |
+| `trade-collection` | 外贸收款管理（页内分段切换「收款记录 / 在途资金」两个视图，列表均分页） | 收款 |
 | `rights-center` | 权益中心 | 权益中心 |
 | `order-management` | 订单管理 | — |
 | `exchange` | 换汇中心 | — |

@@ -565,6 +565,69 @@
     box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
   }
 
+  /* ============ 分页（列表底部） ============
+     由 PP.ui.pager 渲染：‹ 1 2 › +「第 x–y 条 / 共 N 条」。
+     单页时不渲染内容并由组件自带 hidden，不占位。 */
+  .pager {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4) 0 var(--space-2);
+  }
+  .pager-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+  .pager-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 6px;
+    font-family: var(--font-num);
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+    color: var(--text-secondary);
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    transition: background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  /* 32px 视觉尺寸不够 44px 命中标准，用伪元素撑开（见守则「可访问性基线」） */
+  .pager-btn::after {
+    content: '';
+    position: absolute;
+    inset: -6px -2px;
+  }
+  .pager-btn > svg { width: 16px; height: 16px; }
+  .pager-btn:active { background: var(--surface-sunken); }
+  .pager-btn[aria-current='page'] {
+    color: var(--text-on-brand);
+    background: var(--color-brand);
+    border-color: var(--color-brand);
+    font-weight: var(--weight-semibold);
+  }
+  .pager-btn:disabled {
+    color: var(--text-placeholder);
+    background: var(--surface-sunken);
+    border-color: var(--border-subtle);
+  }
+  .pager-gap {
+    min-width: 20px;
+    font-size: var(--text-sm);
+    color: var(--text-quaternary);
+    text-align: center;
+  }
+  .pager-info {
+    font-size: var(--text-xs);
+    color: var(--text-quaternary);
+  }
+
   /* ============ 表单 ============ */
   .field { margin-bottom: var(--space-6); }
   .field-label {
@@ -5525,13 +5588,119 @@
       })
     }
 
+    /* ---------------------------------------------------- 分页 */
+
+    /** 页码序列：≤7 页全列，否则首末两页 + 当前页邻域，中间用省略号占位 */
+    function pageSeq(page, pages) {
+      var nums = []
+      if (pages <= 7) {
+        for (var i = 1; i <= pages; i++) nums.push(i)
+        return nums
+      }
+      var candidates = [1, page - 1, page, page + 1, pages]
+      candidates.forEach(function (n) {
+        if (n >= 1 && n <= pages && nums.indexOf(n) < 0) nums.push(n)
+      })
+      nums.sort(function (a, b) { return a - b })
+
+      var out = []
+      nums.forEach(function (n, i) {
+        if (i > 0 && n - nums[i - 1] > 1) out.push('...')
+        out.push(n)
+      })
+      return out
+    }
+
+    function pagerNavBtn(kind, label, disabled) {
+      // 两个方向分开写整串：图标引用要能被 tools/verify.py 静态扫到
+      var chevron = kind === 'prev'
+        ? '<use href="#i-chevron-left"/>'
+        : '<use href="#i-chevron-right"/>'
+      return (
+        '<button type="button" class="pager-btn pager-nav" data-pg="' + kind + '"' +
+        (disabled ? ' disabled' : '') + ' aria-label="' + label + '">' +
+        '<svg aria-hidden="true">' + chevron + '</svg>' +
+        '</button>'
+      )
+    }
+
+    /**
+     * 分页控件（客户端分页：列表数据已在内存，翻页只是换一段切片）
+     *   el        挂载容器；每次调用重写其内容
+     *   total     筛选后的总条数
+     *   page      当前页（1 起，越界自动收敛到 [1, pages]）
+     *   pageSize  每页条数
+     *   label     容器 aria-label（如「收款记录分页」）
+     *   onGo(n)   翻页回调
+     *
+     * 返回 { page, pages, total } —— 调用方用它同步自己保存的页码，
+     * 免得筛选后只剩一页、页码却还停在第 2 页上。
+     * 总页数 ≤ 1 时清空容器并加 hidden，单页列表不出现多余的翻页控件。
+     *
+     * 点击用容器级 onclick 覆盖绑定：列表每次重渲染都会重调本函数，
+     * 覆盖式赋值天然不会累积监听（用 addEventListener 会）。
+     */
+    function pager(opts) {
+      var o = opts || {}
+      var el = o.el
+      var total = Math.max(0, Number(o.total) || 0)
+      var pageSize = Math.max(1, Number(o.pageSize) || 10)
+      var pages = Math.max(1, Math.ceil(total / pageSize))
+      var page = Math.min(Math.max(1, Number(o.page) || 1), pages)
+      var result = { page: page, pages: pages, total: total }
+
+      if (!el) return result
+
+      el.setAttribute('role', 'navigation')
+      el.setAttribute('aria-label', o.label || '分页')
+
+      if (pages <= 1) {
+        dom.setHTML(el, '')
+        el.hidden = true
+        el.onclick = null
+        return result
+      }
+      el.hidden = false
+
+      var start = (page - 1) * pageSize + 1
+      var end = Math.min(total, page * pageSize)
+
+      dom.setHTML(el, dom.raw(
+        '<div class="pager-nav">' +
+          pagerNavBtn('prev', '上一页', page <= 1) +
+          pageSeq(page, pages).map(function (n) {
+            if (n === '...') return '<span class="pager-gap" aria-hidden="true">…</span>'
+            return (
+              '<button type="button" class="pager-btn" data-pg="' + n + '"' +
+              (n === page ? ' aria-current="page"' : '') +
+              ' aria-label="第 ' + n + ' 页">' + n + '</button>'
+            )
+          }).join('') +
+          pagerNavBtn('next', '下一页', page >= pages) +
+        '</div>' +
+        '<p class="pager-info">第 ' + start + '–' + end + ' 条 / 共 ' + total + ' 条</p>'
+      ))
+
+      el.onclick = function (e) {
+        var btn = e.target.closest('[data-pg]')
+        if (!btn || !el.contains(btn) || btn.disabled) return
+        var v = btn.getAttribute('data-pg')
+        var next = v === 'prev' ? page - 1 : v === 'next' ? page + 1 : Number(v)
+        if (!(next >= 1) || next > pages || next === page) return
+        if (o.onGo) o.onGo(next)
+      }
+
+      return result
+    }
+
     PP.ui = {
       toast: toast,
       sheet: openSheet,
       confirm: confirmDialog,
       picker: picker,
       searchPicker: searchPicker,
-      actions: actionSheet
+      actions: actionSheet,
+      pager: pager
     }
   })((window.PP = window.PP || {}))
   </script><!-- js/chart.js -->
@@ -6357,6 +6526,10 @@
      筛选弹层内编辑的是 draft（草稿），点「查询」才写回 filters ——
      与小程序一致，避免边改边筛导致列表跳动。
 
+     两个列表都做客户端分页（每页 PAGE_SIZE 条，见 PP.ui.pager）：
+     数据本来就在内存里，翻页只换一段切片，不重新过滤。
+     筛选条件变化会把页码拨回第 1 页，否则会停在一个空页上。
+
      两个视图共存于同一页面根元素下，事件委托的属性名必须互不重叠：
      收款用 data-status / data-act / data-id，在途用 data-fstatus / data-fid。
      ============================================================ */
@@ -6364,6 +6537,9 @@
     'use strict'
 
     var dom = PP.dom
+
+    /** 每页条数：两个列表共用（演示数据量小，5 条即可看出翻页效果） */
+    var PAGE_SIZE = 5
 
     /** 收款状态 → 徽章色调（对应小程序 STATUS_CLASS 的 绿 / 橙 / 红） */
     var STATUS_TONE = { '已入账': 'success', '审核中': 'warning', '已驳回': 'danger' }
@@ -6484,6 +6660,36 @@
 
     /* ---------------------------------------------- 渲染 */
 
+    /** 总页数（至少 1，空列表也不出现「第 0 页」） */
+    function pageCount(total) {
+      return Math.max(1, Math.ceil(total / PAGE_SIZE))
+    }
+
+    /** 取当前页的数据切片 */
+    function pageSlice(list, page) {
+      var start = (page - 1) * PAGE_SIZE
+      return list.slice(start, start + PAGE_SIZE)
+    }
+
+    /** 渲染底部翻页控件（单页时组件自行清空并隐藏） */
+    function renderPager(sel, total, page, label, onGo) {
+      return PP.ui.pager({
+        el: dom.qs(sel, view.root),
+        total: total,
+        page: page,
+        pageSize: PAGE_SIZE,
+        label: label,
+        onGo: onGo
+      })
+    }
+
+    /** 翻页后把视图滚回顶部，用户从本页第一条继续往下看 */
+    function scrollViewTop() {
+      if (!view.root) return
+      if (view.root.scrollTo) view.root.scrollTo({ top: 0, behavior: 'smooth' })
+      else view.root.scrollTop = 0
+    }
+
     function rowHTML(a) {
       return (
         '<li class="coll-card">' +
@@ -6519,11 +6725,23 @@
     }
 
     function render() {
+      // 筛选后条数变少时，先把越界的页码收回来再切片，否则会渲染出一个空页
+      if (view.page > pageCount(view.rows.length)) view.page = pageCount(view.rows.length)
+
       var listEl = dom.qs('#tc-list', view.root)
-      dom.renderList(listEl, view.rows, rowHTML)
-      dom.toggle(listEl, view.rows.length > 0)
-      dom.toggle(dom.qs('#tc-empty', view.root), view.rows.length === 0)
+      var rows = pageSlice(view.rows, view.page)
+      dom.renderList(listEl, rows, rowHTML)
+      dom.toggle(listEl, rows.length > 0)
+      dom.toggle(dom.qs('#tc-empty', view.root), rows.length === 0)
+      // 计数始终是筛选后的总数，不受当前页影响
       dom.qs('#tc-count', view.root).textContent = '共 ' + view.rows.length + ' 条收款记录'
+
+      var p = renderPager('#tc-pager', view.rows.length, view.page, '收款记录分页', function (page) {
+        view.page = page
+        render()
+        scrollViewTop()
+      })
+      view.page = p.page
     }
 
     function refreshCounts() {
@@ -6589,6 +6807,8 @@
 
     function applyFilters() {
       view.rows = getFiltered()
+      // 条件一变，结果集就不是刚才那一批了，页码必须回到第 1 页
+      view.page = 1
       syncFilterBadge()
       render()
     }
@@ -6837,7 +7057,8 @@
           dom.on(root, 'click', '[data-save]', function () {
             a.sales = pick
             sheet.close()
-            applyFilters()
+            // 分配不改筛选结果，只重渲染，页码停在原处
+            render()
             PP.ui.toast('业务员已分配：' + pick, { icon: 'success' })
           })
         }
@@ -6930,12 +7151,21 @@
 
     function renderFundList() {
       var list = fundListOf()
-      dom.renderList(dom.qs('#fund-list', view.root), list, fundRowHTML)
+      if (view.fundPage > pageCount(list.length)) view.fundPage = pageCount(list.length)
+
+      dom.renderList(dom.qs('#fund-list', view.root), pageSlice(list, view.fundPage), fundRowHTML)
       dom.toggle(dom.qs('#fund-list-card', view.root), list.length > 0)
       dom.toggle(dom.qs('#fund-empty', view.root), list.length === 0)
 
       var count = dom.qs('#fund-count', view.root)
       if (count) count.textContent = '共 ' + list.length + ' 条记录'
+
+      var p = renderPager('#fund-pager', list.length, view.fundPage, '在途资金分页', function (page) {
+        view.fundPage = page
+        renderFundList()
+        scrollViewTop()
+      })
+      view.fundPage = p.page
     }
 
     function fundDetailRow(label, value, isNum) {
@@ -6986,11 +7216,15 @@
           // 每次挂载都从常量复制一份，编辑（分配业务员）不会污染演示数据
           list: COLLECTIONS.map(decorate),
           rows: [],
+          /** 收款列表当前页（1 起） */
+          page: 1,
           searchText: '',
           statusSeg: '',
           filters: emptyFilters(),
           /** 在途资金视图状态（与收款的状态筛选各自独立） */
           fundStatus: 'all',
+          /** 在途列表当前页（1 起） */
+          fundPage: 1,
           fundSheet: null
         }
 
@@ -7044,11 +7278,12 @@
             else if (act === 'assign') openAssign(a)
           }),
 
-          // 在途资金：状态页签（只影响列表，不影响 Hero 汇总）
+          // 在途资金：状态页签（只影响列表，不影响 Hero 汇总）；换状态即回第 1 页
           dom.on(root, 'click', '#tc-pane-fund [data-fstatus]', function (e, el) {
             var key = el.getAttribute('data-fstatus')
             if (key === view.fundStatus) return
             view.fundStatus = key
+            view.fundPage = 1
             renderFundTabs()
             renderFundList()
           }),
@@ -12137,13 +12372,15 @@
       原「在途资金」一级页已并入此处：首页在途资金「详情 ›」带 data-view="fund"
       直达第二个视图，tabBar 因此从四栏收为三栏。
 
-      静态结构与文案写在这里；两个列表都由 JS 从常量渲染。
+      静态结构与文案写在这里；两个列表都由 JS 从常量渲染，各自每页 5 条，
+      底部分页交给 PP.ui.pager（只剩一页时自动收起，不占位）。
       筛选 / 收款详情 / 分配业务员 / 在途详情四个弹层统一交给 PP.ui.sheet，
       页面里只保留触发按钮，不再手写 mask + sheet 骨架。
 
       两个视图共存于同一页面根元素下，属性名必须互不干扰：
         收款用 data-status（状态统计）、data-act + data-id（卡片动作）
         在途用 data-fstatus（状态页签）、data-fid（条目点击）
+        分页的 data-pg 由各自的挂载容器（#tc-pager / #fund-pager）承接
     -->
 
     <!-- ===== 视图切换：收款记录 / 在途资金 ===== -->
@@ -12197,8 +12434,11 @@
         <button type="button" class="btn-text" id="tc-export">导出明细</button>
       </div>
 
-      <!-- 收款卡片列表（JS 渲染） -->
+      <!-- 收款卡片列表（JS 渲染；每页 5 条） -->
       <ul class="coll-list" id="tc-list" aria-label="收款记录"></ul>
+
+      <!-- 分页：由 PP.ui.pager 渲染，单页时自动隐藏 -->
+      <div class="pager" id="tc-pager" hidden></div>
 
       <!-- 空状态 -->
       <div class="card empty tc-empty" id="tc-empty" hidden>
@@ -12237,10 +12477,12 @@
       <!-- 状态筛选；由 JS 渲染 -->
       <div class="seg fund-filter" id="fund-status" role="tablist" aria-label="资金状态筛选"></div>
 
-      <!-- 资金列表；由 JS 渲染 -->
+      <!-- 资金列表；由 JS 渲染（每页 5 条） -->
       <section class="card card--section" id="fund-list-card">
         <ul class="fund-list" id="fund-list" role="list"></ul>
         <p class="fund-count" id="fund-count">共 0 条记录</p>
+        <!-- 分页：由 PP.ui.pager 渲染，单页时自动隐藏 -->
+        <div class="pager" id="fund-pager" hidden></div>
       </section>
 
       <!-- 空状态 -->

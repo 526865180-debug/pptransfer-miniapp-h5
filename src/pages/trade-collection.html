@@ -7,13 +7,15 @@
   原「在途资金」一级页已并入此处：首页在途资金「详情 ›」带 data-view="fund"
   直达第二个视图，tabBar 因此从四栏收为三栏。
 
-  静态结构与文案写在这里；两个列表都由 JS 从常量渲染。
+  静态结构与文案写在这里；两个列表都由 JS 从常量渲染，各自每页 5 条，
+  底部分页交给 PP.ui.pager（只剩一页时自动收起，不占位）。
   筛选 / 收款详情 / 分配业务员 / 在途详情四个弹层统一交给 PP.ui.sheet，
   页面里只保留触发按钮，不再手写 mask + sheet 骨架。
 
   两个视图共存于同一页面根元素下，属性名必须互不干扰：
     收款用 data-status（状态统计）、data-act + data-id（卡片动作）
     在途用 data-fstatus（状态页签）、data-fid（条目点击）
+    分页的 data-pg 由各自的挂载容器（#tc-pager / #fund-pager）承接
 -->
 
 <!-- ===== 视图切换：收款记录 / 在途资金 ===== -->
@@ -67,8 +69,11 @@
     <button type="button" class="btn-text" id="tc-export">导出明细</button>
   </div>
 
-  <!-- 收款卡片列表（JS 渲染） -->
+  <!-- 收款卡片列表（JS 渲染；每页 5 条） -->
   <ul class="coll-list" id="tc-list" aria-label="收款记录"></ul>
+
+  <!-- 分页：由 PP.ui.pager 渲染，单页时自动隐藏 -->
+  <div class="pager" id="tc-pager" hidden></div>
 
   <!-- 空状态 -->
   <div class="card empty tc-empty" id="tc-empty" hidden>
@@ -107,10 +112,12 @@
   <!-- 状态筛选；由 JS 渲染 -->
   <div class="seg fund-filter" id="fund-status" role="tablist" aria-label="资金状态筛选"></div>
 
-  <!-- 资金列表；由 JS 渲染 -->
+  <!-- 资金列表；由 JS 渲染（每页 5 条） -->
   <section class="card card--section" id="fund-list-card">
     <ul class="fund-list" id="fund-list" role="list"></ul>
     <p class="fund-count" id="fund-count">共 0 条记录</p>
+    <!-- 分页：由 PP.ui.pager 渲染，单页时自动隐藏 -->
+    <div class="pager" id="fund-pager" hidden></div>
   </section>
 
   <!-- 空状态 -->

@@ -110,6 +110,8 @@ PP.definePage('trade-collection', {
 4. 用户反馈：轻提示 `PP.ui.toast('已复制', {icon:'success'})`、确认 `PP.ui.confirm({content}) → Promise<boolean>`、
    单选 `PP.ui.picker({title, options, value}) → Promise<value>`、动作面板 `PP.ui.actions({options}) → Promise<index|null>`。
    不要 `alert()`，不要自己写遮罩。
+   列表分页用 `PP.ui.pager({el, total, page, pageSize, label, onGo})`，不要手写翻页控件；
+   筛选条件变化后把页码拨回 1，翻页只切数据切片、不重新过滤。
 5. 金额格式化只用 `PP.format`（`fmtNum / withSymbol / growth / trend / isoDate / maskAccount`）。
 6. 图表用 `PP.chart.RateChart` + `PP.chart.buildRateSeries`，页面卸载时 `chart.destroy()`。
 7. 演示数据在文件顶部用大写常量声明并注明「演示数据」，与接口字段同名，便于将来替换。

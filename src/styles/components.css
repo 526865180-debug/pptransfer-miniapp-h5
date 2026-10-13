@@ -247,6 +247,69 @@
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
 }
 
+/* ============ 分页（列表底部） ============
+   由 PP.ui.pager 渲染：‹ 1 2 › +「第 x–y 条 / 共 N 条」。
+   单页时不渲染内容并由组件自带 hidden，不占位。 */
+.pager {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) 0 var(--space-2);
+}
+.pager-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.pager-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 6px;
+  font-family: var(--font-num);
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+/* 32px 视觉尺寸不够 44px 命中标准，用伪元素撑开（见守则「可访问性基线」） */
+.pager-btn::after {
+  content: '';
+  position: absolute;
+  inset: -6px -2px;
+}
+.pager-btn > svg { width: 16px; height: 16px; }
+.pager-btn:active { background: var(--surface-sunken); }
+.pager-btn[aria-current='page'] {
+  color: var(--text-on-brand);
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+  font-weight: var(--weight-semibold);
+}
+.pager-btn:disabled {
+  color: var(--text-placeholder);
+  background: var(--surface-sunken);
+  border-color: var(--border-subtle);
+}
+.pager-gap {
+  min-width: 20px;
+  font-size: var(--text-sm);
+  color: var(--text-quaternary);
+  text-align: center;
+}
+.pager-info {
+  font-size: var(--text-xs);
+  color: var(--text-quaternary);
+}
+
 /* ============ 表单 ============ */
 .field { margin-bottom: var(--space-6); }
 .field-label {

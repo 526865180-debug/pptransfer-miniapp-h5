@@ -342,12 +342,118 @@
     })
   }
 
+  /* ---------------------------------------------------- 分页 */
+
+  /** 页码序列：≤7 页全列，否则首末两页 + 当前页邻域，中间用省略号占位 */
+  function pageSeq(page, pages) {
+    var nums = []
+    if (pages <= 7) {
+      for (var i = 1; i <= pages; i++) nums.push(i)
+      return nums
+    }
+    var candidates = [1, page - 1, page, page + 1, pages]
+    candidates.forEach(function (n) {
+      if (n >= 1 && n <= pages && nums.indexOf(n) < 0) nums.push(n)
+    })
+    nums.sort(function (a, b) { return a - b })
+
+    var out = []
+    nums.forEach(function (n, i) {
+      if (i > 0 && n - nums[i - 1] > 1) out.push('...')
+      out.push(n)
+    })
+    return out
+  }
+
+  function pagerNavBtn(kind, label, disabled) {
+    // 两个方向分开写整串：图标引用要能被 tools/verify.py 静态扫到
+    var chevron = kind === 'prev'
+      ? '<use href="#i-chevron-left"/>'
+      : '<use href="#i-chevron-right"/>'
+    return (
+      '<button type="button" class="pager-btn pager-nav" data-pg="' + kind + '"' +
+      (disabled ? ' disabled' : '') + ' aria-label="' + label + '">' +
+      '<svg aria-hidden="true">' + chevron + '</svg>' +
+      '</button>'
+    )
+  }
+
+  /**
+   * 分页控件（客户端分页：列表数据已在内存，翻页只是换一段切片）
+   *   el        挂载容器；每次调用重写其内容
+   *   total     筛选后的总条数
+   *   page      当前页（1 起，越界自动收敛到 [1, pages]）
+   *   pageSize  每页条数
+   *   label     容器 aria-label（如「收款记录分页」）
+   *   onGo(n)   翻页回调
+   *
+   * 返回 { page, pages, total } —— 调用方用它同步自己保存的页码，
+   * 免得筛选后只剩一页、页码却还停在第 2 页上。
+   * 总页数 ≤ 1 时清空容器并加 hidden，单页列表不出现多余的翻页控件。
+   *
+   * 点击用容器级 onclick 覆盖绑定：列表每次重渲染都会重调本函数，
+   * 覆盖式赋值天然不会累积监听（用 addEventListener 会）。
+   */
+  function pager(opts) {
+    var o = opts || {}
+    var el = o.el
+    var total = Math.max(0, Number(o.total) || 0)
+    var pageSize = Math.max(1, Number(o.pageSize) || 10)
+    var pages = Math.max(1, Math.ceil(total / pageSize))
+    var page = Math.min(Math.max(1, Number(o.page) || 1), pages)
+    var result = { page: page, pages: pages, total: total }
+
+    if (!el) return result
+
+    el.setAttribute('role', 'navigation')
+    el.setAttribute('aria-label', o.label || '分页')
+
+    if (pages <= 1) {
+      dom.setHTML(el, '')
+      el.hidden = true
+      el.onclick = null
+      return result
+    }
+    el.hidden = false
+
+    var start = (page - 1) * pageSize + 1
+    var end = Math.min(total, page * pageSize)
+
+    dom.setHTML(el, dom.raw(
+      '<div class="pager-nav">' +
+        pagerNavBtn('prev', '上一页', page <= 1) +
+        pageSeq(page, pages).map(function (n) {
+          if (n === '...') return '<span class="pager-gap" aria-hidden="true">…</span>'
+          return (
+            '<button type="button" class="pager-btn" data-pg="' + n + '"' +
+            (n === page ? ' aria-current="page"' : '') +
+            ' aria-label="第 ' + n + ' 页">' + n + '</button>'
+          )
+        }).join('') +
+        pagerNavBtn('next', '下一页', page >= pages) +
+      '</div>' +
+      '<p class="pager-info">第 ' + start + '–' + end + ' 条 / 共 ' + total + ' 条</p>'
+    ))
+
+    el.onclick = function (e) {
+      var btn = e.target.closest('[data-pg]')
+      if (!btn || !el.contains(btn) || btn.disabled) return
+      var v = btn.getAttribute('data-pg')
+      var next = v === 'prev' ? page - 1 : v === 'next' ? page + 1 : Number(v)
+      if (!(next >= 1) || next > pages || next === page) return
+      if (o.onGo) o.onGo(next)
+    }
+
+    return result
+  }
+
   PP.ui = {
     toast: toast,
     sheet: openSheet,
     confirm: confirmDialog,
     picker: picker,
     searchPicker: searchPicker,
-    actions: actionSheet
+    actions: actionSheet,
+    pager: pager
   }
 })((window.PP = window.PP || {}))

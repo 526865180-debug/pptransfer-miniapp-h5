@@ -9,6 +9,8 @@
  *   2. tabBar 切换      —— 三栏 tabBar，点击「收款」进入 trade-collection，aria-selected 正确
  *   2.5 收款页双视图    —— 页内分段切换「收款记录 / 在途资金」，在途筛选与详情弹层，
  *                          首页「详情 ›」带 data-view 直达在途视图
+ *   2.6 列表分页        —— 两个列表各每页 5 条：翻页换数据、首末页禁用、
+ *                          筛选与切页签回第 1 页、只剩一页时分页收起
  *   3. 进入二级页       —— 快捷入口「换汇」→ exchange，导航栏出现返回键
  *   4. 返回             —— 点返回键回到原 tab，滚动容器只有一页可见
  *   5. 表单校验         —— exchange 直接提交应给出错误提示而不是静默失败
@@ -136,7 +138,7 @@ async function main() {
       check('切到在途视图且收款视图隐藏', s.fundVisible && s.collHidden, JSON.stringify(s))
       check('在途合计与笔数按全量统计',
         /23,128\.37/.test(s.total) && s.all === '6 笔' && s.transit === '2 笔', JSON.stringify(s))
-      check('在途列表渲染 6 条', s.rows === 6, String(s.rows))
+      check('在途列表第 1 页 5 条（共 6 条）', s.rows === 5, String(s.rows))
 
       // 状态页签筛选：只影响列表，不影响 Hero 汇总
       await click(cdp, '#fund-status [data-fstatus="transit"]')
@@ -170,7 +172,7 @@ async function main() {
         fundHidden: document.querySelector('#tc-pane-fund').hidden,
         cards: document.querySelectorAll('#tc-list .coll-card').length
       })`)
-      check('切回收款视图', s.collVisible && s.fundHidden && s.cards === 10, JSON.stringify(s))
+      check('切回收款视图且第 1 页 5 条', s.collVisible && s.fundHidden && s.cards === 5, JSON.stringify(s))
 
       // 首页在途资金「详情 ›」带 data-view 直达在途视图
       await cdp.eval(`PP.router.go('index')`)
@@ -181,6 +183,94 @@ async function main() {
         `PP.router.current() === 'trade-collection' && !document.querySelector('#tc-pane-fund').hidden`,
         '详情直达在途视图')
       check('首页「详情 ›」直达收款页在途视图', true)
+    })
+
+    /* 2.6 两个列表的分页 ------------------------------------------- */
+    await step('收款记录与在途资金分页', cdp, async () => {
+      // 上一段停在在途视图且状态是「在途中」，先回「全部」（6 条 / 每页 5 条 = 2 页）
+      await click(cdp, '#fund-status [data-fstatus="all"]')
+      await sleep(200)
+      let s = await cdp.eval(`({
+        rows: document.querySelectorAll('#fund-list .fund').length,
+        current: (document.querySelector('#fund-pager [aria-current="page"]') || {}).textContent || '',
+        btns: document.querySelectorAll('#fund-pager .pager-btn').length,
+        prevDisabled: document.querySelector('#fund-pager [data-pg="prev"]').disabled,
+        info: (document.querySelector('#fund-pager .pager-info') || {}).textContent || ''
+      })`)
+      check('在途第 1 页 5 条、页码 2 个、上一页禁用',
+        s.rows === 5 && s.current === '1' && s.btns === 4 && s.prevDisabled === true &&
+        /第 1–5 条 \/ 共 6 条/.test(s.info), JSON.stringify(s))
+
+      // 翻到第 2 页：只剩 1 条，下一页禁用
+      const firstFundPayer = await cdp.eval(
+        `(document.querySelector('#fund-list .fund-payer') || {}).textContent || ''`)
+      await click(cdp, '#fund-pager [data-pg="next"]')
+      await sleep(200)
+      s = await cdp.eval(`({
+        rows: document.querySelectorAll('#fund-list .fund').length,
+        payer: (document.querySelector('#fund-list .fund-payer') || {}).textContent || '',
+        current: (document.querySelector('#fund-pager [aria-current="page"]') || {}).textContent || '',
+        nextDisabled: document.querySelector('#fund-pager [data-pg="next"]').disabled,
+        info: (document.querySelector('#fund-pager .pager-info') || {}).textContent || ''
+      })`)
+      check('在途翻到第 2 页只剩 1 条、下一页禁用',
+        s.rows === 1 && s.current === '2' && s.nextDisabled === true && /第 6–6 条/.test(s.info),
+        JSON.stringify(s))
+      check('在途第 2 页换了一批数据', s.payer !== firstFundPayer, s.payer)
+
+      // 换状态页签 → 页码回到第 1 页；结果只剩一页时分页收起
+      await click(cdp, '#fund-status [data-fstatus="arrived"]')
+      await sleep(200)
+      s = await cdp.eval(`({
+        rows: document.querySelectorAll('#fund-list .fund').length,
+        hidden: document.querySelector('#fund-pager').hidden
+      })`)
+      check('在途换页签回到第 1 页、单页时分页隐藏',
+        s.rows === 3 && s.hidden === true, JSON.stringify(s))
+
+      // 收款侧：切回视图，10 条 / 每页 5 条 = 2 页
+      await click(cdp, '#tc-viewseg [data-view="collection"]')
+      await sleep(200)
+      const firstNo = await cdp.eval(
+        `(document.querySelector('#tc-list .cc-no') || {}).textContent || ''`)
+      s = await cdp.eval(`({
+        cards: document.querySelectorAll('#tc-list .coll-card').length,
+        count: document.querySelector('#tc-count').textContent,
+        current: (document.querySelector('#tc-pager [aria-current="page"]') || {}).textContent || '',
+        prevDisabled: document.querySelector('#tc-pager [data-pg="prev"]').disabled,
+        info: (document.querySelector('#tc-pager .pager-info') || {}).textContent || ''
+      })`)
+      check('收款第 1 页 5 条、计数仍是总数 10',
+        s.cards === 5 && /共 10 条收款记录/.test(s.count) && s.current === '1' &&
+        s.prevDisabled === true && /第 1–5 条 \/ 共 10 条/.test(s.info), JSON.stringify(s))
+
+      await click(cdp, '#tc-pager [data-pg="2"]')
+      await sleep(200)
+      s = await cdp.eval(`({
+        cards: document.querySelectorAll('#tc-list .coll-card').length,
+        no: (document.querySelector('#tc-list .cc-no') || {}).textContent || '',
+        current: (document.querySelector('#tc-pager [aria-current="page"]') || {}).textContent || '',
+        nextDisabled: document.querySelector('#tc-pager [data-pg="next"]').disabled,
+        info: (document.querySelector('#tc-pager .pager-info') || {}).textContent || ''
+      })`)
+      check('收款翻到第 2 页 5 条、下一页禁用',
+        s.cards === 5 && s.current === '2' && s.nextDisabled === true &&
+        /第 6–10 条/.test(s.info), JSON.stringify(s))
+      check('收款第 2 页换了一批数据', s.no !== firstNo, s.no)
+
+      // 状态筛选 → 页码回第 1 页；「已驳回」3 条只剩一页，分页收起
+      await click(cdp, '#tc-pane-collection [data-status="已驳回"]')
+      await sleep(200)
+      s = await cdp.eval(`({
+        cards: document.querySelectorAll('#tc-list .coll-card').length,
+        hidden: document.querySelector('#tc-pager').hidden
+      })`)
+      check('收款筛选后回到第 1 页、单页时分页隐藏',
+        s.cards === 3 && s.hidden === true, JSON.stringify(s))
+
+      // 复原筛选，避免影响后续步骤
+      await click(cdp, '#tc-pane-collection [data-status=""]')
+      await sleep(150)
     })
 
     /* 3. 进入二级页 ------------------------------------------------ */
