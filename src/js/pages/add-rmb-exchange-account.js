@@ -11,9 +11,9 @@
    由银行账号按卡 BIN 前缀自动返显（见 CARD_BINS / detectBank）。
    条件字段（见 RULES）：
      personal          仅个人账户        → I 类银行账户卡提示
-     enterprise        仅企业账户        → 开户行支行号（CNAPS 行号）
-     supplier-personal 供应商的个人账户  → 公司名称 / 统一信用代码 /
-                                          收款人身份证号 / 历史采购合同
+     enterprise        仅企业账户        → 开户行支行号（CNAPS 行号，必填）
+     supplier-personal 供应商的个人账户  → 公司名称 / 统一信用代码（选填）/
+                                          收款人身份证号（必填）/ 历史采购合同（选填）
    即企业账户一律填开户行支行号，扩展材料只对「供应商 + 个人账户」收集。
    切换所属/类型只改 data-only 行的显隐，已填值留在 DOM 里，来回切换不丢；
    例外：银行来源随类型而变（企业手选 ↔ 个人自动返显），切类型时银行与支行清空重采。
@@ -217,10 +217,9 @@
     if (!isPersonal() && !view.branch) {
       return { msg: '请选择开户行支行号', sel: '#add-branch-btn' }
     }
-    if (isSupplier() && isPersonal()) {
-      if (!val('#add-company-name')) return { msg: '请填写公司名称', sel: '#add-company-name' }
-      if (!val('#add-credit-code')) return { msg: '请填写统一信用代码', sel: '#add-credit-code' }
-      if (!val('#add-id-card')) return { msg: '请填写收款人身份证号', sel: '#add-id-card' }
+    /* 公司名称 / 统一信用代码为选填（自然人供应商不一定有），这里只把关身份证号 */
+    if (isSupplier() && isPersonal() && !val('#add-id-card')) {
+      return { msg: '请填写收款人身份证号', sel: '#add-id-card' }
     }
     return null
   }

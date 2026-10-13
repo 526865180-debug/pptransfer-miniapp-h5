@@ -309,7 +309,7 @@ async function main() {
       // 本公司 + 企业（默认）：基础字段 + 开户行支行号
       let s = await visibleFields()
       check('本公司+企业 → 基础字段 + 开户行支行号（8 行）',
-        s.length === 8 && s.indexOf('开户行支行号：') >= 0 && s.indexOf('公司名称：') < 0 &&
+        s.length === 8 && s.indexOf('开户行支行号：') >= 0 && s.indexOf('公司名称') < 0 &&
         s.indexOf('收款人身份证号：') < 0, JSON.stringify(s))
       s = await cdp.eval(`(function () {
         var auto = document.querySelector('#add-bank-auto')
@@ -334,7 +334,7 @@ async function main() {
       await sleep(150)
       s = await visibleFields()
       check('本公司+个人 → 支行号与扩展字段全部隐藏（7 行）',
-        s.length === 7 && ['公司名称：', '统一信用代码：', '开户行支行号：', '收款人身份证号：', '历史采购合同：']
+        s.length === 7 && ['公司名称', '统一信用代码', '开户行支行号：', '收款人身份证号：', '历史采购合同：']
           .every(function (x) { return s.indexOf(x) < 0 }), JSON.stringify(s))
       s = await cdp.eval(`document.querySelector('.page[data-page="add-rmb-exchange-account"] .hint-warn').hidden`)
       check('本公司+个人 → I 类卡提示仍显示', s === false, String(s))
@@ -381,7 +381,7 @@ async function main() {
       await sleep(150)
       s = await visibleFields()
       check('供应商+个人 → 4 项扩展材料显示、支行号隐藏（11 行）',
-        s.length === 11 && ['公司名称：', '统一信用代码：', '收款人身份证号：', '历史采购合同：']
+        s.length === 11 && ['公司名称', '统一信用代码', '收款人身份证号：', '历史采购合同：']
           .every(function (x) { return s.indexOf(x) >= 0 }) && s.indexOf('开户行支行号：') < 0,
         JSON.stringify(s))
 
@@ -390,7 +390,7 @@ async function main() {
       await sleep(150)
       s = await visibleFields()
       check('供应商+企业 → 仅保留支行号（8 行）',
-        s.length === 8 && s.indexOf('开户行支行号：') >= 0 && s.indexOf('公司名称：') < 0 && s.indexOf('历史采购合同：') < 0,
+        s.length === 8 && s.indexOf('开户行支行号：') >= 0 && s.indexOf('公司名称') < 0 && s.indexOf('历史采购合同：') < 0,
         JSON.stringify(s))
 
       // 开户地区：系统固定「中国内地」，只读不可修改
@@ -441,17 +441,22 @@ async function main() {
       })`)
       check('切类型后企业手选的银行被清空重采', s.auto === '' && s.pickerHidden, JSON.stringify(s))
 
-      // 基础项填齐后，缺失的条件必填项先被拦下
+      // 基础项填齐后：公司名称/信用代码是选填，剩下收款人身份证号把关
       await setVal('#add-acct-name', '罗炬')
       await setVal('#add-acct-no', '6222020200123456789')
       await click(cdp, '#add-next-btn')
       await sleep(200)
-      s = await cdp.eval(`document.querySelector('#toast-layer').textContent`)
-      check('供应商+个人 缺公司名称 → 拦下', /公司名称/.test(s), s)
+      s = await cdp.eval(`({
+        toast: document.querySelector('#toast-layer').textContent,
+        optional: ['#add-company-name', '#add-credit-code'].map(function (sel) {
+          var row = document.querySelector(sel).closest('.frow')
+          return !!row.querySelector('.frow-optional')
+        })
+      })`)
+      check('公司名称/信用代码选填 → 拦在收款人身份证号',
+        /身份证号/.test(s.toast) && s.optional.every(Boolean), JSON.stringify(s))
 
-      // 补齐条件必填项 → 进入授权步骤（银行账号失焦后按 4 位分组展示）
-      await setVal('#add-company-name', '深圳市极光贸易有限公司')
-      await setVal('#add-credit-code', '91440300MA5F1234XY')
+      // 只补必填的身份证号：选填项留空也应能进入授权步骤（银行账号失焦后按 4 位分组展示）
       await setVal('#add-id-card', '440301199001011234')
       await click(cdp, '#add-next-btn')
       await sleep(200)

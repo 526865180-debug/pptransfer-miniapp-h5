@@ -9295,9 +9295,9 @@
      由银行账号按卡 BIN 前缀自动返显（见 CARD_BINS / detectBank）。
      条件字段（见 RULES）：
        personal          仅个人账户        → I 类银行账户卡提示
-       enterprise        仅企业账户        → 开户行支行号（CNAPS 行号）
-       supplier-personal 供应商的个人账户  → 公司名称 / 统一信用代码 /
-                                            收款人身份证号 / 历史采购合同
+       enterprise        仅企业账户        → 开户行支行号（CNAPS 行号，必填）
+       supplier-personal 供应商的个人账户  → 公司名称 / 统一信用代码（选填）/
+                                            收款人身份证号（必填）/ 历史采购合同（选填）
      即企业账户一律填开户行支行号，扩展材料只对「供应商 + 个人账户」收集。
      切换所属/类型只改 data-only 行的显隐，已填值留在 DOM 里，来回切换不丢；
      例外：银行来源随类型而变（企业手选 ↔ 个人自动返显），切类型时银行与支行清空重采。
@@ -9501,10 +9501,9 @@
       if (!isPersonal() && !view.branch) {
         return { msg: '请选择开户行支行号', sel: '#add-branch-btn' }
       }
-      if (isSupplier() && isPersonal()) {
-        if (!val('#add-company-name')) return { msg: '请填写公司名称', sel: '#add-company-name' }
-        if (!val('#add-credit-code')) return { msg: '请填写统一信用代码', sel: '#add-credit-code' }
-        if (!val('#add-id-card')) return { msg: '请填写收款人身份证号', sel: '#add-id-card' }
+      /* 公司名称 / 统一信用代码为选填（自然人供应商不一定有），这里只把关身份证号 */
+      if (isSupplier() && isPersonal() && !val('#add-id-card')) {
+        return { msg: '请填写收款人身份证号', sel: '#add-id-card' }
       }
       return null
     }
@@ -10777,8 +10776,8 @@
       条件字段用 data-only 声明规则，由页面脚本按规则显隐：
         data-only="personal"           仅个人账户（I 类卡提示；银行名称改自动返显的只读框）
         data-only="enterprise"         仅企业账户（开户行支行号；银行名称为搜索选择器）
-        data-only="supplier-personal"  仅供应商的个人账户（公司名称 / 统一信用代码 /
-                                       收款人身份证号 / 历史采购合同）
+        data-only="supplier-personal"  仅供应商的个人账户（公司名称、统一信用代码、
+                                       历史采购合同为选填；收款人身份证号为必填）
       即：企业账户一律要填开户行支行号、银行名称由用户搜索选择；个人账户的银行名称
       按银行账号自动返显、不可填写；扩展材料只对「供应商 + 个人账户」收集。
       页面内所有 id 都带 add- 前缀：多个页面实例会同时存在于页面栈里，
@@ -10826,14 +10825,14 @@
           </div>
         </div>
 
-        <!-- 供应商的个人账户专属：公司名称 / 统一信用代码 -->
+        <!-- 供应商的个人账户专属：公司名称 / 统一信用代码（均为选填，自然人供应商不一定有） -->
         <div class="frow" data-only="supplier-personal" hidden>
-          <label class="frow-label" for="add-company-name"><i class="frow-req" aria-hidden="true">*</i>公司名称：</label>
+          <label class="frow-label" for="add-company-name">公司名称<i class="frow-optional" aria-hidden="true">选填</i></label>
           <input class="field-input" id="add-company-name" type="text" autocomplete="off"
                  placeholder="请输入公司名称">
         </div>
         <div class="frow" data-only="supplier-personal" hidden>
-          <label class="frow-label" for="add-credit-code"><i class="frow-req" aria-hidden="true">*</i>统一信用代码：</label>
+          <label class="frow-label" for="add-credit-code">统一信用代码<i class="frow-optional" aria-hidden="true">选填</i></label>
           <input class="field-input num" id="add-credit-code" type="text" autocomplete="off"
                  placeholder="18 位统一社会信用代码">
         </div>

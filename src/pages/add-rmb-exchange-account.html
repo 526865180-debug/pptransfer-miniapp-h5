@@ -8,8 +8,8 @@
   条件字段用 data-only 声明规则，由页面脚本按规则显隐：
     data-only="personal"           仅个人账户（I 类卡提示；银行名称改自动返显的只读框）
     data-only="enterprise"         仅企业账户（开户行支行号；银行名称为搜索选择器）
-    data-only="supplier-personal"  仅供应商的个人账户（公司名称 / 统一信用代码 /
-                                   收款人身份证号 / 历史采购合同）
+    data-only="supplier-personal"  仅供应商的个人账户（公司名称、统一信用代码、
+                                   历史采购合同为选填；收款人身份证号为必填）
   即：企业账户一律要填开户行支行号、银行名称由用户搜索选择；个人账户的银行名称
   按银行账号自动返显、不可填写；扩展材料只对「供应商 + 个人账户」收集。
   页面内所有 id 都带 add- 前缀：多个页面实例会同时存在于页面栈里，
@@ -57,14 +57,14 @@
       </div>
     </div>
 
-    <!-- 供应商的个人账户专属：公司名称 / 统一信用代码 -->
+    <!-- 供应商的个人账户专属：公司名称 / 统一信用代码（均为选填，自然人供应商不一定有） -->
     <div class="frow" data-only="supplier-personal" hidden>
-      <label class="frow-label" for="add-company-name"><i class="frow-req" aria-hidden="true">*</i>公司名称：</label>
+      <label class="frow-label" for="add-company-name">公司名称<i class="frow-optional" aria-hidden="true">选填</i></label>
       <input class="field-input" id="add-company-name" type="text" autocomplete="off"
              placeholder="请输入公司名称">
     </div>
     <div class="frow" data-only="supplier-personal" hidden>
-      <label class="frow-label" for="add-credit-code"><i class="frow-req" aria-hidden="true">*</i>统一信用代码：</label>
+      <label class="frow-label" for="add-credit-code">统一信用代码<i class="frow-optional" aria-hidden="true">选填</i></label>
       <input class="field-input num" id="add-credit-code" type="text" autocomplete="off"
              placeholder="18 位统一社会信用代码">
     </div>
