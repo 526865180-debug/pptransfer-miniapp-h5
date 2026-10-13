@@ -925,6 +925,19 @@ body[data-amount-hidden='true'] .bal-amount {
   color: var(--text-quaternary);
 }
 
+/* 只读字段：系统固定值，不可修改（如开户地区固定「中国内地」）。
+   刻意不给按钮语义与交互态——用户点不动它，也就不该看起来像能点。 */
+.field-static {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-inner);
+  background: var(--surface-sunken);
+  font-size: var(--text-md);
+  color: var(--text-secondary);
+}
+
 /* 行内文字链（去换汇 / 添加账户 …）：靠 ::after 撑到 44px 命中区 */
 .link-btn {
   position: relative;

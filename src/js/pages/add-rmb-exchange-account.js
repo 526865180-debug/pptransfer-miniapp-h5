@@ -6,6 +6,7 @@
             银行名称 / 别名，按 所属 × 类型 动态显示条件字段
      步骤 2 授权声明（回填步骤 1 的账户信息）+ 交易密码 + 同意勾选
      步骤 3 申请成功
+   开户地区是系统固定值（中国内地），只读展示、不参与校验也不提供选择器。
    条件字段（见 RULES）：
      personal          仅个人账户        → I 类银行账户卡提示
      enterprise        仅企业账户        → 开户行支行号（CNAPS 行号）
@@ -21,13 +22,8 @@
 
   var dom = PP.dom
 
-  /** 开户地区 */
-  var REGIONS = [
-    { value: '中国内地', title: '中国内地' },
-    { value: '香港地区', title: '香港地区' },
-    { value: '澳门地区', title: '澳门地区' },
-    { value: '台湾地区', title: '台湾地区' }
-  ]
+  /** 开户地区：系统固定值，只读展示 */
+  var REGION_FIXED = '中国内地'
 
   /** 银行（演示数据，sub 参与搜索：银行名称 / CNAPS 行号） */
   var BANKS = [
@@ -223,18 +219,6 @@
 
   /* ---------------------------------------------- 选择器 */
 
-  function pickRegion() {
-    PP.ui.picker({
-      title: '选择开户地区',
-      value: view.region,
-      options: REGIONS
-    }).then(function (value) {
-      if (!value || !view) return
-      view.region = value
-      setText('#add-region-value', value)
-    })
-  }
-
   function pickBank() {
     PP.ui.searchPicker({
       title: '选择银行名称',
@@ -290,7 +274,6 @@
         step: 0,
         owner: 'company',
         type: 'enterprise',
-        region: '中国内地',
         bank: '',
         branch: '',
         branchTitle: '',
@@ -328,9 +311,8 @@
         syncConditionalRows()
       })
 
-      /* -------- 开户地区 / 银行名称 -------- */
+      /* -------- 银行名称 / 开户行支行号 -------- */
 
-      listen('click', '#add-region-btn', pickRegion)
       listen('click', '#add-bank-btn', pickBank)
       listen('click', '#add-branch-btn', pickBranch)
 
@@ -394,7 +376,7 @@
         }
         setText('#add-result-name', val('#add-acct-name'))
         setText('#add-result-no', PP.format.maskAccount(rawNum('#add-acct-no')))
-        setText('#add-result-region', view.region)
+        setText('#add-result-region', REGION_FIXED)
         goStep(2)
         dom.haptic()
       })

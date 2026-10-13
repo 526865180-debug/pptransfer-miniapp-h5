@@ -355,15 +355,18 @@ async function main() {
         s.length === 8 && s.indexOf('开户行支行号：') >= 0 && s.indexOf('公司名称：') < 0 && s.indexOf('历史采购合同：') < 0,
         JSON.stringify(s))
 
-      // 开户地区 picker（保持企业账户，支行号可见）
-      await click(cdp, '#add-region-btn')
-      await cdp.waitFor(`!!document.querySelector('#layer-root .option-row')`, '地区弹层出现')
-      s = await cdp.eval(`document.querySelectorAll('#layer-root .option-row').length`)
-      check('地区弹层 4 项', s === 4, s)
-      await click(cdp, '.option-row[data-value="香港地区"]', 'document.querySelector("#layer-root .sheet")')
-      await sleep(200)
-      s = await cdp.eval(`document.querySelector('#add-region-value').textContent`)
-      check('地区选中回填', s === '香港地区', s)
+      // 开户地区：系统固定「中国内地」，只读不可修改
+      s = await cdp.eval(`(function () {
+        var el = document.querySelector('#add-region-value')
+        return {
+          text: el.textContent,
+          tag: el.tagName,
+          readonly: el.classList.contains('field-static'),
+          picker: !!document.querySelector('#add-region-btn')
+        }
+      })()`)
+      check('开户地区固定中国内地且无选择器',
+        s.text === '中国内地' && s.tag === 'SPAN' && s.readonly && !s.picker, JSON.stringify(s))
 
       // 银行名称 searchPicker
       await click(cdp, '#add-bank-btn')
@@ -433,10 +436,11 @@ async function main() {
       await sleep(200)
       s = await cdp.eval(`({
         step: document.querySelector('.page[data-page="add-rmb-exchange-account"] .wizard-step:not([hidden])').getAttribute('data-step'),
-        no: document.querySelector('#add-result-no').textContent
+        no: document.querySelector('#add-result-no').textContent,
+        region: document.querySelector('#add-result-region').textContent
       })`)
       check('提交进入成功页且账号脱敏展示',
-        s.step === '2' && s.no.indexOf('****') >= 0, JSON.stringify(s))
+        s.step === '2' && s.no.indexOf('****') >= 0 && s.region === '中国内地', JSON.stringify(s))
 
       // 返回结汇提现
       await click(cdp, '.page[data-page="add-rmb-exchange-account"] [data-back]')

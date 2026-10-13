@@ -2,7 +2,7 @@
   pages/add-rmb-exchange-account.html · 添加人民币结汇账户
   ---------------------------------------------------------------
   参考 desktop 版 pages/add_rmb_exchange_account.html，改造成移动端三步向导：
-    1 填写账户信息（字段按 账户所属 × 账户类型 动态显示）
+    1 填写账户信息（字段按 账户所属 × 账户类型 动态显示；开户地区为系统固定值，只读不可改）
     2 授权并确认（授权声明 + 交易密码 + 同意勾选）
     3 添加成功
   条件字段用 data-only 声明规则，由页面脚本按规则显隐：
@@ -77,13 +77,10 @@
       </div>
     </div>
 
+    <!-- 开户地区：系统固定值，不可修改（用 .field-static 只读展示，不给按钮） -->
     <div class="frow">
-      <span class="frow-label"><i class="frow-req" aria-hidden="true">*</i>开户地区：</span>
-      <button type="button" class="select-field" id="add-region-btn"
-              aria-haspopup="dialog" aria-label="选择开户地区">
-        <span class="select-value" id="add-region-value">中国内地</span>
-        <svg class="select-caret" aria-hidden="true"><use href="#i-chevron-down"/></svg>
-      </button>
+      <span class="frow-label">开户地区：</span>
+      <span class="field-static" id="add-region-value">中国内地</span>
     </div>
 
     <div class="frow">
