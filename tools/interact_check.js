@@ -306,34 +306,11 @@ async function main() {
         .map(function (f) { var l = f.querySelector('.frow-label'); return l ? l.textContent.replace(/[*\\s]|选填/g, '') : '' })`)
       const pickerItemClick = () => click(cdp, '.picker-item', 'document.querySelector("#layer-root .sheet")')
 
-      // 本公司 + 企业（默认）：只留基础字段，扩展字段一律不显示
+      // 本公司 + 企业（默认）：基础字段 + 开户行支行号
       let s = await visibleFields()
-      check('本公司+企业 → 仅基础字段（7 行）',
-        s.length === 7 && s.indexOf('开户行支行号：') < 0 && s.indexOf('公司名称：') < 0, JSON.stringify(s))
-
-      // 本公司 + 个人：仍不显示公司名称/信用代码/支行号/身份证/合同
-      await click(cdp, '.radio-pill[data-type="personal"]')
-      await sleep(150)
-      s = await visibleFields()
-      check('本公司+个人 → 扩展字段仍全部隐藏',
-        s.length === 7 && ['公司名称：', '统一信用代码：', '开户行支行号：', '收款人身份证号：', '历史采购合同：']
-          .every(function (x) { return s.indexOf(x) < 0 }), JSON.stringify(s))
-      s = await cdp.eval(`document.querySelector('.page[data-page="add-rmb-exchange-account"] .hint-warn').hidden`)
-      check('本公司+个人 → I 类卡提示仍显示', s === false, String(s))
-
-      // 空表单下一步 → 校验提示
-      await click(cdp, '#add-next-btn')
-      await sleep(150)
-      s = await cdp.eval(`document.querySelector('#toast-layer').textContent`)
-      check('空表单校验 → toast 提示', /请填写/.test(s), s)
-
-      // 供应商 + 个人：5 个扩展字段全部出现
-      await click(cdp, '.radio-pill[data-owner="supplier"]')
-      await sleep(150)
-      s = await visibleFields()
-      check('供应商+个人 → 扩展字段全部显示（12 行）',
-        s.length === 12 && ['公司名称：', '统一信用代码：', '开户行支行号：', '收款人身份证号：', '历史采购合同：']
-          .every(function (x) { return s.indexOf(x) >= 0 }), JSON.stringify(s))
+      check('本公司+企业 → 基础字段 + 开户行支行号（8 行）',
+        s.length === 8 && s.indexOf('开户行支行号：') >= 0 && s.indexOf('公司名称：') < 0 &&
+        s.indexOf('收款人身份证号：') < 0, JSON.stringify(s))
 
       // 未选银行时点支行号 → toast 引导 + 银行行标红
       await click(cdp, '#add-branch-btn')
@@ -345,7 +322,32 @@ async function main() {
       check('未选银行点支行号 → toast 引导并标红银行行',
         /先选择银行/.test(s.toast) && s.errRow, JSON.stringify(s))
 
-      // 供应商 + 企业：只剩支行号这一项扩展字段
+      // 本公司 + 个人：支行号与扩展字段全部隐藏
+      await click(cdp, '.radio-pill[data-type="personal"]')
+      await sleep(150)
+      s = await visibleFields()
+      check('本公司+个人 → 支行号与扩展字段全部隐藏（7 行）',
+        s.length === 7 && ['公司名称：', '统一信用代码：', '开户行支行号：', '收款人身份证号：', '历史采购合同：']
+          .every(function (x) { return s.indexOf(x) < 0 }), JSON.stringify(s))
+      s = await cdp.eval(`document.querySelector('.page[data-page="add-rmb-exchange-account"] .hint-warn').hidden`)
+      check('本公司+个人 → I 类卡提示仍显示', s === false, String(s))
+
+      // 空表单下一步 → 校验提示
+      await click(cdp, '#add-next-btn')
+      await sleep(150)
+      s = await cdp.eval(`document.querySelector('#toast-layer').textContent`)
+      check('空表单校验 → toast 提示', /请填写/.test(s), s)
+
+      // 供应商 + 个人：供应商侧扩展材料显示，支行号随「个人账户」隐藏
+      await click(cdp, '.radio-pill[data-owner="supplier"]')
+      await sleep(150)
+      s = await visibleFields()
+      check('供应商+个人 → 4 项扩展材料显示、支行号隐藏（11 行）',
+        s.length === 11 && ['公司名称：', '统一信用代码：', '收款人身份证号：', '历史采购合同：']
+          .every(function (x) { return s.indexOf(x) >= 0 }) && s.indexOf('开户行支行号：') < 0,
+        JSON.stringify(s))
+
+      // 供应商 + 企业：支行号出现（与所属无关），供应商侧扩展材料收起
       await click(cdp, '.radio-pill[data-type="enterprise"]')
       await sleep(150)
       s = await visibleFields()
@@ -353,11 +355,7 @@ async function main() {
         s.length === 8 && s.indexOf('开户行支行号：') >= 0 && s.indexOf('公司名称：') < 0 && s.indexOf('历史采购合同：') < 0,
         JSON.stringify(s))
 
-      // 回到供应商 + 个人，继续走完整流程
-      await click(cdp, '.radio-pill[data-type="personal"]')
-      await sleep(150)
-
-      // 开户地区 picker
+      // 开户地区 picker（保持企业账户，支行号可见）
       await click(cdp, '#add-region-btn')
       await cdp.waitFor(`!!document.querySelector('#layer-root .option-row')`, '地区弹层出现')
       s = await cdp.eval(`document.querySelectorAll('#layer-root .option-row').length`)
@@ -390,6 +388,12 @@ async function main() {
       await sleep(200)
       s = await cdp.eval(`document.querySelector('#add-branch-value').textContent`)
       check('支行选中回填', /前海/.test(s), s)
+
+      // 切回供应商 + 个人：支行号收起（已选值保留），供应商侧材料转由校验把关
+      await click(cdp, '.radio-pill[data-type="personal"]')
+      await sleep(150)
+      s = await visibleFields()
+      check('切回个人账户 → 支行号收起', s.indexOf('开户行支行号：') < 0, JSON.stringify(s))
 
       // 基础项填齐后，缺失的条件必填项先被拦下
       await setVal('#add-acct-name', '罗炬')

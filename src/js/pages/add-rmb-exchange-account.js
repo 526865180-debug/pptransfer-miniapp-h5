@@ -8,10 +8,10 @@
      步骤 3 申请成功
    条件字段（见 RULES）：
      personal          仅个人账户        → I 类银行账户卡提示
-     supplier          仅供应商          → 开户行支行号（CNAPS 行号）
+     enterprise        仅企业账户        → 开户行支行号（CNAPS 行号）
      supplier-personal 供应商的个人账户  → 公司名称 / 统一信用代码 /
                                           收款人身份证号 / 历史采购合同
-   即本公司的账户只填基础银行信息，扩展材料只对「供应商 + 个人账户」收集。
+   即企业账户一律填开户行支行号，扩展材料只对「供应商 + 个人账户」收集。
    切换所属/类型只改 data-only 行的显隐，已填值留在 DOM 里，来回切换不丢；
    校验按同一套规则决定是否检查条件字段。
    弹层统一走 PP.ui（picker / searchPicker / toast）。
@@ -87,11 +87,11 @@
 
   /**
    * 条件字段规则：data-only 的取值 → 显示条件。
-   *   本公司账户只填基础银行信息；扩展材料只对「供应商 + 个人账户」收集。
+   *   企业账户一律要填开户行支行号；扩展材料只对「供应商 + 个人账户」收集。
    */
   var RULES = {
     personal: function () { return isPersonal() },
-    supplier: function () { return isSupplier() },
+    enterprise: function () { return !isPersonal() },
     'supplier-personal': function () { return isSupplier() && isPersonal() }
   }
 
@@ -147,13 +147,14 @@
     if (!val('#add-acct-name')) return { msg: '请填写账户名称', sel: '#add-acct-name' }
     if (!rawNum('#add-acct-no')) return { msg: '请填写银行账号', sel: '#add-acct-no' }
     if (!view.bank) return { msg: '请选择银行名称', sel: '#add-bank-btn' }
-    if (isSupplier()) {
-      if (!view.branch) return { msg: '请选择开户行支行号', sel: '#add-branch-btn' }
-      if (isPersonal()) {
-        if (!val('#add-company-name')) return { msg: '请填写公司名称', sel: '#add-company-name' }
-        if (!val('#add-credit-code')) return { msg: '请填写统一信用代码', sel: '#add-credit-code' }
-        if (!val('#add-id-card')) return { msg: '请填写收款人身份证号', sel: '#add-id-card' }
-      }
+    /* 企业账户一律要选开户行支行号 */
+    if (!isPersonal() && !view.branch) {
+      return { msg: '请选择开户行支行号', sel: '#add-branch-btn' }
+    }
+    if (isSupplier() && isPersonal()) {
+      if (!val('#add-company-name')) return { msg: '请填写公司名称', sel: '#add-company-name' }
+      if (!val('#add-credit-code')) return { msg: '请填写统一信用代码', sel: '#add-credit-code' }
+      if (!val('#add-id-card')) return { msg: '请填写收款人身份证号', sel: '#add-id-card' }
     }
     return null
   }
