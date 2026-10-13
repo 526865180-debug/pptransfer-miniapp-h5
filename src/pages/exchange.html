@@ -1,0 +1,85 @@
+<!--
+  pages/exchange.html · 换汇中心
+  ---------------------------------------------------------------
+  静态结构与文案写在 HTML 里；卖出/买入币种、金额、历史列表由 JS 驱动。
+  币种选择用 PP.ui.picker，确认与成功弹层用 PP.ui.sheet —— 页面里不出现
+  mask/sheet 骨架，只保留触发按钮。
+
+  弹层内需要随状态变化的文本节点（汇率、倒计时、六位密码校验）都带 id，
+  JS 只改文本/属性，不重建结构。
+-->
+
+<!-- ================= 快速换汇 ================= -->
+<section class="card card--section swap-card">
+  <div class="section-head">
+    <div>
+      <h2 class="section-title">快速换汇</h2>
+      <span class="section-sub">实时参考汇率 · 免手续费</span>
+    </div>
+  </div>
+
+  <!-- 卖出 -->
+  <div class="swap-side">
+    <div class="swap-side-top">
+      <span class="swap-label">卖出</span>
+      <span class="swap-bal">可用余额
+        <span class="num" data-amount id="sell-bal">$ 842,500.20</span>
+      </span>
+    </div>
+    <div class="swap-side-main">
+      <button type="button" class="ccy-pick" data-pick="sell" aria-label="选择卖出币种">
+        <span class="ccy-flag" aria-hidden="true" id="sell-flag">🇺🇸</span>
+        <span class="ccy-code" id="sell-code">USD</span>
+        <svg class="ccy-caret" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+      </button>
+      <label class="sr-only" for="sell-amount">卖出金额</label>
+      <input class="swap-input" id="sell-amount" type="text" inputmode="decimal"
+             autocomplete="off" placeholder="0.00" aria-describedby="amount-error">
+    </div>
+  </div>
+
+  <!-- 卖出 / 买入互调 -->
+  <div class="swap-mid">
+    <button type="button" class="swap-btn" id="swap-sides" aria-label="对调卖出与买入币种">
+      <svg aria-hidden="true"><use href="#i-swap"/></svg>
+    </button>
+  </div>
+
+  <!-- 买入 -->
+  <div class="swap-side">
+    <div class="swap-side-top">
+      <span class="swap-label">买入</span>
+      <span class="swap-bal" id="buy-rate">参考汇率 1 USD = 7.2345 CNH</span>
+    </div>
+    <div class="swap-side-main">
+      <button type="button" class="ccy-pick" data-pick="buy" aria-label="选择买入币种">
+        <span class="ccy-flag" aria-hidden="true" id="buy-flag">🇨🇳</span>
+        <span class="ccy-code" id="buy-code">CNH</span>
+        <svg class="ccy-caret" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+      </button>
+      <span class="swap-out num" data-amount id="buy-amount">—</span>
+    </div>
+  </div>
+
+  <p class="field-error" id="amount-error" role="alert" hidden></p>
+
+  <div class="swap-fee">
+    <span class="detail-label">手续费</span>
+    <span class="pill" data-tone="success">免手续费</span>
+  </div>
+
+  <button type="button" class="btn btn--primary btn--block" id="submit-swap"
+          aria-disabled="true">立即换汇</button>
+</section>
+
+<!-- ================= 换汇历史 ================= -->
+<section class="card card--section history-card">
+  <div class="section-head">
+    <h2 class="section-title">换汇历史</h2>
+    <button type="button" class="section-link" data-go="rmb-exchange-records">查看全部 ›</button>
+  </div>
+  <!-- 列表由 JS 渲染（PP.dom.renderList） -->
+  <ul class="rec-list" id="rec-list"></ul>
+</section>
+
+<div class="page-end"></div>

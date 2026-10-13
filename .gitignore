@@ -8,11 +8,11 @@ __pycache__/
 .venv/
 venv/
 
+# 渲染验证的截图产物
+tools/.render-out/
+
 # 编辑器与系统
 .DS_Store
 .idea/
 .vscode/
 *.swp
-
-# 校验脚本的临时截图
-*.tmp.png

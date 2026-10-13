@@ -1,0 +1,203 @@
+/* ============================================================
+   pages/exchange.css · 换汇中心
+   ------------------------------------------------------------
+   本页只写换汇特有部分：卖出/买入面板、互换按钮、费用行、
+   历史列表右侧、确认弹层的倒计时与密码区。
+   卡片、按钮、表单、列表行、弹层骨架见 components.css。
+   尺寸取自原 750 设计稿 ÷2（375px 基准）。
+   ============================================================ */
+
+.page[data-page='exchange']{
+  padding: 14px 0 12px;
+}
+
+.page[data-page='exchange'] .swap-card{ margin: 0 var(--gutter); padding: 15px 14px 14px; }
+.page[data-page='exchange'] .history-card{ margin: var(--space-3) var(--gutter) 0; padding: 15px 14px; }
+
+/* ============ 卖出 / 买入面板 ============ */
+.page[data-page='exchange'] .swap-side{
+  padding: 12px 13px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+}
+.page[data-page='exchange'] .swap-side-top{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: 9px;
+}
+.page[data-page='exchange'] .swap-label{
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-secondary);
+}
+.page[data-page='exchange'] .swap-bal{
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-xs);
+  color: var(--text-quaternary);
+}
+.page[data-page='exchange'] .swap-side-main{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 币种选择：整块可点，视觉 40px，用伪元素撑到 44px 命中区 */
+.page[data-page='exchange'] .ccy-pick{
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 9px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+}
+.page[data-page='exchange'] .ccy-pick::after{
+  content: '';
+  position: absolute;
+  inset: -2px;
+}
+.page[data-page='exchange'] .ccy-pick:active{ background: var(--surface-sunken); }
+.page[data-page='exchange'] .ccy-flag{
+  font-size: 16px;
+  line-height: 1;
+}
+.page[data-page='exchange'] .ccy-code{
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.page[data-page='exchange'] .ccy-caret{
+  width: 12px;
+  height: 12px;
+  opacity: 0.55;
+}
+
+.page[data-page='exchange'] .swap-input{
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  text-align: right;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.page[data-page='exchange'] .swap-out{
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-semibold);
+  color: var(--color-brand);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 互换按钮：压在两块面板之间 */
+.page[data-page='exchange'] .swap-mid{
+  position: relative;
+  height: 0;
+}
+.page[data-page='exchange'] .swap-btn{
+  position: absolute;
+  left: 50%;
+  top: -19px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  transform: translateX(-50%);
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: 50%;
+  box-shadow: 0 2px 7px rgba(15, 23, 42, 0.1);
+  color: var(--color-brand);
+}
+.page[data-page='exchange'] .swap-btn > svg{ width: 19px; height: 19px; }
+.page[data-page='exchange'] .swap-btn:active{ opacity: 0.7; }
+.page[data-page='exchange'] .swap-side + .swap-mid + .swap-side{ margin-top: 11px; }
+
+/* ============ 费用行与提交 ============ */
+.page[data-page='exchange'] .swap-fee{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 0 4px;
+}
+.page[data-page='exchange'] .swap-card .btn{ margin-top: 10px; }
+.page[data-page='exchange'] .swap-card .field-error{ margin-top: 9px; }
+
+/* ============ 换汇历史 ============ */
+.page[data-page='exchange'] .rec-list{ margin: 0; }
+.page[data-page='exchange'] .rec-right{
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+.page[data-page='exchange'] .rec-pill{
+  font-size: 9.5px;
+  padding: 2px 7px;
+}
+
+/* ============ 确认弹层：汇率锁定倒计时 ============ */
+#layer-root .confirm-lock{
+  margin-bottom: 10px;
+  text-align: right;
+}
+#layer-root .countdown{
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--tone-warning-bg);
+  font-family: var(--font-num);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--tone-warning-fg);
+}
+#layer-root .pwd-field{ margin: 16px 0 4px; }
+
+/* ============ 成功弹层（骨架由 PP.ui.sheet 提供） ============ */
+#layer-root .done-icon{
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 12px;
+  color: var(--tone-success-fg);
+}
+#layer-root .dialog-title{
+  display: block;
+  text-align: center;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+#layer-root .dialog-desc{
+  display: block;
+  margin-top: 6px;
+  text-align: center;
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--text-quaternary);
+}
+#layer-root .dialog-detail{
+  margin: 16px 0 14px;
+  padding: 4px 12px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-inner);
+}

@@ -1,0 +1,324 @@
+/* ============================================================
+   pages/rights-center.css · 权益中心
+   ------------------------------------------------------------
+   只写本页特有部分：说明条、概览格微调、券卡片、券详情弹层。
+   卡片 / 徽章 / 图标块 / 状态统计 / chip / 空状态 / 按钮见 components.css。
+   尺寸取自原 750 宽设计稿 ÷2（375px 基准）。
+
+   券的场景色由 data-tone 决定，统一落到 --rc-accent 上，
+   左侧色条、面额、进度条三处共用同一个变量，避免同色写三遍。
+   弹层挂在 #layer-root（不在页面根元素内），故其样式单独用 .rc-sheet 作用域。
+   ============================================================ */
+
+.page[data-page='rights-center'] {
+  padding: var(--space-4) 0 var(--space-6);
+}
+
+/* ============ 功能说明条 ============ */
+.page[data-page='rights-center'] .rc-banner {
+  margin: 0 var(--gutter);
+}
+.page[data-page='rights-center'] .rc-banner strong {
+  color: var(--text-primary);
+  font-weight: var(--weight-semibold);
+}
+
+/* ============ 概览 2×2 ============ */
+.page[data-page='rights-center'] .rc-stats {
+  margin: var(--space-3) var(--gutter) 0;
+}
+/* 金额位数不定，截断而不是撑破网格 */
+.page[data-page='rights-center'] .stat-card-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============ 抵扣规则入口 ============ */
+.page[data-page='rights-center'] .rc-rule-btn {
+  position: relative;
+  flex-shrink: 0;
+  padding: 5px var(--space-3);
+  border: 1px solid var(--color-brand-tint);
+  border-radius: var(--radius-sm);
+  background: var(--color-brand-soft);
+  color: var(--color-brand);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+/* 视觉 26px，用伪元素把命中区域撑到 44px */
+.page[data-page='rights-center'] .rc-rule-btn::after {
+  content: '';
+  position: absolute;
+  inset: -9px;
+}
+.page[data-page='rights-center'] .rc-rule-btn:active { opacity: 0.7; }
+
+/* ============ 状态筛选 ============ */
+.page[data-page='rights-center'] .rc-tabs {
+  padding: 0;
+  margin-bottom: var(--space-4);
+}
+
+/* ============ 优惠券卡片 ============ */
+.page[data-page='rights-center'] .rc-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.page[data-page='rights-center'] .coupon {
+  position: relative;
+  padding: 0 13px 0 17px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  --rc-accent: var(--tone-neutral-fg);
+}
+.page[data-page='rights-center'] .coupon[data-tone='blue'] { --rc-accent: var(--tone-brand-fg); }
+.page[data-page='rights-center'] .coupon[data-tone='violet'] { --rc-accent: var(--tone-violet-fg); }
+.page[data-page='rights-center'] .coupon[data-tone='success'] { --rc-accent: var(--tone-success-fg); }
+.page[data-page='rights-center'] .coupon[data-tone='warning'] { --rc-accent: var(--tone-warning-fg); }
+
+/* 左侧色条：标识适用的手续费场景 */
+.page[data-page='rights-center'] .coupon-cord {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--rc-accent);
+}
+
+.page[data-page='rights-center'] .coupon-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding-top: 13px;
+}
+.page[data-page='rights-center'] .coupon-head .pill { flex-shrink: 0; }
+.page[data-page='rights-center'] .coupon-id {
+  flex: 1;
+  min-width: 0;
+}
+.page[data-page='rights-center'] .coupon-name {
+  display: block;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.page[data-page='rights-center'] .coupon-type {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  color: var(--text-quaternary);
+}
+
+.page[data-page='rights-center'] .coupon-amount-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding-top: 11px;
+}
+.page[data-page='rights-center'] .coupon-amount {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+  color: var(--rc-accent);
+}
+.page[data-page='rights-center'] .coupon-amount-cap {
+  font-size: var(--text-xs);
+  color: var(--text-quaternary);
+}
+
+.page[data-page='rights-center'] .coupon-scopes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding-top: 9px;
+}
+.page[data-page='rights-center'] .coupon-scope,
+.rc-sheet .coupon-scope {
+  padding: 3px 7px;
+  border-radius: var(--radius-sm);
+  background: var(--tone-neutral-bg);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+}
+
+.page[data-page='rights-center'] .coupon-usage { padding-top: 11px; }
+.page[data-page='rights-center'] .coupon-usage-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: 5px;
+  font-size: var(--text-xs);
+  color: var(--text-quaternary);
+}
+.page[data-page='rights-center'] strong {
+  color: var(--text-primary);
+  font-weight: var(--weight-semibold);
+}
+
+.page[data-page='rights-center'] .bar {
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--tone-neutral-bg);
+  overflow: hidden;
+}
+.page[data-page='rights-center'] .bar-in {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--rc-accent);
+  transition: width var(--dur-slow) var(--ease-out);
+}
+/* 已用完 / 已过期：进度条退成灰与淡红，不与可用券争注意力 */
+.page[data-page='rights-center'] .coupon[data-state='usedup'] .bar-in {
+  background: var(--text-quaternary);
+}
+.page[data-page='rights-center'] .coupon[data-state='expired'] .bar-in {
+  background: var(--color-danger);
+  opacity: 0.45;
+}
+
+.page[data-page='rights-center'] .coupon-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border-subtle);
+}
+.page[data-page='rights-center'] .coupon-valid {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-xs);
+  color: var(--text-quaternary);
+}
+.page[data-page='rights-center'] .coupon-detail {
+  position: relative;
+  flex-shrink: 0;
+  padding: 6px 11px;
+  border: 1px solid var(--color-brand-tint);
+  border-radius: var(--radius-sm);
+  background: var(--color-brand-soft);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+/* 视觉 32px，用伪元素把命中区域撑到 44px */
+.page[data-page='rights-center'] .coupon-detail::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+.page[data-page='rights-center'] .coupon-detail:active { opacity: 0.7; }
+
+/* ============ 券详情弹层 ============ */
+.rc-sheet-id {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.rc-sheet-id .tile {
+  width: 34px;
+  height: 34px;
+}
+.rc-sheet-id .tile > svg {
+  width: 18px;
+  height: 18px;
+}
+.rc-sheet-sub {
+  font-size: var(--text-xs);
+  color: var(--text-quaternary);
+}
+
+.rc-ov {
+  display: flex;
+  gap: 7px;
+  margin-bottom: var(--space-4);
+}
+.rc-ov-cell {
+  flex: 1;
+  padding: 10px 6px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-inner);
+  text-align: center;
+}
+.rc-ov-val {
+  display: block;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.rc-ov-label {
+  display: block;
+  margin-top: 3px;
+  font-size: var(--text-2xs);
+  color: var(--text-quaternary);
+}
+
+.rc-sheet-scopes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: var(--space-4);
+}
+
+.rc-rec-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 7px;
+}
+.rc-rec-ico {
+  width: 16px;
+  height: 16px;
+  color: var(--text-quaternary);
+  opacity: 0.7;
+}
+.rc-rec-title {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text-secondary);
+}
+
+.rc-rec-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rc-rec {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 10px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-inner);
+}
+.rc-rec-body {
+  flex: 1;
+  min-width: 0;
+}
+.rc-rec-date {
+  display: block;
+  font-size: var(--text-2xs);
+  color: var(--text-quaternary);
+}
+.rc-rec-desc {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+}
+.rc-rec-amt {
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-success);
+}

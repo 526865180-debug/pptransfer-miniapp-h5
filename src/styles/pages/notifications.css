@@ -1,0 +1,142 @@
+/* ============================================================
+   pages/notifications.css · 消息通知中心
+   ------------------------------------------------------------
+   只写本页特有部分：概述栏、通知条目、消息详情弹层。
+   卡片 / 分段切换 / 图标块 / 徽章 / 空状态 / 按钮见 components.css。
+   尺寸取自原 750 宽设计稿 ÷2（375px 基准）。
+
+   条目整行可点，按约定用 <button> 而非 div，因此这里要重置
+   按钮默认的居中与内边距、并补上按压反馈。
+   弹层挂在 #layer-root（不在页面根元素内），故其样式单独用 .note-sheet 作用域。
+   ============================================================ */
+
+.page[data-page='notifications'] {
+  padding: var(--space-4) 0 var(--space-6);
+}
+
+/* ============ 概述栏 ============ */
+.page[data-page='notifications'] .note-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.page[data-page='notifications'] .note-head-body {
+  min-width: 0;
+}
+.page[data-page='notifications'] .note-head-title {
+  display: block;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.page[data-page='notifications'] .note-head-sub {
+  display: block;
+  margin-top: 4px;
+  font-size: var(--text-xs);
+  color: var(--text-quaternary);
+}
+/* 视觉 32px，用伪元素把命中区域撑到 44px */
+.page[data-page='notifications'] .note-readall { position: relative; }
+.page[data-page='notifications'] .note-readall::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+
+/* ============ 分类筛选 ============ */
+.page[data-page='notifications'] .note-filter {
+  margin: var(--space-4) var(--gutter) 0;
+}
+
+/* ============ 通知条目 ============ */
+.page[data-page='notifications'] .note {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: left;
+}
+.page[data-page='notifications'] .note-list > li:last-child .note { border-bottom: 0; }
+.page[data-page='notifications'] .note:active { background: var(--surface-sunken); }
+
+.page[data-page='notifications'] .note-body {
+  flex: 1;
+  min-width: 0;
+}
+.page[data-page='notifications'] .note-line1 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.page[data-page='notifications'] .note-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--text-tertiary);
+}
+.page[data-page='notifications'] .note-title[data-unread='true'] {
+  color: var(--text-primary);
+  font-weight: var(--weight-semibold);
+}
+.page[data-page='notifications'] .note-dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-danger);
+}
+.page[data-page='notifications'] .note-summary {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-xs);
+  color: var(--text-quaternary);
+}
+.page[data-page='notifications'] .note-time {
+  display: block;
+  margin-top: 5px;
+  font-size: var(--text-2xs);
+  color: var(--text-quaternary);
+}
+
+/* ============ 消息详情弹层 ============ */
+.note-sheet {
+  display: flex;
+  flex-direction: column;
+}
+.note-sheet .tile {
+  width: 54px;
+  height: 54px;
+  margin-bottom: var(--space-4);
+}
+.note-sheet .tile > svg {
+  width: 28px;
+  height: 28px;
+}
+.note-detail-title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+.note-detail-time {
+  margin-top: 5px;
+  font-size: var(--text-xs);
+  color: var(--text-quaternary);
+}
+.note-detail-content {
+  margin-top: var(--space-4);
+  font-size: var(--text-md);
+  line-height: 1.8;
+  color: var(--text-secondary);
+}

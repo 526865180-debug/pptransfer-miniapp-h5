@@ -1,0 +1,59 @@
+<!--
+  pages/trade-collection.html · 外贸收款管理（tabBar「收款」）
+  ---------------------------------------------------------------
+  静态结构与文案写在这里；收款卡片是同构列表，由 JS 从 COLLECTIONS 渲染。
+  筛选 / 详情 / 分配三个弹层统一交给 PP.ui.sheet 生成，
+  页面里只保留触发按钮，不再手写 mask + sheet 骨架。
+-->
+
+<!-- ===== 收款状态统计（点击即筛选） ===== -->
+<div class="stat-bar" role="group" aria-label="按收款状态筛选">
+  <button type="button" class="stat-item" data-status="" aria-pressed="true">
+    <span class="stat-num num" data-count="all">10</span>
+    <span class="stat-label">全部</span>
+  </button>
+  <button type="button" class="stat-item" data-status="已入账" data-tone="success" aria-pressed="false">
+    <span class="stat-num num" data-count="credited">4</span>
+    <span class="stat-label">已入账</span>
+  </button>
+  <button type="button" class="stat-item" data-status="审核中" data-tone="warning" aria-pressed="false">
+    <span class="stat-num num" data-count="reviewing">3</span>
+    <span class="stat-label">审核中</span>
+  </button>
+  <button type="button" class="stat-item" data-status="已驳回" data-tone="danger" aria-pressed="false">
+    <span class="stat-num num" data-count="rejected">3</span>
+    <span class="stat-label">已驳回</span>
+  </button>
+</div>
+
+<!-- ===== 搜索 + 筛选 ===== -->
+<div class="toolbar">
+  <div class="search-box">
+    <svg class="search-icon" aria-hidden="true"><use href="#i-search"/></svg>
+    <input type="text" class="search-input" id="tc-search" enterkeyhint="search"
+           placeholder="搜索收款编号 / 付款方 / 附言"
+           aria-label="搜索收款编号、付款方或附言">
+    <button type="button" class="search-clear" id="tc-clear" hidden>清除</button>
+  </div>
+  <button type="button" class="filter-btn" id="tc-filter" data-active="false"
+          aria-haspopup="dialog" aria-label="筛选">
+    <svg aria-hidden="true"><use href="#i-filter"/></svg>
+    <span class="filter-badge" id="tc-filter-badge" hidden>0</span>
+  </button>
+</div>
+
+<!-- ===== 列表头 ===== -->
+<div class="list-head">
+  <span class="list-count" id="tc-count">共 10 条收款记录</span>
+  <button type="button" class="btn-text" id="tc-export">导出明细</button>
+</div>
+
+<!-- ===== 收款卡片列表（JS 渲染） ===== -->
+<ul class="coll-list" id="tc-list" aria-label="收款记录"></ul>
+
+<!-- ===== 空状态 ===== -->
+<div class="card empty tc-empty" id="tc-empty" hidden>
+  <svg class="empty-icon" aria-hidden="true"><use href="#i-inbox"/></svg>
+  <p class="empty-text">未找到匹配的收款记录</p>
+  <p class="empty-sub">试试调整搜索关键词或筛选条件</p>
+</div>

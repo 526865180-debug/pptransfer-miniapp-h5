@@ -1,0 +1,51 @@
+<!--
+  pages/wallet.html · 我的资产
+  ---------------------------------------------------------------
+  渐变 Hero 的结构与配色复用 components.css 的 .hero / .hero-deco，
+  钱包特有的排版见 wallet.css。
+  币种账户是 10 条同构数据，由 wallet.js 渲染；静态文案写在这里。
+  金额一律带 data-amount —— 受全局脱敏开关（body[data-amount-hidden]）控制。
+-->
+
+<!-- 汇总 Hero -->
+<section class="hero">
+  <span class="hero-deco hero-deco--a" aria-hidden="true"></span>
+  <span class="hero-deco hero-deco--b" aria-hidden="true"></span>
+
+  <div class="wallet-label-row">
+    <span class="hero-label">总资产折合估值 (USD)</span>
+    <button type="button" class="wallet-eye" id="wallet-amount-toggle"
+            aria-pressed="true" aria-label="隐藏金额">
+      <svg aria-hidden="true"><use href="#i-eye"/></svg>
+    </button>
+  </div>
+
+  <span class="wallet-total num" data-amount id="total-asset">$ 1,723,225.51</span>
+
+  <span class="hero-divider" aria-hidden="true"></span>
+
+  <div class="wallet-meta">
+    <div class="wallet-meta-item">
+      <span class="wallet-meta-label">币种账户</span>
+      <span class="wallet-meta-value num" id="acct-count">10</span>
+    </div>
+    <span class="wallet-meta-split" aria-hidden="true"></span>
+    <div class="wallet-meta-item">
+      <span class="wallet-meta-label">在途资金 (USD)</span>
+      <span class="wallet-meta-value num" data-amount id="in-transit">$ 177,088.52</span>
+    </div>
+  </div>
+</section>
+
+<!-- 币种账户列表；列表项由 JS 渲染 -->
+<section class="card wallet-card">
+  <div class="section-head">
+    <div>
+      <h2 class="section-title">币种账户</h2>
+      <span class="section-sub">余额以各币种原币展示</span>
+    </div>
+  </div>
+  <ul class="acct-list" id="wallet-acct-list"></ul>
+</section>
+
+<p class="wallet-tip">数据仅供参考，以实际清算结果为准</p>

@@ -1,0 +1,207 @@
+/* ============================================================
+   pages/trade-collection.css · 外贸收款管理
+   ------------------------------------------------------------
+   本页只写收款卡片与分配弹层的特有部分；stat-bar / toolbar /
+   search-box / list-head / detail-box / date-row / option-row /
+   sheet 等一律复用 components.css。
+   尺寸按 375px 基准换算（原设计稿 750 单位 ÷ 2）。
+   ============================================================ */
+
+.page[data-page='trade-collection'] {
+  padding: 14px 0 20px;
+}
+
+/* ============ 收款卡片列表 ============ */
+.coll-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 10px var(--gutter) 0;
+}
+.coll-card {
+  padding: 14px 15px;
+  background: var(--surface-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+/* 卡片上半区整块可点 = 查看详情（避免按钮嵌套按钮） */
+.cc-main {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border-radius: var(--radius-inner);
+}
+.cc-main:active { opacity: 0.6; }
+
+.cc-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.cc-no {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-num);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+/* 状态徽章左侧圆点：纯装饰，用伪元素画出来，
+   读屏不会念成「实心圆 已入账」 */
+.cc-status::before {
+  content: '';
+  flex-shrink: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.cc-mid {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+}
+.cc-payer-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.cc-payer {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.cc-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+.cc-amount {
+  flex-shrink: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--color-success);
+}
+.cc-note {
+  display: block;
+  margin-top: 7px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.cc-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* 业务员徽章：点开分配弹层 */
+.cc-sales {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 5px 11px;
+  border-radius: var(--radius-pill);
+  background: var(--tone-brand-bg);
+  color: var(--tone-brand-fg);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+.cc-sales > svg { width: 14px; height: 14px; }
+.cc-sales:active { opacity: 0.6; }
+/* 视觉 28px，撑到 44px 命中区（与相邻控件不相交） */
+.cc-sales::after {
+  content: '';
+  position: absolute;
+  inset: -8px -4px;
+}
+
+.cc-ops {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cc-op {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 9px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--color-brand);
+}
+.cc-op:active { opacity: 0.6; }
+.cc-op::after {
+  content: '';
+  position: absolute;
+  inset: -8px -3px;
+}
+
+/* ============ 空状态 ============ */
+.tc-empty { margin: 10px var(--gutter) 0; }
+
+/* ============ 筛选弹层 ============ */
+/* 账号选择按钮沿用 .date-box 外观，只是换成 button 语义 */
+.tc-pick { font-family: var(--font-num); }
+.tc-amt {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ============ 详情弹层 ============ */
+.tc-strong {
+  color: var(--color-success);
+  font-weight: var(--weight-semibold);
+}
+
+/* ============ 分配业务员弹层 ============ */
+.assign-no-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: var(--space-3);
+  padding: 10px 12px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-inner);
+}
+.assign-no-label {
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+.assign-no {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+/* 业务员最多 11 项，列表自身限高，弹层其余部分不被拉长 */
+.assign-list {
+  max-height: 52vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}

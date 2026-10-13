@@ -1,0 +1,41 @@
+<!--
+  pages/rmb-exchange-records.html · 结汇记录
+  ---------------------------------------------------------------
+  状态分段是固定控件，直接写在 HTML 里；记录列表由 JS 从 RECORDS 渲染，
+  汇总金额随筛选结果由 JS 回填。详情弹层交给 PP.ui.sheet。
+-->
+
+<!-- ===== 状态筛选 ===== -->
+<div class="rx-filter">
+  <div class="seg" role="tablist" aria-label="按结汇状态筛选">
+    <button type="button" class="seg-item" role="tab" data-key="all" aria-selected="true">全部</button>
+    <button type="button" class="seg-item" role="tab" data-key="processing" aria-selected="false">处理中</button>
+    <button type="button" class="seg-item" role="tab" data-key="done" aria-selected="false">已完成</button>
+    <button type="button" class="seg-item" role="tab" data-key="failed" aria-selected="false">失败</button>
+  </div>
+</div>
+
+<!-- ===== 汇总（随筛选结果变化） ===== -->
+<section class="card rx-summary">
+  <div class="rx-summary-item">
+    <span class="rx-summary-label">本页汇出金额</span>
+    <span class="rx-summary-value" id="rx-total">257,742.00 CNH</span>
+  </div>
+  <span class="rx-summary-split" aria-hidden="true"></span>
+  <div class="rx-summary-item">
+    <span class="rx-summary-label">手续费合计</span>
+    <span class="rx-summary-value" id="rx-fee">258.00 CNH</span>
+  </div>
+</section>
+
+<!-- ===== 记录列表 ===== -->
+<section class="card rx-card" id="rx-card">
+  <ul class="rx-list" id="rx-list" aria-label="结汇记录"></ul>
+  <p class="rec-count" id="rx-count">共 4 条记录</p>
+</section>
+
+<!-- ===== 空状态 ===== -->
+<div class="card empty rx-empty" id="rx-empty" hidden>
+  <svg class="empty-icon" aria-hidden="true"><use href="#i-inbox"/></svg>
+  <p class="empty-text">当前筛选条件下暂无结汇记录</p>
+</div>

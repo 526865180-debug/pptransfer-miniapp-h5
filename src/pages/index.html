@@ -1,0 +1,111 @@
+<!--
+  pages/index.html · 商户首页
+  ---------------------------------------------------------------
+  结构与静态文案写在 HTML 里；可变数据（未读数、币种余额）由 JS 填充。
+  整屏单页：内容自然流排布，普通手机上恰好一屏无需滚动，
+  但容器不裁切溢出 —— 遇到特别矮的屏幕会退化为可滚动，而不是丢内容。
+-->
+
+<!-- 企业信息横幅 -->
+<section class="corp-banner">
+  <div class="corp-identity">
+    <span class="corp-avatar" aria-hidden="true">极</span>
+    <span class="corp-name">极光科技(香港)有限公司</span>
+  </div>
+  <span class="corp-divider" aria-hidden="true"></span>
+  <button type="button" class="corp-notice" id="go-notifications"
+          aria-label="通知，有未读消息">
+    <span class="notice-bell-wrap">
+      <svg class="notice-bell" aria-hidden="true"><use href="#i-bell"/></svg>
+      <span class="notice-badge" id="notice-badge">6</span>
+    </span>
+    <span class="notice-label">通知</span>
+  </button>
+</section>
+
+<!-- 资产总览 -->
+<section class="hero">
+  <span class="hero-deco hero-deco--a" aria-hidden="true"></span>
+  <span class="hero-deco hero-deco--b" aria-hidden="true"></span>
+
+  <div class="hero-label-row">
+    <span class="hero-label">总资产折合估值 (USD)</span>
+    <button type="button" class="hero-eye" id="amount-toggle"
+            aria-pressed="true" aria-label="隐藏金额">
+      <svg aria-hidden="true"><use href="#i-eye"/></svg>
+    </button>
+  </div>
+
+  <button type="button" class="hero-amount-row" data-go="wallet"
+          aria-label="查看我的资产">
+    <span class="hero-amount num" data-amount>$ 1,723,225.51</span>
+    <span class="hero-growth">
+      <svg aria-hidden="true"><use href="#i-arrow-up"/></svg>2.4%
+    </span>
+    <svg class="hero-arrow" aria-hidden="true"><use href="#i-chevron-right"/></svg>
+  </button>
+
+  <span class="hero-divider" aria-hidden="true"></span>
+
+  <div class="intransit">
+    <span class="intransit-label">在途资金 (USD)</span>
+    <button type="button" class="intransit-tag" data-go="in-transit-funds">详情 ›</button>
+  </div>
+  <span class="intransit-amount num" data-amount>$ 177,088.52</span>
+
+  <!-- 币种余额横滑；列表由 JS 渲染 -->
+  <div class="bal-scroll" id="bal-scroll" tabindex="0" aria-label="币种余额"></div>
+</section>
+
+<!-- 快捷操作 -->
+<nav class="quick-row" aria-label="快捷操作">
+  <button type="button" class="quick-item" data-go="order-management">
+    <span class="tile" data-tone="success"><svg aria-hidden="true"><use href="#i-order"/></svg></span>
+    <span class="quick-label">订单管理</span>
+  </button>
+  <button type="button" class="quick-item" data-go="exchange">
+    <span class="tile" data-tone="warning"><svg aria-hidden="true"><use href="#i-swap"/></svg></span>
+    <span class="quick-label">换汇</span>
+  </button>
+  <button type="button" class="quick-item" data-go="rmb-exchange">
+    <span class="tile" data-tone="blue"><svg aria-hidden="true"><use href="#i-coin"/></svg></span>
+    <span class="quick-label">人民币结汇</span>
+  </button>
+  <button type="button" class="quick-item" data-go="international-remittance">
+    <span class="tile" data-tone="info"><svg aria-hidden="true"><use href="#i-globe"/></svg></span>
+    <span class="quick-label">国际汇款</span>
+  </button>
+</nav>
+
+<!-- 实时汇率走势 -->
+<section class="card card--section rate-card">
+  <div class="section-head">
+    <div>
+      <h2 class="section-title">实时汇率走势</h2>
+      <span class="section-sub">更新于 2026-04-01 10:45 · UTC+8</span>
+    </div>
+    <button type="button" class="section-link" data-go="exchange">换汇中心 ›</button>
+  </div>
+
+  <div class="seg rate-pairs" role="tablist" aria-label="币对">
+    <button type="button" class="seg-item" role="tab" aria-selected="true"  data-pair="USD/CNH">USD/CNH</button>
+    <button type="button" class="seg-item" role="tab" aria-selected="false" data-pair="EUR/CNH">EUR/CNH</button>
+    <button type="button" class="seg-item" role="tab" aria-selected="false" data-pair="GBP/CNH">GBP/CNH</button>
+  </div>
+
+  <div class="chart-box">
+    <canvas id="rate-canvas" role="img" aria-label="汇率走势折线图"></canvas>
+  </div>
+
+  <div class="trend-foot">
+    <div class="seg range-seg" role="tablist" aria-label="时间区间">
+      <button type="button" class="seg-item" role="tab" aria-selected="true"  data-range="24H">24H</button>
+      <button type="button" class="seg-item" role="tab" aria-selected="false" data-range="7D">7D</button>
+      <button type="button" class="seg-item" role="tab" aria-selected="false" data-range="30D">30D</button>
+    </div>
+    <p class="trend-caption">
+      <span class="trend-val num" id="rate-now">7.2214</span>
+      <span class="trend-chg" id="rate-change" data-trend="up">+0.12%</span>
+    </p>
+  </div>
+</section>

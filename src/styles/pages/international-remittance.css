@@ -1,0 +1,409 @@
+/* ============================================================
+   pages/international-remittance.css · 国际汇款向导
+   ------------------------------------------------------------
+   本页只写向导特有部分：步骤条、币种选择行、金额行、单选卡片、
+   费用明细盒、付款材料上传区、危险提示条、结果页。
+   表单域、按钮、详情行、分隔标题见 components.css。
+   尺寸取自原 750 设计稿 ÷2（375px 基准）。
+   ============================================================ */
+
+.page[data-page='international-remittance']{
+  padding: 14px 0 12px;
+}
+
+/* ============ 步骤条 ============ */
+.page[data-page='international-remittance'] .steps{
+  display: flex;
+  align-items: flex-start;
+  padding: 0 20px 16px;
+}
+.page[data-page='international-remittance'] .step{
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 75px;
+}
+.page[data-page='international-remittance'] .step-dot{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--border-default);
+  color: var(--text-quaternary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+.page[data-page='international-remittance'] .step[data-state='on'] .step-dot{
+  background: var(--color-brand);
+  color: var(--text-on-brand);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.28);
+}
+.page[data-page='international-remittance'] .step[data-state='done'] .step-dot{
+  background: var(--color-success);
+  color: var(--text-on-brand);
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.24);
+}
+.page[data-page='international-remittance'] .step-text{
+  font-size: var(--text-2xs);
+  line-height: 1.3;
+  color: var(--text-quaternary);
+  text-align: center;
+}
+.page[data-page='international-remittance'] .step[data-state='on'] .step-text{
+  color: var(--text-secondary);
+  font-weight: var(--weight-semibold);
+}
+.page[data-page='international-remittance'] .step-line{
+  flex: 1;
+  height: 1px;
+  margin-top: 12px;
+  background: var(--border-default);
+}
+.page[data-page='international-remittance'] .step-line[data-state='on']{ background: var(--color-brand); }
+
+/* ============ 币种选择行 ============ */
+.page[data-page='international-remittance'] .ccy-flag{
+  font-size: 16px;
+  line-height: 1;
+}
+.page[data-page='international-remittance'] .ccy-caret{
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  opacity: 0.55;
+}
+.page[data-page='international-remittance'] .picker-field{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: 12px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-inner);
+}
+.page[data-page='international-remittance'] .picker-field:active{ background: var(--slate-100); }
+.page[data-page='international-remittance'] .picker-left{
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.page[data-page='international-remittance'] .picker-value{
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.page[data-page='international-remittance'] .picker-value.placeholder{
+  font-weight: var(--weight-regular);
+  color: var(--text-placeholder);
+}
+.page[data-page='international-remittance'] .upper{ text-transform: uppercase; }
+
+/* ============ 金额行 ============ */
+.page[data-page='international-remittance'] .amount-field{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 12px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-inner);
+}
+.page[data-page='international-remittance'] .amount-input{
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.page[data-page='international-remittance'] .amount-all{
+  flex-shrink: 0;
+  padding: 5px 11px;
+  border-radius: var(--radius-pill);
+  background: var(--color-brand-soft);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-brand);
+}
+.page[data-page='international-remittance'] .amount-all:active{ background: var(--color-brand-tint); }
+
+/* ============ 只读字段 ============ */
+.page[data-page='international-remittance'] .readonly-field{
+  padding: 12px;
+  border-radius: var(--radius-inner);
+  background: var(--slate-100);
+  font-size: var(--text-base);
+  color: var(--text-tertiary);
+}
+
+/* ============ 单选卡片 ============ */
+.page[data-page='international-remittance'] .radio-opt{
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 11px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-inner);
+  text-align: left;
+  transition: background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+.page[data-page='international-remittance'] .radio-opt:active{ background: var(--surface-sunken); }
+.page[data-page='international-remittance'] .radio-opt[aria-checked='true']{
+  border-color: var(--color-brand);
+  background: var(--color-brand-soft);
+}
+.page[data-page='international-remittance'] .radio-dot{
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+  border: 1px solid var(--text-placeholder);
+  border-radius: 50%;
+  background: var(--surface-card);
+}
+.page[data-page='international-remittance'] .radio-opt[aria-checked='true'] .radio-dot{
+  border: 5px solid var(--color-brand);
+}
+.page[data-page='international-remittance'] .radio-body{
+  flex: 1;
+  min-width: 0;
+}
+.page[data-page='international-remittance'] .radio-title{
+  display: block;
+  font-size: var(--text-md);
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+.page[data-page='international-remittance'] .radio-desc{
+  display: block;
+  margin-top: 4px;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--text-quaternary);
+}
+
+/* ============ 费用明细 ============ */
+.page[data-page='international-remittance'] .fee-box{
+  padding: 4px 13px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-inner);
+}
+.page[data-page='international-remittance'] .fee-row{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: 9px 0;
+}
+.page[data-page='international-remittance'] .fee-row .k{
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+.page[data-page='international-remittance'] .fee-row .v{
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text-secondary);
+}
+.page[data-page='international-remittance'] .fee-row.total{
+  margin-top: 2px;
+  border-top: 1px dashed var(--border-default);
+}
+.page[data-page='international-remittance'] .fee-row.total .k{
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.page[data-page='international-remittance'] .fee-row.total .v{
+  font-size: var(--text-lg);
+  color: var(--color-brand);
+}
+.page[data-page='international-remittance'] .fee-row.deduct .v{ color: var(--text-primary); }
+
+/* ============ 付款材料 ============ */
+.page[data-page='international-remittance'] .upload-box{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  padding: 22px 12px;
+  border: 1px dashed var(--text-placeholder);
+  border-radius: var(--radius-inner);
+  background: var(--surface-card);
+}
+.page[data-page='international-remittance'] .upload-box:active{ background: var(--surface-sunken); }
+.page[data-page='international-remittance'] .upload-icon{
+  width: 28px;
+  height: 28px;
+  color: var(--color-brand);
+}
+.page[data-page='international-remittance'] .upload-title{
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--color-brand);
+}
+.page[data-page='international-remittance'] .upload-hint{
+  font-size: var(--text-2xs);
+  line-height: 1.5;
+  color: var(--text-quaternary);
+  text-align: center;
+}
+.page[data-page='international-remittance'] .file-row{
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-inner);
+}
+.page[data-page='international-remittance'] .file-icon{
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--color-brand);
+}
+.page[data-page='international-remittance'] .file-name{
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-md);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.page[data-page='international-remittance'] .file-del{
+  flex-shrink: 0;
+  padding: 4px 0 4px var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-danger);
+}
+.page[data-page='international-remittance'] .file-del:active{ opacity: 0.6; }
+
+/* ============ 危险提示条 ============ */
+.page[data-page='international-remittance'] .alert-bar{
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 var(--gutter) 10px;
+  padding: 11px 13px;
+  border-radius: var(--radius-inner);
+  background: var(--tone-danger-bg);
+}
+.page[data-page='international-remittance'] .alert-icon{
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  color: var(--tone-danger-fg);
+}
+.page[data-page='international-remittance'] .alert-text{
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--tone-danger-fg);
+}
+
+.page[data-page='international-remittance'] .pwd-field{ margin: 16px 0 12px; }
+
+/* 第 2 步顶部有提示条，卡片与面板左对齐即可 */
+.page[data-page='international-remittance'] #panel-2 > .card--section{ margin-top: 0; }
+
+/* ============ 结果页 ============ */
+.page[data-page='international-remittance'] .done-card{ padding-top: 28px; }
+.page[data-page='international-remittance'] .done-icon{
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 13px;
+  color: var(--tone-success-fg);
+}
+.page[data-page='international-remittance'] .done-title{
+  display: block;
+  text-align: center;
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.page[data-page='international-remittance'] .done-desc{
+  display: block;
+  margin-top: 7px;
+  text-align: center;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--text-tertiary);
+}
+
+.page[data-page='international-remittance'] .ref-box{
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 20px 0 16px;
+  padding: 13px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-inner);
+}
+.page[data-page='international-remittance'] .ref-label{
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+.page[data-page='international-remittance'] .ref-value{
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.page[data-page='international-remittance'] .copy-btn{ flex-shrink: 0; min-height: 28px; padding: 4px 10px; }
+
+.page[data-page='international-remittance'] .tips-box{
+  margin-bottom: 16px;
+  padding: 14px;
+  border-radius: var(--radius-inner);
+  background: var(--tone-warning-bg);
+}
+.page[data-page='international-remittance'] .tips-title{
+  display: block;
+  margin-bottom: 9px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--tone-warning-fg);
+}
+.page[data-page='international-remittance'] .tips-item{
+  display: flex;
+  gap: 6px;
+  margin-bottom: 7px;
+}
+.page[data-page='international-remittance'] .tips-item:last-child{ margin-bottom: 0; }
+.page[data-page='international-remittance'] .tips-dot{
+  flex-shrink: 0;
+  width: 4px;
+  height: 4px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--tone-warning-fg);
+}
+.page[data-page='international-remittance'] .tips-text{
+  flex: 1;
+  font-size: var(--text-xs);
+  line-height: 1.65;
+  color: var(--text-secondary);
+}

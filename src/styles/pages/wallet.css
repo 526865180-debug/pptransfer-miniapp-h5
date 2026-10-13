@@ -1,0 +1,172 @@
+/* ============================================================
+   pages/wallet.css · 我的资产
+   ------------------------------------------------------------
+   渐变 Hero 的底色、装饰圆、分隔线来自 components.css 的
+   .hero / .hero-deco / .hero-label / .hero-divider，本页只写钱包
+   特有的部分：总资产排版、账户概览两项、币种账户列表。
+   全部规则收在 .page[data-page='wallet'] 作用域内，不与别的页面互相污染。
+
+   尺寸按原 750 设计稿 ÷2（375px 基准），一律 px，不使用相对单位。
+   金额脱敏由全站的 [data-amount] + body[data-amount-hidden] 规则驱动，
+   本页只负责给金额加 data-amount 钩子并同步开关图标。
+   ============================================================ */
+
+.page[data-page='wallet'] {
+  padding: 14px 0 24px;
+}
+
+/* ============ 汇总 Hero ============ */
+.page[data-page='wallet'] .hero {
+  margin: 0 var(--gutter);
+  padding: 12px 13px;
+  border-radius: var(--radius-hero);
+}
+.page[data-page='wallet'] .hero-deco--a { width: 130px; height: 130px; top: -60px; right: -35px; }
+.page[data-page='wallet'] .hero-deco--b { width: 70px; height: 70px; bottom: -26px; right: 48px; }
+/* .hero-label 的尺寸也显式声明一次：它的通用规则在别的页面样式里，本页不依赖别人 */
+.page[data-page='wallet'] .hero-label { font-size: var(--text-xs); }
+
+.page[data-page='wallet'] .wallet-label-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 视觉 28px，用伪元素把命中区域撑到 44px（WCAG 最小触摸目标） */
+.page[data-page='wallet'] .wallet-eye {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: var(--text-on-brand);
+  opacity: 0.88;
+}
+.page[data-page='wallet'] .wallet-eye::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+.page[data-page='wallet'] .wallet-eye:active { opacity: 0.6; }
+.page[data-page='wallet'] .wallet-eye > svg { width: 15px; height: 15px; }
+
+.page[data-page='wallet'] .wallet-total {
+  display: block;
+  margin-top: 5px;
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+}
+
+/* 概览两项：币种账户数 / 在途资金 */
+.page[data-page='wallet'] .wallet-meta {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.page[data-page='wallet'] .wallet-meta-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+/* 渐变底上的白色透明层，tokens 里没有对应语义变量，与 index.css 的写法一致 */
+.page[data-page='wallet'] .wallet-meta-label {
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.72);
+}
+.page[data-page='wallet'] .wallet-meta-value {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-on-brand);
+}
+.page[data-page='wallet'] .wallet-meta-split {
+  flex-shrink: 0;
+  width: 1px;
+  height: 28px;
+  margin: 0 var(--space-4);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* ============ 币种账户 ============ */
+.page[data-page='wallet'] .wallet-card {
+  margin: var(--space-4) var(--gutter) 0;
+  padding: var(--space-6);
+}
+.page[data-page='wallet'] .wallet-card .section-head { margin-bottom: var(--space-2); }
+
+.page[data-page='wallet'] .acct-list { margin: 0; padding: 0; }
+
+.page[data-page='wallet'] .acct {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.page[data-page='wallet'] .acct:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.page[data-page='wallet'] .acct-flag {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-inner);
+  background: var(--surface-sunken);
+  font-size: var(--text-3xl);
+}
+
+.page[data-page='wallet'] .acct-body {
+  flex: 1;
+  min-width: 0;
+}
+.page[data-page='wallet'] .acct-name {
+  display: block;
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+}
+.page[data-page='wallet'] .acct-amount {
+  display: block;
+  margin-top: 4px;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--color-brand);
+}
+
+/* 行内操作：视觉 26px 高，用伪元素把命中区域向上下撑开 */
+.page[data-page='wallet'] .acct-ops {
+  flex-shrink: 0;
+  display: flex;
+  gap: 6px;
+}
+.page[data-page='wallet'] .acct-op {
+  position: relative;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--color-brand-soft);
+  color: var(--color-brand);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+}
+.page[data-page='wallet'] .acct-op::after {
+  content: '';
+  position: absolute;
+  inset: -8px -3px;
+}
+.page[data-page='wallet'] .acct-op:active { opacity: 0.6; }
+
+/* ============ 免责说明 ============ */
+.page[data-page='wallet'] .wallet-tip {
+  margin: var(--space-4) var(--gutter) 0;
+  font-size: var(--text-sm);
+  color: var(--text-quaternary);
+  text-align: center;
+}

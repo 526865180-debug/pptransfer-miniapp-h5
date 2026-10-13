@@ -1,0 +1,36 @@
+<!--
+  pages/rights-center.html · 权益中心（手续费优惠券管理）
+  ---------------------------------------------------------------
+  静态骨架与固定文案写在 HTML；概览四格、状态筛选、券列表由 JS 渲染
+  （数据见 rights-center.js 顶部的演示常量）。
+  券详情与抵扣规则分别交给 PP.ui.sheet / PP.ui.confirm，片段里只留触发按钮。
+-->
+
+<!-- 功能说明条 -->
+<section class="notice rc-banner">
+  <svg class="notice-icon" aria-hidden="true"><use href="#i-shield"/></svg>
+  <p class="notice-body"><strong>自动拆分抵扣</strong>：单笔手续费不足券面额时，系统自动按最优组合匹配多张券，不足部分无需手动操作。抵扣明细实时可查，覆盖<strong>跨境收款、人民币结汇、国际汇款</strong>等手续费场景。</p>
+</section>
+
+<!-- 概览 2×2；由 JS 渲染 -->
+<div class="stat-grid rc-stats" id="rc-stats"></div>
+
+<!-- 我的优惠券 -->
+<section class="card card--section">
+  <div class="section-head">
+    <h2 class="section-title">我的优惠券</h2>
+    <button type="button" class="rc-rule-btn" id="rc-rules">抵扣规则</button>
+  </div>
+
+  <!-- 状态筛选（横向滚动，含计数）；由 JS 渲染 -->
+  <div class="chipbar rc-tabs" id="rc-filters" role="group" aria-label="优惠券状态筛选"></div>
+
+  <!-- 券列表；由 JS 渲染 -->
+  <ul class="rc-list" id="rc-list" role="list"></ul>
+
+  <!-- 空状态 -->
+  <div class="empty" id="rc-empty" hidden>
+    <svg class="empty-icon" aria-hidden="true"><use href="#i-inbox"/></svg>
+    <span class="empty-text">暂无相关优惠券</span>
+  </div>
+</section>

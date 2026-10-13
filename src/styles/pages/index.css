@@ -1,0 +1,360 @@
+/* ============================================================
+   pages/index.css · 商户首页
+   ------------------------------------------------------------
+   本页只写首页特有部分；卡片、徽章、按钮等通用样式见 components.css。
+   尺寸取自原 750rpx 设计稿 ÷2（375px 基准）。
+
+   布局取舍：原实现让汇率卡 flex:1 吸收剩余高度，并用 space-between
+   分摊余量，结果是长屏机型上标题与图表之间出现大片空白。这里改为
+   自然流 + 图表定高，余量统一落在页面底部 —— 视觉更稳定，
+   且矮屏不会被裁切内容。
+   ============================================================ */
+
+/* 整屏单页：普通手机恰好一屏，矮屏可退化滚动而不丢内容 */
+.page[data-page='index']{
+  min-height: 100%;
+  padding: 6px 0 5px;
+}
+
+/* ============ 企业信息横幅 ============ */
+.page[data-page='index'] .corp-banner{
+  display: flex;
+  align-items: center;
+  margin: 0 var(--gutter) 6px;
+  padding: 6px 10px;
+  background: var(--surface-card);
+  border-radius: var(--radius-inner);
+  box-shadow: var(--shadow-card);
+}
+.page[data-page='index'] .corp-identity{
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.page[data-page='index'] .corp-avatar{
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue-500), var(--blue-600));
+  color: var(--text-on-brand);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+.page[data-page='index'] .corp-name{
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.page[data-page='index'] .corp-divider{
+  flex-shrink: 0;
+  width: 1px;
+  height: 17px;
+  margin: 0 10px;
+  background: var(--border-default);
+}
+.page[data-page='index'] .corp-notice{
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 3px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+}
+.page[data-page='index'] .corp-notice:active{ background: var(--surface-sunken); }
+.page[data-page='index'] .notice-bell-wrap{
+  position: relative;
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+.page[data-page='index'] .notice-bell{
+  width: 20px;
+  height: 20px;
+  opacity: 0.75;
+}
+.page[data-page='index'] .notice-badge{
+  position: absolute;
+  top: -4px;
+  right: -5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  border: 1.5px solid var(--surface-card);
+  border-radius: var(--radius-pill);
+  background: var(--color-danger);
+  color: #ffffff;
+  font-family: var(--font-num);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+}
+.page[data-page='index'] .notice-label{
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+/* ============ 资产 Hero ============ */
+.page[data-page='index'] .hero{
+  margin: 0 var(--gutter);
+  padding: 11px 13px;
+  border-radius: var(--radius-card);
+}
+.page[data-page='index'] .hero-deco--a{ width: 130px; height: 130px; top: -60px; right: -35px; }
+.page[data-page='index'] .hero-deco--b{ width: 70px; height: 70px; bottom: -28px; right: 50px; }
+
+.page[data-page='index'] .hero-label-row{
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.page[data-page='index'] .hero-label{ font-size: var(--text-xs); }
+
+/* 视觉 28px，但用伪元素把可点区域撑到 44px（WCAG 最小触摸目标） */
+.page[data-page='index'] .hero-eye{
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: var(--text-on-brand);
+  opacity: 0.88;
+}
+.page[data-page='index'] .hero-eye::after{
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+.page[data-page='index'] .hero-eye:active{ opacity: 0.6; }
+.page[data-page='index'] .hero-eye > svg{ width: 15px; height: 15px; }
+
+.page[data-page='index'] .hero-amount-row{
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 6px;
+  padding: 2px 0;
+  color: var(--text-on-brand);
+  text-align: left;
+}
+.page[data-page='index'] .hero-amount-row:active{ opacity: 0.75; }
+.page[data-page='index'] .hero-amount{
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+}
+.page[data-page='index'] .hero-growth{
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.18);
+  font-family: var(--font-num);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+}
+.page[data-page='index'] .hero-growth > svg{ width: 10px; height: 10px; }
+.page[data-page='index'] .hero-arrow{
+  margin-left: auto;
+  width: 14px;
+  height: 14px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.page[data-page='index'] .intransit{
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.page[data-page='index'] .intransit-label{
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.72);
+}
+.page[data-page='index'] .intransit-tag{
+  position: relative;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: var(--text-2xs);
+}
+.page[data-page='index'] .intransit-tag::after{
+  content: '';
+  position: absolute;
+  inset: -10px -6px;
+}
+.page[data-page='index'] .intransit-tag:active{ background: rgba(255, 255, 255, 0.24); }
+.page[data-page='index'] .intransit-amount{
+  position: relative;
+  display: block;
+  margin-top: 3px;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-on-brand);
+}
+
+/* 金额脱敏的全局机制在 components.css（[data-amount] + body[data-amount-hidden]）；
+   这里只补币种余额行的更浅模糊 */
+
+/* ============ 币种余额横滑 ============ */
+.page[data-page='index'] .bal-scroll{
+  position: relative;
+  display: flex;
+  gap: 7px;
+  width: 100%;
+  margin-top: 7px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.page[data-page='index'] .bal-scroll::-webkit-scrollbar{ display: none; }
+.page[data-page='index'] .bal-chip{
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  width: 108px;
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+}
+.page[data-page='index'] .bal-chip-head{
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+.page[data-page='index'] .bal-flag{ font-size: var(--text-sm); }
+.page[data-page='index'] .bal-ccy{
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.72);
+}
+.page[data-page='index'] .bal-amount{
+  font-family: var(--font-num);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-on-brand);
+}
+
+/* ============ 快捷操作 ============ */
+.page[data-page='index'] .quick-row{
+  display: flex;
+  margin: 7px var(--gutter) 0;
+  padding: 8px 7px;
+  background: var(--surface-card);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+}
+.page[data-page='index'] .quick-item{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 0;
+  border-radius: var(--radius-inner);
+}
+.page[data-page='index'] .quick-item:active{ background: var(--surface-sunken); }
+.page[data-page='index'] .quick-item .tile{
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+.page[data-page='index'] .quick-item .tile > svg{ width: 19px; height: 19px; }
+.page[data-page='index'] .quick-label{
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+}
+
+/* ============ 汇率走势卡 ============ */
+.page[data-page='index'] .rate-card{
+  margin: 7px var(--gutter) 0;
+  padding: 9px 11px;
+}
+.page[data-page='index'] .rate-card .section-head{ margin-bottom: 6px; }
+.page[data-page='index'] .rate-card .section-title{ font-size: var(--text-md); }
+.page[data-page='index'] .rate-card .section-sub{ margin-top: 2px; font-size: var(--text-2xs); }
+.page[data-page='index'] .rate-card .section-link{ font-size: var(--text-xs); padding: 0; }
+
+/* 币对切换：主控件，给足高度保证可点 */
+.page[data-page='index'] .rate-pairs{
+  margin-bottom: 6px;
+  border-radius: 8px;
+}
+.page[data-page='index'] .rate-pairs .seg-item{
+  min-height: 28px;
+  padding: 5px 0;
+  font-size: var(--text-xs);
+  border-radius: 6px;
+}
+
+/* 图表定高：不参与 flex 拉伸，避免长屏上被拉扁变形 */
+.page[data-page='index'] .chart-box{
+  width: 100%;
+  height: 160px;
+}
+.page[data-page='index'] .chart-box > canvas{
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.page[data-page='index'] .trend-foot{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+.page[data-page='index'] .range-seg{
+  gap: 2px;
+  padding: 2px;
+  border-radius: 8px;
+}
+.page[data-page='index'] .range-seg .seg-item{
+  flex: none;
+  min-height: 24px;
+  padding: 3px 9px;
+  font-size: var(--text-2xs);
+  border-radius: 6px;
+}
+.page[data-page='index'] .trend-caption{
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.page[data-page='index'] .trend-val{
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.page[data-page='index'] .trend-chg{
+  font-family: var(--font-num);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+}
+/* 涨红跌绿 —— 国内金融场景惯例 */
+.page[data-page='index'] .trend-chg[data-trend='up']{ color: var(--color-up); }
+.page[data-page='index'] .trend-chg[data-trend='down']{ color: var(--color-down); }
+.page[data-page='index'] .trend-chg[data-trend='flat']{ color: var(--text-quaternary); }

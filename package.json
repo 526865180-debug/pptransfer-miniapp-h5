@@ -1,13 +1,12 @@
 {
   "name": "pptransfer-miniapp-h5",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "PPTransfer 商户端小程序转 H5 单文件版（自带运行时，零外部依赖）",
+  "description": "PPTransfer 商户端移动 H5 —— 原生前端工程 + 单文件打包产物，零运行时依赖",
   "scripts": {
-    "build": "python3 h5/build.py --miniapp ../pptransfer-miniapp --out index.html",
-    "verify": "node h5/verify_h5.js index.html"
-  },
-  "devDependencies": {
-    "jsdom": "^30.0.1"
+    "build": "python3 tools/bundle.py",
+    "verify": "python3 tools/verify.py",
+    "test:render": "node tools/render_check.js",
+    "test:interact": "node tools/interact_check.js"
   }
 }

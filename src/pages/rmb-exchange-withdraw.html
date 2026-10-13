@@ -1,0 +1,142 @@
+<!--
+  pages/rmb-exchange-withdraw.html · 结汇提现（3 步向导）
+  ---------------------------------------------------------------
+  三步在同一页内切换（section 的 hidden 属性），不新开路由。
+  步骤指示器、金额卡、申报订单卡为静态结构；订单行（3 条同构、带勾选与
+  申报金额输入）由 rmb-exchange-withdraw.js 渲染。
+  提现账户用 PP.ui.picker 选择，提交前用 PP.ui.confirm 二次确认。
+-->
+
+<!-- 步骤指示器：data-tone 由 JS 按当前进度刷新 -->
+<ol class="steps" id="steps" aria-label="结汇提现流程">
+  <li class="step" data-tone="blue" aria-current="step">
+    <span class="step-dot">1</span>
+    <span class="step-text">填写金额</span>
+  </li>
+  <li class="step" data-tone="neutral">
+    <span class="step-dot">2</span>
+    <span class="step-text">确认信息</span>
+  </li>
+  <li class="step" data-tone="neutral">
+    <span class="step-dot">3</span>
+    <span class="step-text">提交完成</span>
+  </li>
+</ol>
+
+<!-- ===== 步骤 1：填写金额与申报订单 ===== -->
+<section class="wizard-step" data-step="0">
+  <div class="card quota">
+    <div class="quota-body">
+      <span class="quota-label">可结汇提现金额</span>
+      <span class="quota-amount num" id="available-amount">¥ 1,000,000.00</span>
+    </div>
+    <button type="button" class="btn btn--ghost btn--sm" id="fill-all">一键填写</button>
+  </div>
+
+  <div class="card wizard-card">
+    <div class="field">
+      <label class="field-label" for="amount-input">结汇提现金额 (CNH)</label>
+      <input class="field-input" id="amount-input" type="text" inputmode="decimal"
+             autocomplete="off" placeholder="请输入提现金额">
+      <span class="field-hint">单笔最低 100.00 CNH，提现手续费 0.10%</span>
+      <span class="field-error" id="amount-error" role="alert" hidden></span>
+    </div>
+
+    <div class="declared">
+      <span class="declared-label">结汇申报金额</span>
+      <span class="declared-value num" id="declared-total">0.00 CNH</span>
+    </div>
+    <span class="field-hint">仅能关联一年内的订单</span>
+  </div>
+
+  <div class="card wizard-card">
+    <div class="section-head">
+      <div>
+        <h2 class="section-title">关联申报订单</h2>
+        <span class="section-sub">请选择本次提现对应的申报订单，并填写申报金额</span>
+      </div>
+    </div>
+    <ul class="order-list" id="order-list"></ul>
+    <p class="order-count" id="order-count">共 3 条 · 已选 0 条</p>
+  </div>
+
+  <div class="footbar">
+    <button type="button" class="btn btn--ghost" data-back>取消</button>
+    <button type="button" class="btn btn--primary" id="next-btn" aria-disabled="true">下一步</button>
+  </div>
+</section>
+
+<!-- ===== 步骤 2：确认信息 ===== -->
+<section class="wizard-step" data-step="1" hidden>
+  <div class="card wizard-card">
+    <div class="section-head">
+      <h2 class="section-title">提现信息确认</h2>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">提现类型</span>
+      <span class="detail-value">结汇提现</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">申请金额</span>
+      <span class="detail-value num" id="confirm-amount">0.00 CNH</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">手续费</span>
+      <span class="detail-value num" id="confirm-fee">0.00 CNH</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">到账金额</span>
+      <span class="detail-value num" data-tone="success" id="confirm-arrival">0.00 CNH</span>
+    </div>
+    <button type="button" class="detail-row account-row" id="account-btn"
+            aria-label="选择提现账户">
+      <span class="detail-label">提现账户</span>
+      <span class="detail-value" id="confirm-account">招商银行 · 6225 **** 8888（顾人）</span>
+      <svg class="row-chev" aria-hidden="true"><use href="#i-chevron-right"/></svg>
+    </button>
+  </div>
+
+  <div class="card wizard-card">
+    <div class="field">
+      <label class="field-label" for="pwd-input">交易密码</label>
+      <input class="field-input" id="pwd-input" type="password" inputmode="numeric"
+             maxlength="6" autocomplete="off" placeholder="请输入 6 位交易密码">
+    </div>
+  </div>
+
+  <div class="footbar">
+    <button type="button" class="btn btn--ghost" id="prev-btn">返回上一步</button>
+    <button type="button" class="btn btn--primary" id="submit-btn" aria-disabled="true">确认提交</button>
+  </div>
+</section>
+
+<!-- ===== 步骤 3：提交成功 ===== -->
+<section class="wizard-step" data-step="2" hidden>
+  <div class="result">
+    <span class="result-icon" aria-hidden="true">
+      <svg aria-hidden="true"><use href="#i-check-circle"/></svg>
+    </span>
+    <h2 class="result-title">您的结汇提现已提交成功</h2>
+    <p class="result-desc">我们将尽快完成审核，请耐心等待结果</p>
+
+    <div class="card result-card">
+      <div class="detail-row">
+        <span class="detail-label">申请金额</span>
+        <span class="detail-value num" id="result-amount">0.00 CNH</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">到账金额</span>
+        <span class="detail-value num" id="result-arrival">0.00 CNH</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">交易流水号</span>
+        <span class="detail-value num" id="result-order-no"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footbar">
+    <button type="button" class="btn btn--ghost" data-go="index">返回首页</button>
+    <button type="button" class="btn btn--primary" data-go="rmb-exchange-records">查看结汇记录</button>
+  </div>
+</section>

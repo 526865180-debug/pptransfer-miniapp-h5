@@ -1,0 +1,284 @@
+/* ============================================================
+   ui.js · 反馈与弹层
+   ------------------------------------------------------------
+   把 toast / modal / sheet / picker 统一收口在此。
+   页面不再各自拼遮罩与弹层骨架，保证一致的动效、遮罩与关闭行为。
+   弹层支持堆叠（sheet 里再开 modal），按栈后进先出关闭。
+   ============================================================ */
+(function (PP) {
+  'use strict'
+
+  var dom = PP.dom
+  var layers = [] // 弹层栈，栈顶响应 Esc
+
+  /* ---------------------------------------------------- Toast */
+
+  var toastTimer = null
+
+  /**
+   * 轻提示
+   *   toast('已复制')                  → 纯文字
+   *   toast('提交成功', {icon:'success'})
+   *   toast('处理中', {icon:'loading', duration:0})  → 常驻，需手动 hide
+   */
+  function toast(message, opts) {
+    var o = opts || {}
+    var layer = dom.qs('#toast-layer')
+    if (!layer) return { hide: function () {} }
+
+    if (toastTimer) {
+      clearTimeout(toastTimer)
+      toastTimer = null
+    }
+    dom.setHTML(layer, '')
+    layer.style.display = 'flex'
+
+    var icon = ''
+    if (o.icon === 'success') {
+      icon = '<svg aria-hidden="true"><use href="#i-check-circle"/></svg>'
+    } else if (o.icon === 'loading') {
+      icon = '<div class="spinner" role="status"></div>'
+    }
+
+    var node = document.createElement('div')
+    node.className = 'toast'
+    node.setAttribute('role', o.icon === 'loading' ? 'status' : 'alert')
+    dom.setHTML(node, dom.raw(icon + '<span>' + dom.esc(message) + '</span>'))
+    layer.appendChild(node)
+
+    var duration = o.duration === undefined ? 1800 : o.duration
+    if (duration > 0) {
+      toastTimer = setTimeout(function () { hideToast(node) }, duration)
+    }
+
+    function hideToast(target) {
+      var el = target || node
+      if (!el || !el.parentNode) return
+      el.classList.add('is-out')
+      setTimeout(function () {
+        if (el.parentNode) el.parentNode.removeChild(el)
+        if (!layer.children.length) layer.style.display = 'none'
+      }, 200)
+    }
+
+    return { hide: hideToast }
+  }
+
+  /* ---------------------------------------------------- 弹层基座 */
+
+  /**
+   * 打开一个弹层。
+   *   title    标题（可选）
+   *   body     弹层内容，接受 PP.html 字面量或 HTML 字符串
+   *   align    'bottom'（默认，动作面板样式）| 'center'（对话框样式）
+   *   footer   底部按钮区 HTML
+   *   onMount  内容挂载后回调，参数 (root, api)，用于绑定事件
+   *   onClose  关闭后回调
+   * 返回 { close, root }
+   */
+  function openSheet(opts) {
+    var o = opts || {}
+    var layerRoot = dom.qs('#layer-root')
+
+    var mask = document.createElement('div')
+    mask.className = 'mask'
+    mask.setAttribute('data-align', o.align === 'center' ? 'center' : 'bottom')
+
+    var inner = document.createElement('div')
+    inner.className = 'mask-inner'
+    mask.appendChild(inner)
+
+    var sheet = document.createElement('div')
+    sheet.className = 'sheet'
+    sheet.setAttribute('role', 'dialog')
+    sheet.setAttribute('aria-modal', 'true')
+    if (o.title) sheet.setAttribute('aria-label', o.title)
+    inner.appendChild(sheet)
+
+    var head = ''
+    if (o.title) {
+      head =
+        '<div class="sheet-head">' +
+        '<h2 class="sheet-title">' + dom.esc(o.title) + '</h2>' +
+        '<button type="button" class="sheet-close" data-close>关闭</button>' +
+        '</div>'
+    }
+    dom.setHTML(sheet, dom.raw(head + (o.body || '') + (o.footer || '')))
+
+    var closed = false
+    function close(result) {
+      if (closed) return
+      closed = true
+      var i = layers.indexOf(entry)
+      if (i >= 0) layers.splice(i, 1)
+      mask.remove()
+      document.removeEventListener('keydown', onKey)
+      if (o.onClose) o.onClose(result)
+    }
+
+    function onKey(e) {
+      if (e.key === 'Escape' && layers[layers.length - 1] === entry) {
+        e.preventDefault()
+        close()
+      }
+    }
+
+    // 点关闭按钮或点遮罩空白处关闭；点弹层内部不关
+    mask.addEventListener('click', function (e) {
+      if (e.target === mask || e.target.closest('[data-close]')) close()
+    })
+    document.addEventListener('keydown', onKey)
+
+    layerRoot.appendChild(mask)
+
+    var entry = {
+      close: close,
+      root: sheet,
+      set: function (markup) { dom.setHTML(sheet, markup) }
+    }
+    layers.push(entry)
+
+    if (o.onMount) o.onMount(sheet, entry)
+
+    // 焦点移入弹层，键盘用户不会停留在被遮住的页面上
+    var focusTarget = sheet.querySelector('[autofocus], input, button')
+    if (focusTarget) focusTarget.focus({ preventScroll: true })
+
+    return entry
+  }
+
+  /* ---------------------------------------------------- 确认框 */
+
+  /**
+   * 确认对话框（替代 wx.showModal）
+   * 返回 Promise<boolean> —— 确认 true / 取消 false
+   */
+  function confirmDialog(opts) {
+    var o = typeof opts === 'string' ? { content: opts } : (opts || {})
+    return new Promise(function (resolve) {
+      var settled = false
+      function done(v) {
+        if (settled) return
+        settled = true
+        resolve(v)
+      }
+      var footer =
+        '<div class="sheet-footer">' +
+        (o.showCancel === false ? '' :
+          '<button type="button" class="btn btn--ghost" data-cancel>' +
+          dom.esc(o.cancelText || '取消') + '</button>') +
+        '<button type="button" class="btn btn--primary" data-ok>' +
+        dom.esc(o.confirmText || '确定') + '</button>' +
+        '</div>'
+
+      var api = openSheet({
+        title: o.title || '',
+        align: 'center',
+        body: '<p class="muted" style="font-size:var(--text-base);line-height:var(--leading-normal)">' +
+          dom.esc(o.content || '') + '</p>',
+        footer: footer,
+        onMount: function (root, sheet) {
+          root.addEventListener('click', function (e) {
+            if (e.target.closest('[data-ok]')) { done(true); sheet.close() }
+            if (e.target.closest('[data-cancel]')) { done(false); sheet.close() }
+          })
+        },
+        onClose: function () { done(false) }
+      })
+      return api
+    })
+  }
+
+  /* ---------------------------------------------------- 选择器 */
+
+  /**
+   * 单选列表弹层（替代 picker mode=selector）
+   *   options: [{ value, title, sub, valueText }]
+   * 返回 Promise<value|null>
+   */
+  function picker(opts) {
+    var o = opts || {}
+    var options = o.options || []
+    return new Promise(function (resolve) {
+      var settled = false
+      function done(v) {
+        if (settled) return
+        settled = true
+        resolve(v)
+      }
+
+      var body = '<div class="stack-2">' + options.map(function (item) {
+        var selected = String(item.value) === String(o.value)
+        return (
+          '<div class="option-row" role="option" data-value="' + dom.esc(item.value) + '"' +
+          ' aria-selected="' + (selected ? 'true' : 'false') + '">' +
+          '<div class="option-body">' +
+          '<span class="option-title">' + dom.esc(item.title) + '</span>' +
+          (item.sub ? '<span class="option-sub">' + dom.esc(item.sub) + '</span>' : '') +
+          '</div>' +
+          (item.valueText ? '<span class="option-value">' + dom.esc(item.valueText) + '</span>' : '') +
+          (selected ? '<svg class="option-check" aria-hidden="true"><use href="#i-check"/></svg>' : '') +
+          '</div>'
+        )
+      }).join('') + '</div>'
+
+      var sheet = openSheet({
+        title: o.title || '请选择',
+        body: body,
+        onMount: function (root) {
+          root.addEventListener('click', function (e) {
+            var row = e.target.closest('.option-row')
+            if (!row) return
+            done(row.getAttribute('data-value'))
+            sheet.close()
+          })
+        },
+        onClose: function () { done(null) }
+      })
+    })
+  }
+
+  /** 动作面板：options 为 [{ label, tone }]，返回被选项的 index 或 null */
+  function actionSheet(opts) {
+    var o = opts || {}
+    var options = o.options || []
+    return new Promise(function (resolve) {
+      var settled = false
+      function done(v) {
+        if (settled) return
+        settled = true
+        resolve(v)
+      }
+      var body = '<div class="stack-2">' + options.map(function (item, i) {
+        return '<button type="button" class="btn btn--block ' +
+          (item.tone === 'danger' ? 'btn--soft' : 'btn--ghost') +
+          '" data-index="' + i + '"' +
+          (item.tone === 'danger' ? ' style="color:var(--color-danger)"' : '') + '>' +
+          dom.esc(item.label) + '</button>'
+      }).join('') + '</div>' +
+        '<div class="sheet-footer"><button type="button" class="btn btn--ghost" data-close>取消</button></div>'
+
+      var sheet = openSheet({
+        title: o.title || '',
+        body: body,
+        onMount: function (root) {
+          root.addEventListener('click', function (e) {
+            var btn = e.target.closest('[data-index]')
+            if (!btn) return
+            done(Number(btn.getAttribute('data-index')))
+            sheet.close()
+          })
+        },
+        onClose: function () { done(null) }
+      })
+    })
+  }
+
+  PP.ui = {
+    toast: toast,
+    sheet: openSheet,
+    confirm: confirmDialog,
+    picker: picker,
+    actions: actionSheet
+  }
+})((window.PP = window.PP || {}))

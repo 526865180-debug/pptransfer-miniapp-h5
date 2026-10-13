@@ -1,0 +1,218 @@
+/* ============================================================
+   pages/collection.css · 外贸收款账户
+   ------------------------------------------------------------
+   分两段：
+     ① .page[data-page='collection'] 作用域内 —— 概览卡、筛选行、账户卡片
+     ② col-* 前缀的弹层样式 —— 弹层挂载在 #layer-root（页面元素之外），
+        无法用页面作用域选择器命中，因此用独立前缀命名，不覆盖任何其他页面
+   尺寸按原 750 设计稿 ÷2（375px 基准），一律 px，不使用相对单位。
+   分段切换、徽章、chip、字段、键值行等一律复用 components.css。
+   ============================================================ */
+
+.page[data-page='collection'] {
+  padding: 14px 0 24px;
+}
+
+/* ============ ① 概览 + 筛选 ============ */
+.page[data-page='collection'] .col-type {
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-sm);
+}
+.page[data-page='collection'] .col-type .seg-item {
+  min-height: 30px;
+  padding: 5px 0;
+  font-size: var(--text-sm);
+  border-radius: var(--radius-sm);
+}
+
+.page[data-page='collection'] .col-filters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.page[data-page='collection'] .col-filter-caret {
+  flex-shrink: 0;
+  width: 11px;
+  height: 11px;
+  opacity: 0.55;
+}
+.page[data-page='collection'] .col-filters .btn-text { margin-left: auto; }
+
+/* ============ ① 账户卡片 ============ */
+.page[data-page='collection'] .col-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: var(--space-4) var(--gutter) 0;
+}
+
+.page[data-page='collection'] .acc-card {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  text-align: left;
+  background: var(--surface-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.page[data-page='collection'] .acc-card:active { background: var(--surface-sunken); }
+
+.page[data-page='collection'] .acc-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.page[data-page='collection'] .acc-head-body {
+  flex: 1;
+  min-width: 0;
+}
+.page[data-page='collection'] .acc-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.page[data-page='collection'] .acc-name {
+  min-width: 0;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.page[data-page='collection'] .acc-sub {
+  display: block;
+  margin-top: 4px;
+  font-size: var(--text-sm);
+  color: var(--text-quaternary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page[data-page='collection'] .acc-no-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 9px;
+}
+.page[data-page='collection'] .acc-no {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.5px;
+  color: var(--text-primary);
+}
+
+.page[data-page='collection'] .acc-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 11px;
+}
+
+.page[data-page='collection'] .acc-foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 11px;
+  border-top: 1px solid var(--border-subtle);
+}
+.page[data-page='collection'] .acc-foot-icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--tone-info-fg);
+}
+.page[data-page='collection'] .acc-foot-text {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.page[data-page='collection'] .acc-foot-count {
+  flex-shrink: 0;
+  padding: 3px 7px;
+  border-radius: var(--radius-sm);
+  background: var(--tone-neutral-bg);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--text-tertiary);
+}
+
+/* ============ ② 账户详情弹层 ============ */
+.col-detail-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.col-cur-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: 9px 0 11px;
+}
+
+/* 注意事项：原稿为琥珀底 + 琥珀字（#d97706 on #fffbeb 仅 3.07:1），
+   这里保留琥珀底色承载警示语义，文字改用高对比的语义色。 */
+.col-notice {
+  margin: var(--space-5) 0 var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-inner);
+  background: var(--tone-warning-bg);
+}
+.col-notice-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 5px;
+}
+.col-notice-icon {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  color: var(--tone-warning-fg);
+}
+.col-notice-title {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.col-notice-text {
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--text-secondary);
+}
+
+/* ============ ② 开通申请弹层 ============ */
+.col-apply-seg { border-radius: var(--radius-sm); }
+.col-apply-seg .seg-item {
+  min-height: 34px;
+  padding: 7px 0;
+  font-size: var(--text-sm);
+  border-radius: var(--radius-sm);
+}
+.col-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.col-apply .chip:active { opacity: 0.6; }
+.col-apply-seg .seg-item:active { opacity: 0.7; }
+.col-apply-label { margin-top: var(--space-5); }
+
+/* 弹层底部：按钮占一行，说明文字另起一行居中 */
+.col-apply-foot { flex-wrap: wrap; }
+.col-apply-hint {
+  flex-basis: 100%;
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--text-quaternary);
+  text-align: center;
+}

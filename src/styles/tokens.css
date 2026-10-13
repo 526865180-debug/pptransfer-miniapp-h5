@@ -1,0 +1,179 @@
+/* ============================================================
+   PPTransfer H5 · 设计令牌（Design Tokens）
+   ------------------------------------------------------------
+   分两层：
+     ① 原始层（primitive）—— 色阶、尺度，只描述「是什么」
+     ② 语义层（semantic）—— 别名，描述「用在哪」，组件只许引用语义层
+   这样换肤 / 换品牌时只改原始层，组件代码零改动。
+
+   尺寸基准：375px 视口（原小程序 750rpx ÷ 2）。
+   单位一律用 px，不做全局缩放 —— 窄屏上文字仍保持 14px 可读，
+   这是相对 rpx 换算方案在可访问性上的主动取舍。
+   ============================================================ */
+
+:root {
+  /* ---------- ① 原始层 · 品牌蓝 ---------- */
+  --blue-50: #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-900: #1e3a8a;
+
+  /* ---------- ① 原始层 · 中性灰 ---------- */
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-900: #0f172a;
+
+  /* ---------- ① 原始层 · 语义色阶 ---------- */
+  --emerald-50: #ecfdf5;
+  --emerald-600: #059669;
+  --amber-50: #fffbeb;
+  --amber-600: #d97706;
+  --red-50: #fef2f2;
+  --red-600: #dc2626;
+  --orange-50: #fff7ed;
+  --orange-600: #ea580c;
+  --indigo-50: #eef2ff;
+  --indigo-600: #4f46e5;
+  --violet-50: #f5f3ff;
+  --violet-600: #7c3aed;
+
+  /* ---------- ② 语义层 · 品牌与状态 ---------- */
+  --color-brand: var(--blue-600);
+  --color-brand-strong: var(--blue-700);
+  --color-brand-deep: var(--blue-900);
+  --color-brand-soft: var(--blue-50);
+  --color-brand-tint: var(--blue-100);
+
+  --color-up: var(--red-600);      /* 涨 —— 国内金融惯例用红 */
+  --color-down: var(--emerald-600); /* 跌 —— 用绿 */
+  --color-success: var(--emerald-600);
+  --color-warning: var(--amber-600);
+  --color-danger: var(--red-600);
+  --color-info: var(--indigo-600);
+
+  /* ---------- ② 语义层 · 文字与表面 ---------- */
+  --text-primary: var(--slate-900);
+  --text-secondary: var(--slate-700);
+  --text-tertiary: var(--slate-500);
+  --text-quaternary: var(--slate-400);
+  --text-placeholder: var(--slate-300);
+  --text-on-brand: #ffffff;
+
+  --surface-page: var(--slate-50);
+  --surface-card: #ffffff;
+  --surface-sunken: var(--slate-50);
+  --surface-frame: var(--slate-200); /* 应用框之外的画布底色 */
+
+  --border-subtle: var(--slate-100);
+  --border-default: var(--slate-200);
+
+  /* 状态底色（徽章 / 图标块 / 提示条） */
+  --tone-brand-bg: var(--blue-50);
+  --tone-brand-fg: var(--blue-600);
+  --tone-success-bg: var(--emerald-50);
+  --tone-success-fg: var(--emerald-600);
+  --tone-warning-bg: var(--amber-50);
+  --tone-warning-fg: var(--amber-600);
+  --tone-danger-bg: var(--red-50);
+  --tone-danger-fg: var(--red-600);
+  --tone-orange-bg: var(--orange-50);
+  --tone-orange-fg: var(--orange-600);
+  --tone-info-bg: var(--indigo-50);
+  --tone-info-fg: var(--indigo-600);
+  --tone-violet-bg: var(--violet-50);
+  --tone-violet-fg: var(--violet-600);
+  --tone-neutral-bg: var(--slate-100);
+  --tone-neutral-fg: var(--slate-500);
+
+  /* ---------- ② 语义层 · 字体 ---------- */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-num: "DIN Alternate", "SF Mono", ui-monospace, -apple-system, sans-serif;
+
+  --text-2xs: 10px;  /* 角标、极小辅助 */
+  --text-xs: 11px;   /* 次要说明 */
+  --text-sm: 12px;   /* 辅助信息、pill */
+  --text-md: 13px;   /* 正文次要 */
+  --text-base: 14px; /* 正文基准 */
+  --text-lg: 15px;   /* 区块标题 */
+  --text-xl: 16px;   /* 页面标题 */
+  --text-2xl: 17px;  /* 统计数字 */
+  --text-3xl: 20px;  /* 金额（次级） */
+  --text-4xl: 23px;  /* 金额（主） */
+  --text-5xl: 30px;  /* 总资产 */
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.55;
+
+  /* ---------- ② 语义层 · 间距（4pt 栅格） ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 10px;
+  --space-4: 12px;
+  --space-5: 14px;
+  --space-6: 16px;
+  --space-7: 20px;
+  --space-8: 24px;
+  --space-9: 32px;
+
+  --gutter: 12px;    /* 页面左右安全边距 */
+  --tap-min: 44px;   /* 最小可点区域（WCAG / iOS HIG） */
+
+  /* ---------- ② 语义层 · 圆角 ---------- */
+  --radius-inner: 10px;
+  --radius-card: 14px;
+  --radius-hero: 16px;
+  --radius-sheet: 16px;
+  --radius-sm: 6px;
+  --radius-pill: 999px;
+
+  /* ---------- ② 语义层 · 阴影与层级 ---------- */
+  --shadow-card: 0 2px 8px rgba(15, 23, 42, 0.04);
+  --shadow-raised: 0 8px 20px rgba(15, 23, 42, 0.08);
+  --shadow-hero: 0 8px 20px rgba(29, 78, 216, 0.26);
+  --shadow-brand: 0 4px 10px rgba(37, 99, 235, 0.22);
+  --shadow-sheet: 0 -8px 32px rgba(15, 23, 42, 0.16);
+
+  --z-sticky: 20;
+  --z-navbar: 40;
+  --z-tabbar: 40;
+  --z-mask: 100;
+  --z-toast: 200;
+
+  /* ---------- ② 语义层 · 动效 ---------- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+
+  /* ---------- 外壳几何（供布局计算复用） ---------- */
+  --navbar-h: 44px;
+  --tabbar-h: 52px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-max-w: 430px;
+}
+
+/* 用户偏好减少动效时，全部降级为瞬时 —— 可访问性要求 */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 1ms;
+    --dur-base: 1ms;
+    --dur-slow: 1ms;
+  }
+}

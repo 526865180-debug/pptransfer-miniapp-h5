@@ -1,0 +1,321 @@
+/* ============================================================
+   pages/rmb-exchange-withdraw.css · 结汇提现（3 步向导）
+   ------------------------------------------------------------
+   全部规则都收在 .page[data-page='rmb-exchange-withdraw'] 作用域内，
+   卡片、按钮、字段、键值行、分段切换等通用样式复用 components.css。
+   步骤状态色一律由 data-tone 驱动（blue=进行中 / success=已完成 /
+   neutral=未开始），不在 JS 里切类名。
+   尺寸按原 750 设计稿 ÷2（375px 基准），一律 px，不使用相对单位。
+   ============================================================ */
+
+.page[data-page='rmb-exchange-withdraw'] {
+  padding: 12px 0 24px;
+}
+
+/* ============ 步骤指示器 ============ */
+.page[data-page='rmb-exchange-withdraw'] .steps {
+  display: flex;
+  padding: 0 12px 8px;
+}
+.page[data-page='rmb-exchange-withdraw'] .step {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* 圆点与文案间距显式写死：.step 是通用类名，别处也可能给同名类加 gap */
+  gap: 6px;
+}
+/* 连接线：从本步圆心指向下一步，末步不画 */
+.page[data-page='rmb-exchange-withdraw'] .step::after {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  width: 100%;
+  height: 1px;
+  background: var(--border-default);
+}
+.page[data-page='rmb-exchange-withdraw'] .step:last-child::after { display: none; }
+
+.page[data-page='rmb-exchange-withdraw'] .step-dot {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-family: var(--font-num);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+.page[data-page='rmb-exchange-withdraw'] .step-dot > svg {
+  width: 14px;
+  height: 14px;
+}
+.page[data-page='rmb-exchange-withdraw'] .step-text {
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+.page[data-page='rmb-exchange-withdraw'] .step[data-tone='blue'] .step-dot {
+  background: var(--color-brand);
+  color: var(--text-on-brand);
+}
+.page[data-page='rmb-exchange-withdraw'] .step[data-tone='success'] .step-dot {
+  background: var(--tone-success-bg);
+  color: var(--tone-success-fg);
+}
+.page[data-page='rmb-exchange-withdraw'] .step[data-tone='neutral'] .step-dot {
+  background: var(--border-default);
+  color: var(--text-secondary);
+}
+.page[data-page='rmb-exchange-withdraw'] .step[data-tone='blue'] .step-text,
+.page[data-page='rmb-exchange-withdraw'] .step[data-tone='success'] .step-text {
+  color: var(--text-secondary);
+  font-weight: var(--weight-medium);
+}
+
+/* ============ 步骤内容容器 ============
+   .wizard-step 只作为分步钩子（配 data-step，显隐交给 base.css 的 [hidden]），
+   本身不需要样式，间距由内部的 .wizard-card / .quota / .footbar 决定。 */
+.page[data-page='rmb-exchange-withdraw'] .wizard-card {
+  margin: var(--space-4) var(--gutter) 0;
+  padding: var(--space-6);
+}
+.page[data-page='rmb-exchange-withdraw'] .wizard-card .section-head { margin-bottom: var(--space-4); }
+.page[data-page='rmb-exchange-withdraw'] .wizard-card .field:last-child { margin-bottom: 0; }
+
+/* ============ 可提现额度 ============ */
+.page[data-page='rmb-exchange-withdraw'] .quota {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin: 0 var(--gutter);
+  padding: var(--space-4);
+}
+.page[data-page='rmb-exchange-withdraw'] .quota-body { min-width: 0; }
+.page[data-page='rmb-exchange-withdraw'] .quota-label {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+.page[data-page='rmb-exchange-withdraw'] .quota-amount {
+  display: block;
+  margin-top: 5px;
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-semibold);
+  color: var(--color-brand);
+}
+
+/* ============ 结汇申报金额 ============ */
+.page[data-page='rmb-exchange-withdraw'] .declared {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin: var(--space-3) 0 6px;
+  padding: var(--space-4);
+  border-radius: var(--radius-inner);
+  background: var(--surface-sunken);
+}
+.page[data-page='rmb-exchange-withdraw'] .declared-label {
+  font-size: var(--text-md);
+  color: var(--text-tertiary);
+}
+.page[data-page='rmb-exchange-withdraw'] .declared-value {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+/* ============ 申报订单 ============ */
+.page[data-page='rmb-exchange-withdraw'] .order-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.page[data-page='rmb-exchange-withdraw'] .order {
+  padding: var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-inner);
+  background: var(--surface-card);
+  transition: border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+.page[data-page='rmb-exchange-withdraw'] .order[data-selected='true'] {
+  border-color: var(--color-brand);
+  background: var(--color-brand-soft);
+}
+
+.page[data-page='rmb-exchange-withdraw'] .order-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  text-align: left;
+}
+.page[data-page='rmb-exchange-withdraw'] .order-head:active { opacity: 0.75; }
+
+.page[data-page='rmb-exchange-withdraw'] .order-check {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--text-placeholder);
+  border-radius: var(--radius-sm);
+  color: var(--text-on-brand);
+}
+.page[data-page='rmb-exchange-withdraw'] .order-check > svg {
+  width: 13px;
+  height: 13px;
+  opacity: 0;
+}
+.page[data-page='rmb-exchange-withdraw'] .order-head[aria-pressed='true'] .order-check {
+  border-color: var(--color-brand);
+  background: var(--color-brand);
+}
+.page[data-page='rmb-exchange-withdraw'] .order-head[aria-pressed='true'] .order-check > svg {
+  opacity: 1;
+}
+
+.page[data-page='rmb-exchange-withdraw'] .order-head-body {
+  flex: 1;
+  min-width: 0;
+}
+.page[data-page='rmb-exchange-withdraw'] .order-no {
+  display: block;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.page[data-page='rmb-exchange-withdraw'] .order-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+.page[data-page='rmb-exchange-withdraw'] .order-amount {
+  flex-shrink: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+.page[data-page='rmb-exchange-withdraw'] .order-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px var(--space-4);
+  margin-top: var(--space-2);
+}
+.page[data-page='rmb-exchange-withdraw'] .order-meta-item {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.page[data-page='rmb-exchange-withdraw'] .order-declared {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--border-default);
+}
+.page[data-page='rmb-exchange-withdraw'] .order-declared-label {
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+.page[data-page='rmb-exchange-withdraw'] .order-declared-input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-family: var(--font-num);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  text-align: right;
+}
+.page[data-page='rmb-exchange-withdraw'] .order-declared-input:focus {
+  outline: none;
+  border-bottom-color: var(--color-brand);
+}
+
+.page[data-page='rmb-exchange-withdraw'] .order-count {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+/* ============ 底部操作条 ============ */
+.page[data-page='rmb-exchange-withdraw'] .footbar {
+  display: flex;
+  gap: var(--space-2);
+  margin: var(--space-4) var(--gutter) 0;
+}
+.page[data-page='rmb-exchange-withdraw'] .footbar > .btn { flex: 1; }
+
+/* ============ 步骤 2：提现账户选择 ============ */
+.page[data-page='rmb-exchange-withdraw'] .account-row {
+  width: 100%;
+  text-align: left;
+}
+.page[data-page='rmb-exchange-withdraw'] .account-row:active { opacity: 0.7; }
+.page[data-page='rmb-exchange-withdraw'] .account-row .detail-value { flex: 1; }
+/* 到账金额用状态色强调 */
+.page[data-page='rmb-exchange-withdraw'] .detail-value[data-tone='success'] {
+  color: var(--tone-success-fg);
+}
+
+/* ============ 步骤 3：结果 ============ */
+.page[data-page='rmb-exchange-withdraw'] .result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px var(--gutter) 0;
+}
+.page[data-page='rmb-exchange-withdraw'] .result-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--tone-success-bg);
+  color: var(--tone-success-fg);
+}
+.page[data-page='rmb-exchange-withdraw'] .result-icon > svg {
+  width: 46px;
+  height: 46px;
+}
+.page[data-page='rmb-exchange-withdraw'] .result-title {
+  margin-top: var(--space-4);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  text-align: center;
+}
+.page[data-page='rmb-exchange-withdraw'] .result-desc {
+  margin-top: 6px;
+  font-size: var(--text-sm);
+  color: var(--text-quaternary);
+  text-align: center;
+}
+.page[data-page='rmb-exchange-withdraw'] .result-card {
+  width: 100%;
+  margin-top: var(--space-5);
+  padding: var(--space-4);
+}

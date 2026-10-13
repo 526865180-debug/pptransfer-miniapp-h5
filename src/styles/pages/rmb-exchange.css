@@ -1,0 +1,178 @@
+/* ============================================================
+   pages/rmb-exchange.css · 人民币结汇
+   ------------------------------------------------------------
+   本页只写结汇首页特有部分：渐变横幅、双入口卡、优势信息列表。
+   图标块尺寸、卡片、徽章见 components.css（.tile / .card / .pill）。
+   尺寸取自原 750 设计稿 ÷2（375px 基准）。
+
+   取舍：原稿的入口图标块是蓝色/绿色渐变底，这里改为语义色平底
+   （--tone-brand-bg / --tone-success-bg）—— token 层没有对应的
+   渐变色阶，混用会让两块图标的观感不一致。
+   ============================================================ */
+
+.page[data-page='rmb-exchange'] {
+  padding: 12px var(--gutter) 0;
+}
+
+/* ============ 页头横幅 ============ */
+.banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: 20px 18px;
+  border-radius: var(--radius-hero);
+  background: linear-gradient(120deg, var(--color-brand-deep) 0%, var(--color-brand-strong) 100%);
+  box-shadow: var(--shadow-hero);
+  overflow: hidden;
+}
+.banner-deco {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+.banner-deco--a { width: 150px; height: 150px; top: -70px; right: -40px; }
+.banner-deco--b {
+  width: 80px;
+  height: 80px;
+  bottom: -35px;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.05);
+}
+.banner-text {
+  position: relative;
+  min-width: 0;
+}
+.banner-title {
+  display: block;
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-on-brand);
+}
+.banner-sub {
+  display: block;
+  margin-top: 5px;
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.record-btn {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--text-on-brand);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+/* 视觉 33px，用伪元素把命中区撑到 44px */
+.record-btn::after {
+  content: '';
+  position: absolute;
+  inset: -6px -5px;
+}
+.record-btn:active { background: rgba(255, 255, 255, 0.28); }
+.record-btn > svg { width: 15px; height: 15px; }
+
+/* ============ 双入口卡 ============ */
+.entry {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  margin-top: var(--space-4);
+  padding: 17px 15px;
+  background: var(--surface-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  text-align: left;
+}
+.entry:active { background: var(--surface-sunken); }
+.entry-tile {
+  width: 54px;
+  height: 54px;
+  border-radius: 15px;
+}
+.entry-tile > svg { width: 30px; height: 30px; }
+.entry-body {
+  flex: 1;
+  min-width: 0;
+}
+.entry-title-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.entry-title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.entry-coming {
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--tone-neutral-bg);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-quaternary);
+}
+.entry-desc {
+  display: block;
+  margin-top: 4px;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--text-quaternary);
+}
+.entry-arrow {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--text-quaternary);
+  opacity: 0.8;
+}
+
+/* ============ 优势信息列表 ============ */
+.info-card {
+  margin-top: var(--space-4);
+  padding: 6px 15px;
+}
+.info-list { margin: 0; }
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.info-item:last-child { border-bottom: 0; }
+.info-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-inner);
+}
+.info-icon > svg { width: 20px; height: 20px; }
+.info-body {
+  flex: 1;
+  min-width: 0;
+}
+.info-title {
+  display: block;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.info-desc {
+  display: block;
+  margin-top: 3px;
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  color: var(--text-quaternary);
+}

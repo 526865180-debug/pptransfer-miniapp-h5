@@ -1,0 +1,118 @@
+/* ============================================================
+   基础层 · 重置与排版
+   只做全局默认，不承载任何组件样式
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden; /* 滚动交给 .app-body，避免整页跟着弹层滚 */
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  background: var(--surface-frame);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 移动端点击不出现灰色高亮块，按压反馈一律自己做 */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd {
+  margin: 0;
+}
+
+ul, ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+img, svg {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+input::placeholder {
+  color: var(--text-placeholder);
+}
+
+/* 数值一律等宽 + 表格数字，金额对齐才不会跳动 */
+.num,
+[data-num] {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 可访问性 ---------- */
+
+/* 键盘焦点清晰可见；鼠标点击不出现焦点环 */
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* 仅屏幕阅读器可见 —— 用于补充语义标签 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 跳转主内容 —— 键盘用户可直达正文 */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 999;
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface-card);
+  color: var(--color-brand);
+  border-radius: var(--radius-inner);
+  font-weight: var(--weight-semibold);
+}
+.skip-link:focus {
+  left: var(--space-4);
+  top: var(--space-2);
+}
+
+/* 折叠状态用 hidden 属性统一控制 */
+[hidden] {
+  display: none !important;
+}

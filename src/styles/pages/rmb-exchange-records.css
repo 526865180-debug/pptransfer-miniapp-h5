@@ -1,0 +1,139 @@
+/* ============================================================
+   pages/rmb-exchange-records.css · 结汇记录
+   ------------------------------------------------------------
+   本页只写汇总条与记录行；seg / card / empty / detail-row /
+   sheet 等一律复用 components.css。
+   尺寸按 375px 基准换算（原设计稿 750 单位 ÷ 2）。
+   ============================================================ */
+
+.page[data-page='rmb-exchange-records'] {
+  padding: 12px 0 20px;
+}
+
+.rx-filter { padding: 0 var(--gutter); }
+
+/* ============ 汇总 ============ */
+.rx-summary {
+  display: flex;
+  align-items: center;
+  margin: 10px var(--gutter) 0;
+  padding: var(--space-4);
+}
+.rx-summary-item {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rx-summary-label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+.rx-summary-value {
+  font-family: var(--font-num);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.rx-summary-split {
+  flex-shrink: 0;
+  width: 1px;
+  height: 26px;
+  margin: 0 var(--space-4);
+  background: var(--border-default);
+}
+
+/* ============ 记录卡 ============ */
+.rx-card {
+  margin: 10px var(--gutter) 0;
+  padding: 4px var(--space-6) 10px;
+}
+.rec { border-bottom: 1px solid var(--border-subtle); }
+.rec:last-child { border-bottom: 0; }
+
+.rec-main {
+  display: block;
+  width: 100%;
+  padding: 13px 0;
+  text-align: left;
+}
+.rec-main:active { opacity: 0.6; }
+
+.rec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+.rec-no {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-num);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+.rec-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+.rec-label {
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+.rec-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.rec-foot {
+  display: flex;
+  gap: var(--space-5);
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px dashed var(--border-default);
+}
+.rec-amount {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.rec-amount-label {
+  font-size: var(--text-2xs);
+  color: var(--text-tertiary);
+}
+.rec-amount-value {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+/* 汇出金额（实到金额）用品牌色强调 */
+.rec-amount-value--out { color: var(--color-brand); }
+
+.rec-count {
+  margin-top: var(--space-2);
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+/* ============ 空状态 ============ */
+.rx-empty { margin: 10px var(--gutter) 0; }
+
+/* ============ 详情弹层 ============ */
+.rx-strong {
+  color: var(--color-success);
+  font-weight: var(--weight-semibold);
+}

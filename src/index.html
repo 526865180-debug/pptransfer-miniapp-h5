@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="description" content="PPTransfer 跨境收款商户端 · 移动 H5">
+<!-- 内联 favicon：开发态下避免 /favicon.ico 404，打包后同样自包含 -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%232565eb'/><text x='16' y='22.5' font-family='Helvetica,Arial,sans-serif' font-size='18' font-weight='700' fill='%23ffffff' text-anchor='middle'>P</text></svg>">
+<title>PPTransfer 商户端 · H5</title>
+
+<!-- 设计系统 -->
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/shell.css">
+
+<!-- 页面样式（各页只写本页特有部分，通用组件见 components.css） -->
+<link rel="stylesheet" href="styles/pages/index.css">
+<link rel="stylesheet" href="styles/pages/trade-collection.css">
+<link rel="stylesheet" href="styles/pages/in-transit-funds.css">
+<link rel="stylesheet" href="styles/pages/rights-center.css">
+<link rel="stylesheet" href="styles/pages/order-management.css">
+<link rel="stylesheet" href="styles/pages/exchange.css">
+<link rel="stylesheet" href="styles/pages/international-remittance.css">
+<link rel="stylesheet" href="styles/pages/rmb-exchange.css">
+<link rel="stylesheet" href="styles/pages/rmb-exchange-withdraw.css">
+<link rel="stylesheet" href="styles/pages/rmb-exchange-records.css">
+<link rel="stylesheet" href="styles/pages/wallet.css">
+<link rel="stylesheet" href="styles/pages/collection.css">
+<link rel="stylesheet" href="styles/pages/notifications.css">
+</head>
+<body>
+
+<a class="skip-link" href="#app-body">跳到主内容</a>
+
+<!-- 应用框：模拟一台手机，桌面下居中浮起 -->
+<div class="app" id="app">
+
+  <!-- 模拟导航栏；返回键仅在二级页出现，由 router 控制 -->
+  <header class="app-bar">
+    <div class="app-bar-side" id="bar-start"></div>
+    <h1 class="app-bar-title" id="bar-title">PPTransfer</h1>
+    <div class="app-bar-side app-bar-side--end" id="bar-end"></div>
+  </header>
+
+  <!-- 滚动主体：页面片段挂载于此 -->
+  <main class="app-body" id="app-body" tabindex="-1"></main>
+
+  <!-- tabBar：仅 tab 页显示，由 router 控制 -->
+  <nav class="tabbar" id="tabbar" aria-label="主导航"></nav>
+
+  <div class="boot" id="boot">正在加载…</div>
+</div>
+
+<!-- 反馈层：toast 与弹层统一挂在此，保证层级与动效一致 -->
+<div class="toast-layer" id="toast-layer" role="status" aria-live="polite" hidden></div>
+<div id="layer-root"></div>
+
+<!-- 运行时 -->
+<script src="js/dom.js"></script>
+<script src="js/format.js"></script>
+<script src="js/store.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/chart.js"></script>
+<script src="js/routes.js"></script>
+<script src="js/router.js"></script>
+
+<!-- 页面：注册顺序无关，router 启动前全部加载完成即可 -->
+<script src="js/pages/index.js"></script>
+<script src="js/pages/trade-collection.js"></script>
+<script src="js/pages/in-transit-funds.js"></script>
+<script src="js/pages/rights-center.js"></script>
+<script src="js/pages/order-management.js"></script>
+<script src="js/pages/exchange.js"></script>
+<script src="js/pages/international-remittance.js"></script>
+<script src="js/pages/rmb-exchange.js"></script>
+<script src="js/pages/rmb-exchange-withdraw.js"></script>
+<script src="js/pages/rmb-exchange-records.js"></script>
+<script src="js/pages/wallet.js"></script>
+<script src="js/pages/collection.js"></script>
+<script src="js/pages/notifications.js"></script>
+
+<!-- 引导：最后加载 -->
+<script src="js/app.js"></script>
+</body>
+</html>

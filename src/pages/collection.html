@@ -1,0 +1,133 @@
+<!--
+  pages/collection.html · 外贸收款账户
+  ---------------------------------------------------------------
+  概览 + 筛选 + 账户卡片列表；账户列表由 collection.js 渲染（4 条同构数据）。
+  账户详情、筛选、开通申请三个弹层不写 mask/sheet 结构，统一交给 PP.ui，
+  其中弹层里的静态文案与选项放在本文件的 <template> 里，JS 只负责状态。
+-->
+
+<!-- ===== 概览 + 筛选 ===== -->
+<section class="card card--section">
+  <div class="section-head">
+    <div>
+      <h2 class="section-title">外贸收款账户</h2>
+      <span class="section-sub" id="acct-summary">共 4 个账户 · 收款免费</span>
+    </div>
+    <button type="button" class="btn btn--ghost btn--sm" id="open-apply">开通账户</button>
+  </div>
+
+  <div class="seg col-type" role="tablist" aria-label="账户类型">
+    <button type="button" class="seg-item" role="tab" aria-selected="true"  data-type="all">全部</button>
+    <button type="button" class="seg-item" role="tab" aria-selected="false" data-type="global">全球账户</button>
+    <button type="button" class="seg-item" role="tab" aria-selected="false" data-type="local">本地账户</button>
+  </div>
+
+  <div class="col-filters">
+    <button type="button" class="chip" data-kind="region" aria-pressed="false">
+      <span id="region-label">全部地区</span>
+      <svg class="col-filter-caret" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+    </button>
+    <button type="button" class="chip" data-kind="currency" aria-pressed="false">
+      <span id="currency-label">全部币种</span>
+      <svg class="col-filter-caret" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+    </button>
+    <button type="button" class="btn-text" data-tone="muted" id="reset-filter" hidden>重置</button>
+  </div>
+</section>
+
+<!-- ===== 账户列表；卡片由 JS 渲染 ===== -->
+<ul class="col-list" id="col-acct-list"></ul>
+
+<div class="empty" id="col-acct-empty" hidden>
+  <svg class="empty-icon" aria-hidden="true"><use href="#i-inbox"/></svg>
+  <p class="empty-text">未找到匹配的收款账户</p>
+</div>
+
+<!-- ===== 账户详情弹层正文（data-slot 占位符由 JS 填文案） ===== -->
+<template id="detail-tpl">
+  <div class="col-detail-top">
+    <span class="pill" data-tone="blue" data-slot="default-badge" hidden>默认账户</span>
+    <span class="pill" data-tone="neutral" data-slot="type-label">全球收款账户</span>
+    <span class="pill" data-tone="success">免费</span>
+  </div>
+
+  <h3 class="group-label">账户能力</h3>
+  <div class="detail-row">
+    <span class="detail-label">支持币种</span>
+    <span class="detail-value" data-num data-slot="ccy-count">14 种</span>
+  </div>
+  <div class="col-cur-grid" data-slot="currencies"></div>
+  <div class="detail-row">
+    <span class="detail-label">付款地区</span>
+    <span class="detail-value" data-slot="payment-region">全球</span>
+  </div>
+  <div class="detail-row">
+    <span class="detail-label">付款方式</span>
+    <span class="detail-value" data-slot="payment-method"></span>
+  </div>
+
+  <h3 class="group-label">账户信息</h3>
+  <div class="detail-row">
+    <span class="detail-label">Account name 账户名称</span>
+    <span class="detail-value" data-slot="account-name"></span>
+  </div>
+  <div class="detail-row">
+    <span class="detail-label">Account no. 账号</span>
+    <span class="detail-value" data-num data-slot="account-number"></span>
+  </div>
+  <div class="detail-row">
+    <span class="detail-label">SWIFT / BIC Code</span>
+    <span class="detail-value" data-num data-slot="swift"></span>
+  </div>
+  <div class="detail-row">
+    <span class="detail-label">Bank name 银行名称</span>
+    <span class="detail-value" data-slot="bank-name-en"></span>
+  </div>
+  <div class="detail-row">
+    <span class="detail-label">Bank address 银行地址</span>
+    <span class="detail-value" data-slot="bank-address"></span>
+  </div>
+  <div class="detail-row">
+    <span class="detail-label">国家/地区</span>
+    <span class="detail-value" data-slot="country"></span>
+  </div>
+
+  <div class="col-notice">
+    <span class="col-notice-head">
+      <svg class="col-notice-icon" aria-hidden="true"><use href="#i-warn"/></svg>
+      <span class="col-notice-title">注意事项</span>
+    </span>
+    <p class="col-notice-text">因银行合规要求，该账户暂不支持收取部分国家/地区及部分产品的相关款项。</p>
+  </div>
+</template>
+
+<!-- ===== 开通收款账户表单 ===== -->
+<template id="apply-tpl">
+  <div class="col-apply">
+    <h3 class="group-label">账户类型</h3>
+    <div class="seg col-apply-seg" role="tablist" aria-label="账户类型">
+      <button type="button" class="seg-item" role="tab" aria-selected="true"  data-apply-type="global">全球收款账户</button>
+      <button type="button" class="seg-item" role="tab" aria-selected="false" data-apply-type="local">本地收款账户</button>
+    </div>
+
+    <h3 class="group-label">主要收款币种</h3>
+    <div class="col-chip-group">
+      <button type="button" class="chip" data-apply-currency="USD" aria-pressed="true">USD</button>
+      <button type="button" class="chip" data-apply-currency="EUR" aria-pressed="false">EUR</button>
+      <button type="button" class="chip" data-apply-currency="GBP" aria-pressed="false">GBP</button>
+      <button type="button" class="chip" data-apply-currency="HKD" aria-pressed="false">HKD</button>
+      <button type="button" class="chip" data-apply-currency="CNH" aria-pressed="false">CNH</button>
+    </div>
+
+    <h3 class="group-label">付款地区</h3>
+    <div class="col-chip-group">
+      <button type="button" class="chip" data-apply-region="全球" aria-pressed="true">全球</button>
+      <button type="button" class="chip" data-apply-region="香港地区" aria-pressed="false">香港地区</button>
+      <button type="button" class="chip" data-apply-region="美国" aria-pressed="false">美国</button>
+    </div>
+
+    <label class="field-label col-apply-label" for="apply-remark">备注</label>
+    <input class="field-input" id="apply-remark" type="text" autocomplete="off"
+           placeholder="选填，补充您的收款场景">
+  </div>
+</template>

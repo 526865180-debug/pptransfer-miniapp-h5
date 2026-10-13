@@ -1,0 +1,30 @@
+<!--
+  pages/notifications.html · 消息通知中心
+  ---------------------------------------------------------------
+  概述栏与筛选器为静态骨架；分类、列表、未读数由 JS 渲染。
+  消息详情交给 PP.ui.sheet，片段里只留触发按钮。
+  未读概览里的两个数字（未读 / 共）由 JS 填入，见 notifications.js。
+-->
+
+<!-- 顶部未读概览 -->
+<section class="card card--section note-head">
+  <div class="note-head-body">
+    <h2 class="note-head-title">消息通知中心</h2>
+    <span class="note-head-sub" id="note-sub">未读 0 条 · 共 0 条</span>
+  </div>
+  <button type="button" class="btn btn--ghost btn--sm note-readall" id="note-readall">全部已读</button>
+</section>
+
+<!-- 分类筛选；由 JS 渲染 -->
+<div class="seg note-filter" id="note-categories" role="tablist" aria-label="消息分类"></div>
+
+<!-- 通知列表；由 JS 渲染 -->
+<section class="card card--section" id="note-list-card">
+  <ul class="note-list" id="note-list" role="list"></ul>
+</section>
+
+<!-- 空状态 -->
+<section class="card card--section empty" id="note-empty" hidden>
+  <svg class="empty-icon" aria-hidden="true"><use href="#i-inbox"/></svg>
+  <span class="empty-text">暂无该分类的消息</span>
+</section>

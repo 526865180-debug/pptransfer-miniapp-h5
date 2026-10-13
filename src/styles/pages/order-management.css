@@ -1,0 +1,177 @@
+/* ============================================================
+   pages/order-management.css · 订单管理
+   ------------------------------------------------------------
+   本页只写订单卡片、收款关联进度条与新增按钮；
+   stat-bar / toolbar / search-box / list-head / detail-box /
+   date-row / sheet / field 等一律复用 components.css。
+   尺寸按 375px 基准换算（原设计稿 750 单位 ÷ 2）。
+   ============================================================ */
+
+.page[data-page='order-management'] {
+  /* 列表为空时新增按钮仍停在底部，与小程序 FAB 一致 */
+  min-height: 100%;
+  padding: 14px 0 12px;
+}
+
+/* ============ 订单卡片列表 ============ */
+.om-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 10px var(--gutter) 0;
+}
+.order-card {
+  padding: 14px 15px;
+  background: var(--surface-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+/* 整张卡片可点 = 查看详情 */
+.oc-main {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border-radius: var(--radius-inner);
+}
+.oc-main:active { opacity: 0.6; }
+
+.oc-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.oc-no {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-num);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.oc-mid {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+}
+.oc-buyer-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.oc-buyer {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+.oc-product {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+.oc-amount {
+  flex-shrink: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+.oc-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 7px;
+}
+.oc-meta-item {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.oc-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ============ 收款关联进度条 ============ */
+.oc-ratio {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.oc-ratio-track {
+  flex: 1;
+  height: 5px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--tone-neutral-bg); /* 原设计稿的浅灰轨道，取中性语义色 */
+}
+.oc-ratio-bar {
+  display: block;
+  height: 100%;
+  width: var(--ratio, 0%); /* 由行数据写入，不做 JS 类名切换 */
+  border-radius: var(--radius-pill);
+  background: var(--color-brand);
+}
+.oc-ratio-text {
+  flex-shrink: 0;
+  font-size: var(--text-2xs);
+  color: var(--text-tertiary);
+}
+
+/* ============ 空状态 ============ */
+.om-empty { margin: 10px var(--gutter) 0; }
+
+/* ============ 详情 / 表单弹层 ============ */
+.om-strong { font-weight: var(--weight-semibold); }
+
+/* ============ 新增订单（停靠按钮） ============ */
+/* 给停靠按钮让出高度，避免遮挡最后一张卡片（原设计稿 140 单位） */
+.fab-space { height: 70px; }
+
+/* 用 sticky + 零高容器把按钮钉在列表上方：
+   既跟随滚动停在底部，又不会像 fixed 那样在桌面态跑出 430px 模拟机身 */
+.fab-dock {
+  position: sticky;
+  bottom: var(--space-7);
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  height: 0;
+  padding: 0 var(--gutter);
+}
+.fab {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: var(--tap-min);
+  padding: 11px 17px;
+  border-radius: var(--radius-pill);
+  background: var(--color-brand);
+  color: var(--text-on-brand);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  box-shadow: var(--shadow-brand);
+  transition: background-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.fab > svg { width: 15px; height: 15px; }
+.fab:hover { background: var(--color-brand-strong); }
+.fab:active { transform: scale(0.97); }

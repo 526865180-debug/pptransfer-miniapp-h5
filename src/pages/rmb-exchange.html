@@ -1,0 +1,31 @@
+<!--
+  pages/rmb-exchange.html · 人民币结汇
+  ---------------------------------------------------------------
+  页头横幅 + 双入口 + 优势信息。入口与信息项都是同构列表（2 条 / 3 条），
+  由 JS 渲染；跳转靠声明式属性：可用的入口写 data-go，未上线的写 data-demo，
+  页面脚本因此不需要再写导航代码。
+-->
+
+<!-- ================= 页头横幅 ================= -->
+<section class="banner">
+  <span class="banner-deco banner-deco--a" aria-hidden="true"></span>
+  <span class="banner-deco banner-deco--b" aria-hidden="true"></span>
+  <div class="banner-text">
+    <h1 class="banner-title">人民币结汇</h1>
+    <p class="banner-sub">将外币资金结汇为人民币，最快 30 分钟到账</p>
+  </div>
+  <button type="button" class="record-btn" data-go="rmb-exchange-records">
+    <svg aria-hidden="true"><use href="#i-doc"/></svg>
+    <span>结汇记录</span>
+  </button>
+</section>
+
+<!-- ================= 双入口 ================= -->
+<nav id="entry-list" aria-label="结汇入口"></nav>
+
+<!-- ================= 优势信息 ================= -->
+<section class="card info-card">
+  <ul class="info-list" id="info-list"></ul>
+</section>
+
+<div class="page-end"></div>

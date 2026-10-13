@@ -1,0 +1,233 @@
+/* ============================================================
+   外壳层 · 应用框 / 导航栏 / tabBar / 滚动容器 / 反馈组件
+   ------------------------------------------------------------
+   这是「手机壳」的模拟：桌面浏览器下居中显示 430px 应用框，
+   移动端满宽。壳与页面内容解耦，页面只管 #app-body 里的东西。
+   ============================================================ */
+
+/* ============ 应用框 ============ */
+.app {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--app-max-w);
+  height: 100vh;
+  height: 100dvh;
+  margin: 0 auto;
+  overflow: hidden;
+  background: var(--surface-page);
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+.app.is-ready { opacity: 1; }
+
+@media (min-width: 480px) {
+  /* 桌面下浮起来，脱离画布底色，更像一台设备 */
+  .app {
+    height: min(100dvh, 900px);
+    margin-top: max(0px, calc((100dvh - 900px) / 2));
+    border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+  }
+}
+
+/* ============ 导航栏 ============ */
+.app-bar {
+  position: relative;
+  z-index: var(--z-navbar);
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-2);
+  height: calc(var(--navbar-h) + var(--safe-top));
+  padding: var(--safe-top) var(--space-3) 0;
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.app-bar-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  text-align: center;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app-bar-side {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  min-width: 44px;
+}
+.app-bar-side--end { justify-content: flex-end; }
+
+/* 返回键 */
+.app-back {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: var(--tap-min);
+  padding: 0 var(--space-2) 0 0;
+  color: var(--text-primary);
+  font-size: var(--text-base);
+}
+.app-back > svg {
+  width: 20px;
+  height: 20px;
+}
+.app-back:active { opacity: 0.6; }
+
+/* ============ 滚动主体 ============ */
+.app-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--surface-page);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* 页面容器：由 router 控制显隐，保留滚动位置 */
+.page {
+  padding: var(--space-6) 0 var(--space-6);
+}
+.page[hidden] { display: none; }
+
+/* ============ tabBar ============ */
+.tabbar {
+  position: relative;
+  z-index: var(--z-tabbar);
+  display: flex;
+  flex-shrink: 0;
+  height: calc(var(--tabbar-h) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background: var(--surface-card);
+  border-top: 1px solid var(--border-subtle);
+}
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--text-quaternary);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.tab > svg {
+  width: 23px;
+  height: 23px;
+}
+.tab-label {
+  font-size: var(--text-2xs);
+  line-height: 1;
+}
+.tab[aria-selected='true'] {
+  color: var(--color-brand);
+  font-weight: var(--weight-semibold);
+}
+
+/* ============ Toast ============ */
+.toast-layer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  pointer-events: none;
+}
+.toast {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 70%;
+  padding: var(--space-4) var(--space-6);
+  border-radius: var(--radius-inner);
+  background: rgba(15, 23, 42, 0.86);
+  color: #fff;
+  font-size: var(--text-md);
+  line-height: var(--leading-snug);
+  text-align: center;
+  backdrop-filter: blur(8px);
+  animation: toast-in var(--dur-base) var(--ease-out);
+}
+.toast > svg {
+  width: 26px;
+  height: 26px;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.toast.is-out {
+  animation: toast-out var(--dur-base) var(--ease-out) forwards;
+}
+@keyframes toast-out {
+  to { opacity: 0; transform: translateY(-4px); }
+}
+
+/* 加载指示 */
+.spinner {
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation-duration: 2s; }
+}
+
+/* ============ 页面切换过渡 ============ */
+.page {
+  animation: page-in var(--dur-slow) var(--ease-out);
+}
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* 返回上一页时不播进场动画，避免方向感错乱 */
+/* 属性名是 data-nav（fwd/back），不要写成 data-back —— 那是「返回按钮」的
+   声明式属性，写在这里会让二级页上任何点击都冒泡命中、触发返回 */
+.page[data-nav='back'] {
+  animation: page-back var(--dur-slow) var(--ease-out);
+}
+@keyframes page-back {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ============ 底部安全留白 ============ */
+.page-end {
+  height: var(--space-8);
+}
+
+/* ============ 首屏加载骨架 ============ */
+.boot {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-page);
+  color: var(--text-quaternary);
+  font-size: var(--text-md);
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+.boot.is-off {
+  opacity: 0;
+  pointer-events: none;
+}
