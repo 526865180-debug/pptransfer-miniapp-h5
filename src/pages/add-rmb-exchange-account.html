@@ -24,9 +24,16 @@
   </li>
 </ol>
 
-<!-- ===== 步骤 1：填写账户信息 ===== -->
+<!-- ===== 步骤 1：填写账户信息（按语义分三组，避免一长表糊成一屏） ===== -->
 <section class="wizard-step" data-step="0">
   <div class="card wizard-card">
+    <div class="section-head">
+      <div>
+        <h2 class="section-title">账户归属</h2>
+        <span class="section-sub">确认账户属于谁、是什么类型</span>
+      </div>
+    </div>
+
     <div class="frow">
       <span class="frow-label" id="add-owner-label"><i class="frow-req" aria-hidden="true">*</i>账户所属：</span>
       <div class="radio-group" role="radiogroup" aria-labelledby="add-owner-label">
@@ -35,7 +42,7 @@
       </div>
     </div>
 
-    <div class="frow">
+    <div class="frow frow--last">
       <span class="frow-label" id="add-type-label"><i class="frow-req" aria-hidden="true">*</i>账户类型：</span>
       <div class="radio-group" role="radiogroup" aria-labelledby="add-type-label">
         <button type="button" class="radio-pill" role="radio" aria-checked="true"  data-type="enterprise">企业账户</button>
@@ -44,15 +51,24 @@
     </div>
 
     <!-- 个人账户专属：公司名称 / 统一信用代码 -->
-    <div class="frow" data-only="personal" hidden>
-      <label class="frow-label" for="add-company-name">公司名称：</label>
+    <div class="frow frow--last" data-only="personal" hidden>
+      <label class="frow-label" for="add-company-name"><i class="frow-req" aria-hidden="true">*</i>公司名称：</label>
       <input class="field-input" id="add-company-name" type="text" autocomplete="off"
              placeholder="请输入公司名称">
     </div>
-    <div class="frow" data-only="personal" hidden>
-      <label class="frow-label" for="add-credit-code">统一信用代码：</label>
-      <input class="field-input" id="add-credit-code" type="text" autocomplete="off"
-             placeholder="请输入统一信用代码">
+    <div class="frow frow--last" data-only="personal" hidden>
+      <label class="frow-label" for="add-credit-code"><i class="frow-req" aria-hidden="true">*</i>统一信用代码：</label>
+      <input class="field-input num" id="add-credit-code" type="text" autocomplete="off"
+             placeholder="18 位统一社会信用代码">
+    </div>
+  </div>
+
+  <div class="card wizard-card">
+    <div class="section-head">
+      <div>
+        <h2 class="section-title">收款账户信息</h2>
+        <span class="section-sub">开户银行与收款账号，用于外汇提现入账</span>
+      </div>
     </div>
 
     <div class="frow">
@@ -67,13 +83,13 @@
     <div class="frow">
       <label class="frow-label" for="add-acct-name"><i class="frow-req" aria-hidden="true">*</i>账户名称：</label>
       <input class="field-input" id="add-acct-name" type="text" autocomplete="off"
-             placeholder="请输入账户名称">
+             placeholder="如：深圳市极光贸易有限公司">
     </div>
 
     <div class="frow">
       <label class="frow-label" for="add-acct-no"><i class="frow-req" aria-hidden="true">*</i>银行账号：</label>
       <input class="field-input num" id="add-acct-no" type="text" inputmode="numeric"
-             autocomplete="off" placeholder="请输入银行账号">
+             autocomplete="off" maxlength="23" placeholder="请输入银行账号">
       <span class="hint-warn" data-only="personal" hidden>
         温馨提示：仅支持 I 类银行账户卡，不支持信用卡，请和开户行确认账户类型
       </span>
@@ -83,25 +99,28 @@
       <span class="frow-label"><i class="frow-req" aria-hidden="true">*</i>银行名称：</span>
       <button type="button" class="select-field" id="add-bank-btn"
               aria-haspopup="dialog" aria-label="选择银行名称">
-        <span class="select-value is-placeholder" id="add-bank-value">请输入搜索选择</span>
+        <span class="select-value is-placeholder" id="add-bank-value">搜索银行名称 / CNAPS 行号</span>
         <svg class="select-caret" aria-hidden="true"><use href="#i-chevron-down"/></svg>
       </button>
     </div>
 
-    <div class="frow">
-      <label class="frow-label" for="add-branch-code"><i class="frow-req" aria-hidden="true">*</i>开户行支行号：</label>
-      <input class="field-input num" id="add-branch-code" type="text" autocomplete="off"
-             placeholder="请输入搜索选择">
+    <div class="frow frow--last">
+      <span class="frow-label"><i class="frow-req" aria-hidden="true">*</i>开户行支行号：</span>
+      <button type="button" class="select-field" id="add-branch-btn"
+              aria-haspopup="dialog" aria-label="选择开户支行">
+        <span class="select-value is-placeholder" id="add-branch-value">请先选择开户银行</span>
+        <svg class="select-caret" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+      </button>
     </div>
 
     <!-- 个人账户专属：身份证号 / 历史采购合同 -->
     <div class="frow" data-only="personal" hidden>
-      <label class="frow-label" for="add-id-card">收款人身份证号：</label>
+      <label class="frow-label" for="add-id-card"><i class="frow-req" aria-hidden="true">*</i>收款人身份证号：</label>
       <input class="field-input num" id="add-id-card" type="text" autocomplete="off"
-             placeholder="请输入">
+             maxlength="18" placeholder="18 位二代身份证号码">
     </div>
-    <div class="frow" data-only="personal" hidden>
-      <span class="frow-label">历史采购合同：</span>
+    <div class="frow frow--last" data-only="personal" hidden>
+      <span class="frow-label"><i class="frow-req" aria-hidden="true">*</i>历史采购合同：</span>
       <label class="upload-box" for="add-contract-file">
         <svg aria-hidden="true"><use href="#i-upload"/></svg>
         <span>采购合同加盖双方公章，支持 png、jpg、jpeg、pdf 文件</span>
@@ -109,11 +128,19 @@
       </label>
       <ul class="upload-list" id="add-upload-list"></ul>
     </div>
+  </div>
 
+  <div class="card wizard-card">
+    <div class="section-head">
+      <div>
+        <h2 class="section-title">其他</h2>
+        <span class="section-sub">以下信息为选填，不影响审核</span>
+      </div>
+    </div>
     <div class="frow frow--last">
-      <label class="frow-label" for="add-alias">别名/昵称：</label>
+      <label class="frow-label" for="add-alias">别名/昵称<i class="frow-optional" aria-hidden="true">选填</i></label>
       <input class="field-input" id="add-alias" type="text" autocomplete="off"
-             placeholder="选填，便于在提现账户列表里识别">
+             placeholder="便于在提现账户列表里识别">
     </div>
   </div>
 
@@ -185,7 +212,7 @@
     </div>
 
     <div class="field">
-      <label class="field-label" for="add-trade-pwd">交易密码</label>
+      <label class="field-label" for="add-trade-pwd"><i class="frow-req" aria-hidden="true">*</i>交易密码</label>
       <input class="field-input" id="add-trade-pwd" type="password" inputmode="numeric"
              maxlength="6" autocomplete="off" placeholder="请输入 6 位交易密码">
     </div>

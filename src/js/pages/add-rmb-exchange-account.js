@@ -38,6 +38,19 @@
     { value: '兴业银行', title: '兴业银行', sub: 'CNAPS 309391000011' }
   ]
 
+  /** 依所选银行生成开户支行（演示数据；CNAPS 前缀沿用银行自身的行号） */
+  function branchesFor(bankName) {
+    var bank = null
+    BANKS.forEach(function (b) { if (b.value === bankName) bank = b })
+    var base = (bank && /\d{12}/.exec(bank.sub)) ? String(/\d{12}/.exec(bank.sub)[0]) : '308584000013'
+    var head = base.slice(0, 9)
+    return [
+      { value: head + '013', title: bankName + '深圳前海支行', sub: 'CNAPS ' + head + '013' },
+      { value: head + '046', title: bankName + '深圳南山支行', sub: 'CNAPS ' + head + '046' },
+      { value: head + '091', title: bankName + '深圳福田支行', sub: 'CNAPS ' + head + '091' }
+    ]
+  }
+
   /** 当前页面实例的可变状态；未挂载时为 null */
   var view = null
 
@@ -46,6 +59,16 @@
   function val(sel) {
     var el = dom.qs(sel, view.root)
     return el ? el.value.trim() : ''
+  }
+
+  /** 去掉 4 位分组时插入的空格，得到原始账号 */
+  function rawNum(sel) {
+    return val(sel).replace(/\s+/g, '')
+  }
+
+  /** 长卡号按 4 位分组展示，如 6222 0202 0012 3456 789 */
+  function group4(s) {
+    return s.replace(/(\d{4})(?=\d)/g, '$1 ')
   }
 
   function setText(sel, text) {
@@ -63,27 +86,53 @@
   function syncTypeRows() {
     var personal = isPersonal()
     visibleRows().forEach(function (el) { el.hidden = !personal })
+    /* 账户名称占位文案按类型切换（沿用 desktop 版细节） */
+    var nameInput = dom.qs('#add-acct-name', view.root)
+    if (nameInput) {
+      nameInput.placeholder = personal
+        ? '请输入'
+        : '如：深圳市极光贸易有限公司'
+    }
   }
 
-  /** 步骤 1 的必填校验：返回第一个缺失项的提示文案 */
+  /* ---------------------------------------------- 行内校验 */
+
+  /** 给字段所在 .frow 标红并滚动定位；返回行元素 */
+  function showError(sel) {
+    var el = dom.qs(sel, view.root)
+    if (!el) return null
+    var row = el.closest('.frow')
+    if (row) row.classList.add('is-error')
+    if (el.scrollIntoView) el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    if (el.focus) el.focus({ preventScroll: true })
+    return row
+  }
+
+  /** 任何输入 / 选择都会清掉所在行的错误态 */
+  function clearRowError(e, el) {
+    var row = el.closest('.frow')
+    if (row) row.classList.remove('is-error')
+  }
+
+  /** 步骤 1 的必填校验：返回第一个缺失项 { msg, sel } */
   function firstMissing() {
-    if (!val('#add-acct-name')) return '请填写账户名称'
-    if (!val('#add-acct-no')) return '请填写银行账号'
-    if (!view.bank) return '请选择银行名称'
-    if (!val('#add-branch-code')) return '请填写开户行支行号'
+    if (!val('#add-acct-name')) return { msg: '请填写账户名称', sel: '#add-acct-name' }
+    if (!rawNum('#add-acct-no')) return { msg: '请填写银行账号', sel: '#add-acct-no' }
+    if (!view.bank) return { msg: '请选择银行名称', sel: '#add-bank-btn' }
+    if (!view.branch) return { msg: '请选择开户行支行号', sel: '#add-branch-btn' }
     if (isPersonal()) {
-      if (!val('#add-company-name')) return '请填写公司名称'
-      if (!val('#add-credit-code')) return '请填写统一信用代码'
-      if (!val('#add-id-card')) return '请填写收款人身份证号'
+      if (!val('#add-company-name')) return { msg: '请填写公司名称', sel: '#add-company-name' }
+      if (!val('#add-credit-code')) return { msg: '请填写统一信用代码', sel: '#add-credit-code' }
+      if (!val('#add-id-card')) return { msg: '请填写收款人身份证号', sel: '#add-id-card' }
     }
-    return ''
+    return null
   }
 
   /** 把步骤 1 的账户信息同步到授权声明 */
   function syncAuth() {
     setText('#add-auth-bank', view.bank || '—')
     setText('#add-auth-name', val('#add-acct-name') || '—')
-    setText('#add-auth-no', val('#add-acct-no') || '—')
+    setText('#add-auth-no', group4(rawNum('#add-acct-no')) || '—')
   }
 
   /* ---------------------------------------------- 列表渲染 */
@@ -167,6 +216,37 @@
       var el = dom.qs('#add-bank-value', view.root)
       el.textContent = value
       el.classList.remove('is-placeholder')
+      /* 换银行后原支行不再有效，重置支行选择 */
+      view.branch = ''
+      view.branchTitle = ''
+      var branch = dom.qs('#add-branch-value', view.root)
+      branch.textContent = '请选择开户支行'
+      branch.classList.add('is-placeholder')
+    })
+  }
+
+  /** 支行号：依所选银行搜索选择（CNAPS 行号参与检索） */
+  function pickBranch() {
+    if (!view.bank) {
+      PP.ui.toast('请先选择银行名称')
+      showError('#add-bank-btn')
+      return
+    }
+    PP.ui.searchPicker({
+      title: '选择开户支行',
+      placeholder: '支行名称 / CNAPS 行号',
+      value: view.branch,
+      items: branchesFor(view.bank)
+    }).then(function (value) {
+      if (!value || !view) return
+      view.branch = value
+      var items = branchesFor(view.bank)
+      items.forEach(function (it) {
+        if (String(it.value) === String(value)) view.branchTitle = it.title
+      })
+      var el = dom.qs('#add-branch-value', view.root)
+      el.textContent = view.branchTitle || value
+      el.classList.remove('is-placeholder')
     })
   }
 
@@ -181,6 +261,8 @@
         type: 'enterprise',
         region: '中国内地',
         bank: '',
+        branch: '',
+        branchTitle: '',
         files: [],
         pwd: '',
         agreed: false
@@ -188,6 +270,12 @@
 
       var offs = []
       function listen(type, sel, fn) { offs.push(dom.on(root, type, sel, fn)) }
+
+      /* -------- 行内错误态：任何输入/选择都清掉所在行的标红 -------- */
+
+      listen('input', '.field-input', clearRowError)
+      listen('click', '.select-field', clearRowError)
+      listen('click', '.radio-pill', clearRowError)
 
       /* -------- 单选：账户所属 / 账户类型 -------- */
 
@@ -212,6 +300,16 @@
 
       listen('click', '#add-region-btn', pickRegion)
       listen('click', '#add-bank-btn', pickBank)
+      listen('click', '#add-branch-btn', pickBranch)
+
+      /* -------- 银行账号：失焦时按 4 位分组展示，存值始终去空格 -------- */
+
+      listen('input', '#add-acct-no', function (e, el) {
+        el.value = el.value.replace(/[^\d\s]/g, '')
+      })
+      listen('focusout', '#add-acct-no', function (e, el) {
+        el.value = group4(el.value.replace(/\s+/g, ''))
+      })
 
       /* -------- 历史采购合同上传 -------- */
 
@@ -233,7 +331,8 @@
       listen('click', '#add-next-btn', function () {
         var missing = firstMissing()
         if (missing) {
-          PP.ui.toast(missing)
+          PP.ui.toast(missing.msg)
+          showError(missing.sel)
           return
         }
         syncAuth()
@@ -262,7 +361,7 @@
           return
         }
         setText('#add-result-name', val('#add-acct-name'))
-        setText('#add-result-no', PP.format.maskAccount(val('#add-acct-no')))
+        setText('#add-result-no', PP.format.maskAccount(rawNum('#add-acct-no')))
         setText('#add-result-region', view.region)
         goStep(2)
         dom.haptic()

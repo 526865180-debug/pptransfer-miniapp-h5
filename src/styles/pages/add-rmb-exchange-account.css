@@ -18,7 +18,31 @@
   margin: var(--space-4) var(--gutter) 0;
   padding: var(--space-5) var(--space-4);
 }
-.page[data-page='add-rmb-exchange-account'] .wizard-card .section-head { margin-bottom: var(--space-4); }
+.page[data-page='add-rmb-exchange-account'] .wizard-card + .wizard-card { margin-top: var(--space-3); }
+.page[data-page='add-rmb-exchange-account'] .wizard-card .section-head { margin-bottom: var(--space-3); }
+/* 分组卡里紧跟分组标题的首行不再另起留白 */
+.page[data-page='add-rmb-exchange-account'] .section-head + .frow { padding-top: 0; }
+
+/* ============ 行内校验错误态 ============ */
+.page[data-page='add-rmb-exchange-account'] .frow.is-error .field-input,
+.page[data-page='add-rmb-exchange-account'] .frow.is-error .select-field {
+  border-color: var(--tone-danger-fg);
+}
+.page[data-page='add-rmb-exchange-account'] .frow.is-error .frow-label {
+  color: var(--tone-danger-fg);
+}
+
+/* ============ 选填小标签 ============ */
+.page[data-page='add-rmb-exchange-account'] .frow-optional {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  font-size: var(--text-2xs);
+  font-style: normal;
+  color: var(--text-tertiary);
+  vertical-align: 1px;
+}
 
 /* 银行账号下方的橙色提示（个人账户专属） */
 .page[data-page='add-rmb-exchange-account'] .hint-warn {

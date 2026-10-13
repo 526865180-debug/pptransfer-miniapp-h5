@@ -302,11 +302,20 @@ async function main() {
       }
       const pageScope = 'document.querySelector(".page[data-page=\'add-rmb-exchange-account\']")'
 
-      // 空表单直接下一步 → 校验提示
+      // 空表单直接下一步 → 校验提示 + 行内标红
       await click(cdp, '#add-next-btn')
       await sleep(150)
       let s = await cdp.eval(`document.querySelector('#toast-layer').textContent`)
       check('空表单校验 → toast 提示', /请填写/.test(s), s)
+      // 未选银行时点支行号 → toast 引导 + 银行行标红
+      await click(cdp, '#add-branch-btn')
+      await sleep(200)
+      s = await cdp.eval(`({
+        toast: document.querySelector('#toast-layer').textContent,
+        errRow: !!document.querySelector('.page[data-page="add-rmb-exchange-account"] .frow.is-error #add-bank-btn')
+      })`)
+      check('未选银行点支行号 → toast 引导并标红银行行',
+        /先选择银行/.test(s.toast) && s.errRow, JSON.stringify(s))
 
       // 切到个人账户：专属字段出现
       await click(cdp, '.radio-pill[data-type="personal"]')
@@ -345,10 +354,21 @@ async function main() {
       s = await cdp.eval(`document.querySelector('#add-bank-value').textContent`)
       check('银行选中回填', s === '招商银行', s)
 
-      // 补齐必填项 → 进入授权步骤
+      // 支行号 searchPicker（依所选银行动态生成）
+      await click(cdp, '#add-branch-btn')
+      await cdp.waitFor(`!!document.querySelector('#layer-root .picker-list')`, '支行弹层出现')
+      s = await cdp.eval(`document.querySelectorAll('#layer-root .picker-item').length`)
+      check('招商银行支行列表 3 条', s === 3, s)
+      s = await cdp.eval(`[].slice.call(document.querySelectorAll('#layer-root .picker-item .picker-title')).some(function (t) { return /前海/.test(t.textContent) })`)
+      check('支行列表含「前海支行」', s === true, String(s))
+      await click(cdp, '.picker-item', 'document.querySelector("#layer-root .sheet")')
+      await sleep(200)
+      s = await cdp.eval(`document.querySelector('#add-branch-value').textContent`)
+      check('支行选中回填', /前海/.test(s), s)
+
+      // 补齐必填项 → 进入授权步骤（银行账号失焦后按 4 位分组展示）
       await setVal('#add-acct-name', '深圳市极光贸易有限公司')
       await setVal('#add-acct-no', '6222020200123456789')
-      await setVal('#add-branch-code', '308584000013')
       await click(cdp, '#add-next-btn')
       await sleep(200)
       s = await cdp.eval(`({
@@ -359,7 +379,7 @@ async function main() {
         confirmDisabled: document.querySelector('#add-confirm-btn').getAttribute('aria-disabled')
       })`)
       check('进入授权步骤且账户信息回填',
-        s.step === '1' && s.bank === '招商银行' && /极光贸易/.test(s.name) && /6222/.test(s.no),
+        s.step === '1' && s.bank === '招商银行' && /极光贸易/.test(s.name) && s.no === '6222 0202 0012 3456 789',
         JSON.stringify(s))
       check('未填密码/未勾选时提交置灰', s.confirmDisabled === 'true', s.confirmDisabled)
 
