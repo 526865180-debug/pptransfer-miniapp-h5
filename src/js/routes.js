@@ -1,7 +1,7 @@
 /* ============================================================
    routes.js · 路由表
    ------------------------------------------------------------
-   13 个页面的唯一真源：导航栏标题、tabBar 归属、片段文件名。
+   14 个页面的唯一真源：导航栏标题、tabBar 归属、片段文件名。
    router 与 tabBar 都从这里读，避免两处各写一份对不上。
    ============================================================ */
 (function (PP) {
@@ -25,6 +25,7 @@
     /* ---------- 二级页 ---------- */
     { name: 'order-management', title: '订单管理' },
     { name: 'exchange', title: '换汇中心' },
+    { name: 'exchange-records', title: '换汇记录' },
     { name: 'international-remittance', title: '国际汇款' },
     { name: 'rmb-exchange', title: '人民币结汇' },
     { name: 'rmb-exchange-withdraw', title: '结汇提现' },

@@ -86,7 +86,7 @@ python3 tools/bundle.py         # src/ → ./index.html
 
 ```bash
 python3 tools/verify.py                          # 静态校验，6 项
-node tools/render_check.js                       # 产物 13 页渲染 + 截图 → tools/.render-out/
+node tools/render_check.js                       # 产物 14 页渲染 + 截图 → tools/.render-out/
 node tools/render_check.js http://localhost:8080/index.html   # 同上，但验证开发态
 node tools/interact_check.js                     # 交互冒烟，78 项断言
 ```
@@ -120,7 +120,7 @@ node tools/interact_check.js                     # 交互冒烟，78 项断言
 
 ---
 
-## 页面清单（13 页）
+## 页面清单（14 页）
 
 | 路由 | 页面 | 底部 tab |
 |---|---|---|
@@ -129,6 +129,7 @@ node tools/interact_check.js                     # 交互冒烟，78 项断言
 | `rights-center` | 权益中心 | 权益中心 |
 | `order-management` | 订单管理 | — |
 | `exchange` | 换汇中心 | — |
+| `exchange-records` | 换汇记录（经换汇中心「查看全部 ›」进入；KPI 概览 + 状态/条件筛选 + 分页） | — |
 | `international-remittance` | 国际汇款 | — |
 | `rmb-exchange` | 人民币结汇 | — |
 | `rmb-exchange-withdraw` | 结汇提现 | — |
@@ -140,6 +141,10 @@ node tools/interact_check.js                     # 交互冒烟，78 项断言
 
 > 原「在途资金」一级页（`in-transit-funds`）已并入 `trade-collection`：
 > tabBar 从四栏收敛为三栏，首页在途资金的「详情 ›」带 `data-view="fund"` 直达该视图。
+>
+> `exchange-records` 的内容对齐 desktop 版 `pages/exchange_records.html`：
+> 概览 KPI（成功/申请中笔数与金额，按全量统计）+ 状态统计条 + 筛选
+> （交易时间 / 买入币种 / 卖出币种 / 下单方式）+ 卡片列表 + 详情 + 导出。
 
 首页为**自然流布局**：图表定高 160px，矮屏退化为可滚动而不是丢内容。
 

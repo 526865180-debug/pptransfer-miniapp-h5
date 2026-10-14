@@ -1,0 +1,204 @@
+/* ============================================================
+   pages/exchange-records.css · 换汇记录
+   ------------------------------------------------------------
+   本页只写概览 KPI、记录卡与列表头右侧的操作组；
+   stat-bar / list-head / pager / filter-btn / card / empty /
+   detail-row / sheet 一律复用 components.css。
+   尺寸按 375px 基准换算。
+
+   概览卡在桌面版是四列横排，375px 下折成 2×2 —— 每格仍有
+   170px 净宽，放得下「¥ 46,197.88」这类 15px 等宽数字。
+   ============================================================ */
+
+.page[data-page='exchange-records'] {
+  padding: 12px 0 20px;
+}
+
+/* ============ 概览 KPI（桌面四列 → 移动 2×2） ============ */
+.exr-kpis {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0 var(--gutter);
+}
+
+.exr-kpi {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  padding: var(--space-4);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.exr-kpi-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.exr-kpi-label {
+  font-size: var(--text-xs);
+  color: var(--text-quaternary);
+}
+
+.exr-kpi-value {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  line-height: var(--leading-tight);
+}
+
+/* 数字本身用等宽字体，单位回落正文字体 —— 避免「笔」被撑宽 */
+.exr-kpi-num {
+  font-family: var(--font-num);
+}
+
+.exr-kpi-unit {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  color: var(--text-quaternary);
+}
+
+.exr-kpi-sub {
+  font-size: var(--text-2xs);
+  color: var(--text-quaternary);
+  overflow-wrap: anywhere;
+}
+
+/* ============ 列表头右侧：导出 + 筛选 ============ */
+.exr-ops {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* ============ 记录卡列表 ============ */
+.exr-list {
+  margin: 10px var(--gutter) 0;
+  padding: 2px var(--space-6) 4px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.exr-item {
+  border-bottom: 1px solid var(--border-subtle);
+}
+.exr-item:last-child {
+  border-bottom: 0;
+}
+
+.exr-main {
+  display: block;
+  width: 100%;
+  padding: 13px 0;
+  text-align: left;
+}
+.exr-main:active {
+  background: var(--surface-sunken);
+}
+
+/* —— 序号 + 状态 —— */
+.exr-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.exr-no {
+  font-family: var(--font-num);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-quaternary);
+}
+
+/* —— 时间 · 下单方式 —— */
+.exr-meta {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  color: var(--text-quaternary);
+}
+
+/* —— 卖出 / 买入 两栏 —— */
+.exr-legs {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-3);
+  margin-top: 10px;
+  padding: 10px var(--space-4);
+  background: var(--surface-sunken);
+  border-radius: var(--radius-inner);
+}
+
+.exr-leg {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.exr-leg + .exr-leg {
+  border-left: 1px solid var(--border-default);
+  padding-left: var(--space-4);
+}
+
+.exr-leg-label {
+  font-size: var(--text-2xs);
+  color: var(--text-quaternary);
+}
+
+.exr-leg-value {
+  font-family: var(--font-num);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+/* 买入侧用品牌色区分「进账」方向 */
+.exr-leg--buy .exr-leg-value {
+  color: var(--color-brand);
+}
+
+/* —— 汇率 / 流水号 —— */
+.exr-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+}
+
+.exr-line {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  font-size: var(--text-2xs);
+  color: var(--text-quaternary);
+}
+
+.exr-line-label {
+  flex-shrink: 0;
+}
+
+.exr-line-value {
+  min-width: 0;
+  font-family: var(--font-num);
+  color: var(--text-tertiary);
+  overflow-wrap: anywhere;
+}
+
+/* ============ 空状态 ============ */
+.exr-empty {
+  margin: 10px var(--gutter) 0;
+}

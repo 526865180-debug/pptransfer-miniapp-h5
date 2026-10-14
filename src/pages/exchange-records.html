@@ -1,0 +1,113 @@
+<!--
+  pages/exchange-records.html · 换汇记录
+  ---------------------------------------------------------------
+  入口：换汇中心「换汇历史」右侧「查看全部 ›」。内容对齐 desktop 版
+  pages/exchange_records.html：概览 KPI + 状态筛选 + 记录列表 + 详情 + 导出。
+
+  桌面版的宽表格（10 列、1260px）在 375px 下改为卡片：每张卡按
+    「序号 + 状态徽章」→「交易时间 · 下单方式」→「卖出 / 买入 / 汇率」
+    →「交易流水号 / 操作人邮箱」
+  四段堆叠，不做横向滚动，也就不需要首列吸附那套桌面技巧。
+
+  KPI 与状态统计的笔数、金额全部由 JS 从 RECORDS 现算，不写死 ——
+  结果与桌面版硬编码的 7 笔 / 3 笔 / 46,197.88 / 2,519.96 完全一致。
+  列表底部分页交给 PP.ui.pager（单页时自动收起），筛选弹层与详情弹层
+  交给 PP.ui.sheet，页面里只保留触发按钮。
+-->
+
+<!-- ===== 换汇概览 ===== -->
+<section class="exr-kpis" aria-label="换汇概览">
+  <div class="exr-kpi">
+    <span class="tile" data-tone="success" aria-hidden="true">
+      <svg aria-hidden="true"><use href="#i-check-circle"/></svg>
+    </span>
+    <div class="exr-kpi-body">
+      <span class="exr-kpi-label">换汇成功</span>
+      <span class="exr-kpi-value">
+        <span class="exr-kpi-num num" id="exr-kpi-done">0</span>
+        <span class="exr-kpi-unit">笔</span>
+      </span>
+      <span class="exr-kpi-sub">已交割至收款账户</span>
+    </div>
+  </div>
+
+  <div class="exr-kpi">
+    <span class="tile" data-tone="orange" aria-hidden="true">
+      <svg aria-hidden="true"><use href="#i-clock"/></svg>
+    </span>
+    <div class="exr-kpi-body">
+      <span class="exr-kpi-label">换汇申请中</span>
+      <span class="exr-kpi-value">
+        <span class="exr-kpi-num num" id="exr-kpi-pending">0</span>
+        <span class="exr-kpi-unit">笔</span>
+      </span>
+      <span class="exr-kpi-sub">待银行处理</span>
+    </div>
+  </div>
+
+  <div class="exr-kpi">
+    <span class="tile" data-tone="blue" aria-hidden="true">
+      <svg aria-hidden="true"><use href="#i-coin"/></svg>
+    </span>
+    <div class="exr-kpi-body">
+      <span class="exr-kpi-label">成功换入金额</span>
+      <span class="exr-kpi-value num" data-amount id="exr-kpi-in">¥ 0.00</span>
+      <span class="exr-kpi-sub" id="exr-kpi-in-sub">折合 CNH · 0 笔</span>
+    </div>
+  </div>
+
+  <div class="exr-kpi">
+    <span class="tile" data-tone="violet" aria-hidden="true">
+      <svg aria-hidden="true"><use href="#i-trend"/></svg>
+    </span>
+    <div class="exr-kpi-body">
+      <span class="exr-kpi-label">申请中金额</span>
+      <span class="exr-kpi-value num" data-amount id="exr-kpi-pending-amt">¥ 0.00</span>
+      <span class="exr-kpi-sub" id="exr-kpi-pending-sub">折合 CNH · 0 笔</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 状态统计（点击即筛选） ===== -->
+<div class="stat-bar" role="group" aria-label="按换汇状态筛选">
+  <button type="button" class="stat-item" data-status="" aria-pressed="true">
+    <span class="stat-num num" data-count="all">0</span>
+    <span class="stat-label">全部</span>
+  </button>
+  <button type="button" class="stat-item" data-status="success" data-tone="success" aria-pressed="false">
+    <span class="stat-num num" data-count="success">0</span>
+    <span class="stat-label">换汇成功</span>
+  </button>
+  <button type="button" class="stat-item" data-status="pending" data-tone="orange" aria-pressed="false">
+    <span class="stat-num num" data-count="pending">0</span>
+    <span class="stat-label">换汇申请中</span>
+  </button>
+</div>
+
+<!-- ===== 列表头：条数 + 导出 + 筛选 ===== -->
+<div class="list-head">
+  <span class="list-count" id="exr-count">共 0 条换汇记录</span>
+  <div class="exr-ops">
+    <button type="button" class="btn-text" id="exr-export">导出列表</button>
+    <button type="button" class="filter-btn" id="exr-filter" data-active="false"
+            aria-haspopup="dialog" aria-label="筛选">
+      <svg aria-hidden="true"><use href="#i-filter"/></svg>
+      <span class="filter-badge" id="exr-filter-badge" hidden>0</span>
+    </button>
+  </div>
+</div>
+
+<!-- ===== 记录卡片列表（JS 渲染；每页 5 条） ===== -->
+<ul class="exr-list" id="exr-list" aria-label="换汇记录"></ul>
+
+<!-- 分页：由 PP.ui.pager 渲染，单页时自动隐藏 -->
+<div class="pager" id="exr-pager" hidden></div>
+
+<!-- 空状态 -->
+<div class="card empty exr-empty" id="exr-empty" hidden>
+  <svg class="empty-icon" aria-hidden="true"><use href="#i-inbox"/></svg>
+  <p class="empty-text">当前筛选条件下暂无换汇记录</p>
+  <p class="empty-sub">试试切换状态标签或调整筛选条件</p>
+</div>
+
+<div class="page-end"></div>

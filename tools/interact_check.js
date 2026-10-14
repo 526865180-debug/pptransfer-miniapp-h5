@@ -14,6 +14,8 @@
  *   3. 进入二级页       —— 快捷入口「换汇」→ exchange，导航栏出现返回键
  *   4. 返回             —— 点返回键回到原 tab，滚动容器只有一页可见
  *   5. 表单校验         —— exchange 直接提交应给出错误提示而不是静默失败
+ *   5.5 换汇记录页      —— 换汇中心「查看全部」进入换汇记录：KPI 全量统计、
+ *                          每页 5 条分页、状态筛选、详情弹层、筛选弹层（币种 picker）、导出
  *   6. 确认弹层         —— 填入合法金额提交，#layer-root 里出现确认弹层，可取消关闭
  *   7. 消息通知清零     —— 进入 notifications 后全局未读角标清零，列表仍在
  *
@@ -290,6 +292,22 @@ async function main() {
       check('二级页隐藏 tabBar', s.tabbarHidden === true, String(s.tabbarHidden))
       check('标题正确', s.title === '换汇中心', s.title)
       check('页面栈正确', JSON.stringify(s.stack) === JSON.stringify(['index', 'exchange']), JSON.stringify(s.stack))
+
+      // 换汇历史「查看全部」→ 换汇记录页（对齐 desktop 版 pages/exchange_records.html）
+      await click(cdp, '.page[data-page="exchange"] [data-go="exchange-records"]')
+      await cdp.waitFor(`PP.router.current() === 'exchange-records'`, '进入换汇记录')
+      const s2 = await cdp.eval(`({
+        title: document.querySelector('#bar-title').textContent,
+        stack: PP.router.stack().map(function (i) { return i.name })
+      })`)
+      check('「查看全部」进入换汇记录页',
+        s2.title === '换汇记录' &&
+        JSON.stringify(s2.stack) === JSON.stringify(['index', 'exchange', 'exchange-records']),
+        JSON.stringify(s2))
+
+      // 回到换汇中心，保持「返回上一页」步骤的页面栈不变
+      await click(cdp, '#bar-back')
+      await cdp.waitFor(`PP.router.current() === 'exchange'`, '返回换汇中心')
     })
 
     /* 4. 返回 ----------------------------------------------------- */
@@ -327,6 +345,119 @@ async function main() {
       })`)
       check('给出错误提示', s.shown && !!s.text, s.shown ? s.text : '错误节点 hidden')
       check('没有弹出确认层', s.gone === true, String(s.gone))
+    })
+
+    /* 5.5 换汇记录页 ------------------------------------------------ */
+    await step('换汇记录页（KPI / 分页 / 状态筛选 / 详情 / 筛选 / 导出）', cdp, async () => {
+      await cdp.eval(`PP.router.go('exchange-records')`)
+      await cdp.waitFor(`PP.router.current() === 'exchange-records'`, '进入换汇记录')
+      await sleep(200)
+
+      // KPI 按全量统计，与桌面版硬编码值一致（7 笔 / 3 笔 / 46,197.88 / 2,519.96）
+      let s = await cdp.eval(`({
+        done: document.querySelector('#exr-kpi-done').textContent,
+        pending: document.querySelector('#exr-kpi-pending').textContent,
+        inAmt: document.querySelector('#exr-kpi-in').textContent,
+        inSub: document.querySelector('#exr-kpi-in-sub').textContent
+      })`)
+      check('KPI 换汇成功 7 笔', s.done === '7', JSON.stringify(s))
+      check('KPI 申请中 3 笔', s.pending === '3', JSON.stringify(s))
+      check('成功换入金额 46,197.88', s.inAmt.indexOf('46,197.88') >= 0, JSON.stringify(s))
+      check('KPI 副标题笔数一致', /7 笔/.test(s.inSub), JSON.stringify(s))
+
+      // 第 1 页渲染 5 条，分页可见
+      s = await cdp.eval(`({
+        all: document.querySelector('[data-count="all"]').textContent,
+        items: document.querySelectorAll('#exr-list .exr-item').length,
+        count: document.querySelector('#exr-count').textContent,
+        pagerHidden: document.querySelector('#exr-pager').hidden,
+        first: (document.querySelector('#exr-list .exr-no') || {}).textContent
+      })`)
+      check('状态统计全部 10 条', s.all === '10', JSON.stringify(s))
+      check('第 1 页渲染 5 条、原始序号 #01',
+        s.items === 5 && s.first === '#01', JSON.stringify(s))
+      check('计数共 10 条', s.count === '共 10 条换汇记录', JSON.stringify(s))
+      check('分页控件可见', s.pagerHidden === false, JSON.stringify(s))
+
+      // 翻到第 2 页
+      await click(cdp, '#exr-pager [data-pg="2"]')
+      await sleep(200)
+      s = await cdp.eval(`({
+        items: document.querySelectorAll('#exr-list .exr-item').length,
+        first: (document.querySelector('#exr-list .exr-no') || {}).textContent,
+        info: (document.querySelector('#exr-pager .pager-info') || {}).textContent
+      })`)
+      check('第 2 页渲染 5 条（#06 起）', s.items === 5 && s.first === '#06', JSON.stringify(s))
+      check('分页范围文案', /第 6–10 条 \/ 共 10 条/.test(s.info), JSON.stringify(s))
+
+      // 状态筛选「换汇成功」→ 7 条，页码回第 1 页
+      await click(cdp, '.page[data-page="exchange-records"] [data-status="success"]')
+      await sleep(200)
+      s = await cdp.eval(`({
+        count: document.querySelector('#exr-count').textContent,
+        first: (document.querySelector('#exr-list .exr-no') || {}).textContent
+      })`)
+      check('筛选换汇成功 → 共 7 条、页码回第 1 页',
+        s.count === '共 7 条换汇记录' && s.first === '#01', JSON.stringify(s))
+
+      // 详情弹层
+      await click(cdp, '#exr-list .exr-main')
+      await cdp.waitFor(`!!document.querySelector('#layer-root .sheet')`, '详情弹层出现')
+      s = await cdp.eval(`({
+        title: (document.querySelector('#layer-root .sheet-title') || {}).textContent,
+        rows: document.querySelectorAll('#layer-root .detail-row').length,
+        sn: (document.querySelector('#layer-root .detail-value') || {}).textContent
+      })`)
+      check('详情弹层 9 行字段', /换汇记录详情/.test(s.title) && s.rows === 9, JSON.stringify(s))
+      check('详情展示交易流水号', s.sn === '1524048125382234112', JSON.stringify(s))
+      await cdp.eval(`document.querySelector('#layer-root .mask').click()`)
+      await cdp.waitFor(`!document.querySelector('#layer-root .mask')`, '详情弹层关闭')
+
+      // 筛选弹层：卖出币种 GBP → 共 1 条
+      await click(cdp, '#exr-filter')
+      await cdp.waitFor(`!!document.querySelector('#layer-root .sheet')`, '筛选弹层出现')
+      s = await cdp.eval(`({
+        fields: document.querySelectorAll('#layer-root .sheet .field').length,
+        dates: document.querySelectorAll('#layer-root .date-box[type="date"]').length
+      })`)
+      check('筛选弹层 4 个字段（含日期区间）', s.fields === 4 && s.dates === 2, JSON.stringify(s))
+
+      await click(cdp, '#exr-f-sell')
+      await cdp.waitFor(`!!document.querySelector('#layer-root .option-row')`, '币种选择弹层出现')
+      s = await cdp.eval(`document.querySelectorAll('#layer-root .option-row').length`)
+      check('卖出币种选项 = 全部 + 数据内币种', s === 3, s)
+      await click(cdp, '.option-row[data-value="GBP"]')
+      await sleep(200)
+      s = await cdp.eval(`document.querySelector('#exr-f-sell-v').textContent`)
+      check('卖出币种回填 GBP', s === 'GBP', s)
+
+      await click(cdp, '[data-apply]')
+      await sleep(250)
+      s = await cdp.eval(`document.querySelector('#exr-count').textContent`)
+      check('卖出 GBP → 共 1 条', s === '共 1 条换汇记录', s)
+
+      // 重置只清筛选弹层字段，状态标签（换汇成功）仍生效 → 共 7 条；筛选角标隐藏
+      await click(cdp, '#exr-filter')
+      await cdp.waitFor(`!!document.querySelector('#layer-root [data-reset]')`, '筛选弹层再次出现')
+      await click(cdp, '[data-reset]')
+      await click(cdp, '[data-apply]')
+      await sleep(250)
+      s = await cdp.eval(`({
+        count: document.querySelector('#exr-count').textContent,
+        badgeHidden: document.querySelector('#exr-filter-badge').hidden
+      })`)
+      check('重置筛选后回到状态标签口径（7 条）、角标隐藏',
+        s.count === '共 7 条换汇记录' && s.badgeHidden === true, JSON.stringify(s))
+
+      // 导出列表（headless 下剪贴板可能被拒，成功/失败 toast 都算反馈到达）
+      await click(cdp, '#exr-export')
+      await sleep(200)
+      s = await cdp.eval(`document.querySelector('#toast-layer').textContent`)
+      check('导出列表 → 出现提示 toast', /已复制 \d+ 条明细|复制失败/.test(s), s)
+
+      // 状态标签回到「全部」，避免影响后续步骤
+      await click(cdp, '.page[data-page="exchange-records"] [data-status=""]')
+      await sleep(150)
     })
 
     /* 6. 确认弹层 -------------------------------------------------- */
