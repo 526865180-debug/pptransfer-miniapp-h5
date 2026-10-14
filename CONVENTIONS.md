@@ -58,11 +58,18 @@ PP.definePage('trade-collection', {
 ```html
 <button data-go="wallet">我的资产</button>
 <button data-go="trade-collection" data-view="fund">在途资金详情</button>  <!-- 进入 tab 页并指定视图 -->
+<button data-go="rmb-exchange-withdraw" data-replace>结汇提现</button>     <!-- 平级页互跳：替换栈顶，不入栈 -->
 <button data-back>返回</button>
 <button data-demo="收款账户管理待接入">…</button>   <!-- 演示占位提示 -->
 ```
 
 仅当跳转前需要判断/传参时才在 JS 里调 `ctx.go()` / `PP.router.go()`。
+
+**`data-replace` 用在模块内的 tab 上**：同一模块下的平级页面（如人民币结汇的
+「结汇提现 / 结汇账户」）互跳时，如果次次入栈，返回键要按很多下才能出去。
+带上 `data-replace` 后由 `PP.router.replace()` 处理：目标已在栈中就回退到它，
+否则顶掉栈顶再入栈，栈深度不增长，返回键始终落在模块首页。
+模块首页（如 `rmb-exchange`）进子页仍用普通 `data-go`——那一步要入栈，返回才有落点。
 
 ---
 

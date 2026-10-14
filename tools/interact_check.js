@@ -18,6 +18,13 @@
  *                          每页 5 条分页、状态筛选、详情弹层、筛选弹层（币种 picker）、导出
  *   6. 确认弹层         —— 填入合法金额提交，#layer-root 里出现确认弹层，可取消关闭
  *   7. 消息通知清零     —— 进入 notifications 后全局未读角标清零，列表仍在
+ *   8. 结汇提现 / 添加结汇账户 —— 双向金额计算、账户搜索弹层、三步向导、
+ *                          条件字段矩阵（所属 × 类型）
+ *   9. 结汇模块顶部 tab —— 首页 / 结汇提现 / 结汇账户 共用一条 tab：
+ *                          进子页是入栈（返回有落点）、平级互跳是替换（不堆栈）、
+ *                          点当前页自己的 tab 无副作用、返回落回结汇首页
+ *  10. 结汇账户列表     —— 状态统计、搜索、筛选弹层、分页、
+ *                          修改别名 / 修改资料 / 删除、添加账户入口
  *
  * 任一步骤失败即非零退出。
  *
@@ -341,10 +348,15 @@ async function main() {
         err: document.querySelector('#amount-error'),
         shown: !(document.querySelector('#amount-error') || {}).hidden,
         text: (document.querySelector('#amount-error') || {}).textContent,
-        gone: !document.querySelector('#layer-root .mask')
+        gone: !document.querySelector('#layer-root .mask'),
+        swapDisabled: document.querySelector('#submit-swap').getAttribute('aria-disabled'),
+        swapBg: getComputedStyle(document.querySelector('#submit-swap')).backgroundColor
       })`)
       check('给出错误提示', s.shown && !!s.text, s.shown ? s.text : '错误节点 hidden')
       check('没有弹出确认层', s.gone === true, String(s.gone))
+      // 未填金额时按钮仍是品牌蓝 rgb(10, 108, 255)，而不是全局禁用态的中性灰
+      check('未填金额时按钮保持品牌蓝',
+        s.swapDisabled === 'true' && s.swapBg === 'rgb(10, 108, 255)', s.swapBg)
     })
 
     /* 5.5 换汇记录页 ------------------------------------------------ */
@@ -829,6 +841,244 @@ async function main() {
       await click(cdp, '.page[data-page="add-rmb-exchange-account"] [data-back]')
       await cdp.waitFor(`PP.router.current() === 'rmb-exchange-withdraw'`, '返回结汇提现')
       check('返回结汇提现', true)
+    })
+
+    /* 10. 结汇模块顶部 tab ------------------------------------------ */
+    await step('结汇模块顶部 tab（跳转 + 平级替换）', cdp, async () => {
+      // 从首页快捷入口进结汇首页，先把页面栈收敛到确定基线
+      await cdp.eval(`PP.router.switchTab('index')`)
+      await cdp.waitFor(`PP.router.current() === 'index'`, '回到首页')
+      await sleep(150)
+      await click(cdp, '.quick-item[data-go="rmb-exchange"]')
+      await cdp.waitFor(`PP.router.current() === 'rmb-exchange'`, '进入人民币结汇')
+      await sleep(200)
+
+      const tabState = (sel) => cdp.eval(`({
+        texts: [].slice.call(document.querySelectorAll(${JSON.stringify(sel)} + ' .seg-item'))
+          .map(function (b) { return b.textContent.trim() }),
+        selected: [].slice.call(document.querySelectorAll(${JSON.stringify(sel)} + ' .seg-item'))
+          .map(function (b) { return b.getAttribute('aria-selected') })
+      })`)
+
+      let s = await tabState('#rmb-tabseg')
+      check('结汇首页顶部两个 tab：结汇提现 / 结汇账户',
+        s.texts.join('/') === '结汇提现/结汇账户', JSON.stringify(s.texts))
+      check('默认选中「结汇提现」', s.selected.join(',') === 'true,false', JSON.stringify(s.selected))
+      s = await cdp.eval(`({
+        entries: document.querySelectorAll('#entry-list .entry').length,
+        entryTitles: [].slice.call(document.querySelectorAll('#entry-list .entry-title'))
+          .map(function (e) { return e.textContent.trim() }),
+        infos: document.querySelectorAll('#info-list .info-item').length,
+        infoText: document.querySelector('#info-list').textContent,
+        infoTones: [].slice.call(document.querySelectorAll('#info-list .info-icon'))
+          .map(function (e) { return e.getAttribute('data-tone') })
+      })`)
+      check('企业结汇入口已隐藏，入口仅剩「结汇提现」',
+        s.entries === 1 && s.entryTitles.join('/') === '结汇提现', JSON.stringify(s.entryTitles))
+      check('优势信息 3 条且第三条文案为「全流程合规申报」',
+        s.infos === 3 && s.infoText.indexOf('全流程合规申报') >= 0 &&
+          s.infoText.indexOf('合规审核') < 0, JSON.stringify(s.infoText))
+      // 本页视觉语言是「一支品牌蓝 + 中性灰」，优势信息不再用绿/橙语义色
+      check('优势信息图标配色统一为品牌蓝（单色系）',
+        s.infoTones.join(',') === 'blue,blue,blue', JSON.stringify(s.infoTones))
+
+      // tab 一：从首页进结汇提现（入栈，返回键才有落点）
+      await click(cdp, '#rmb-tabseg .seg-item[data-go="rmb-exchange-withdraw"]')
+      await cdp.waitFor(`PP.router.current() === 'rmb-exchange-withdraw'`, '进入结汇提现')
+      await sleep(150)
+      s = await cdp.eval(`PP.router.stack().length`)
+      const depth = s
+      check('从结汇首页进子页是入栈（深度 3：首页/结汇/提现）', depth === 3, String(depth))
+      s = await tabState('#withdraw-tabseg')
+      check('结汇提现页 tab 选中状态正确', s.selected.join(',') === 'true,false', JSON.stringify(s.selected))
+
+      // tab 二：平级互跳用替换，栈深度不得增长
+      await click(cdp, '#withdraw-tabseg .seg-item[data-go="rmb-exchange-accounts"]')
+      await cdp.waitFor(`PP.router.current() === 'rmb-exchange-accounts'`, '切到结汇账户')
+      await sleep(200)
+      s = await cdp.eval(`({ depth: PP.router.stack().length, title: document.querySelector('#bar-title').textContent })`)
+      check('平级互跳不堆栈（深度仍为 3）', s.depth === depth, String(s.depth))
+      check('导航栏标题为「人民币结汇账户」', s.title === '人民币结汇账户', s.title)
+      s = await tabState('#acct-tabseg')
+      check('结汇账户页 tab 选中状态正确', s.selected.join(',') === 'false,true', JSON.stringify(s.selected))
+
+      // 切回结汇提现，同样不堆栈
+      await click(cdp, '#acct-tabseg .seg-item[data-go="rmb-exchange-withdraw"]')
+      await cdp.waitFor(`PP.router.current() === 'rmb-exchange-withdraw'`, '切回结汇提现')
+      await sleep(150)
+      s = await cdp.eval(`PP.router.stack().length`)
+      check('切回结汇提现仍不堆栈', s === depth, String(s))
+
+      // 点当前页自己的 tab：不动栈、不重进
+      await click(cdp, '#withdraw-tabseg .seg-item[data-go="rmb-exchange-withdraw"]')
+      await sleep(150)
+      s = await cdp.eval(`({ cur: PP.router.current(), depth: PP.router.stack().length })`)
+      check('点当前页自己的 tab 无副作用',
+        s.cur === 'rmb-exchange-withdraw' && s.depth === depth, JSON.stringify(s))
+
+      // 返回键落回人民币结汇首页
+      await click(cdp, '#bar-back')
+      await cdp.waitFor(`PP.router.current() === 'rmb-exchange'`, '返回结汇首页')
+      await sleep(150)
+      s = await cdp.eval(`({
+        depth: PP.router.stack().length,
+        active: document.querySelector('#rmb-tabseg .seg-item[aria-selected="true"]').textContent.trim()
+      })`)
+      check('返回键落回人民币结汇首页', s.depth === 2 && s.active === '结汇提现', JSON.stringify(s))
+    })
+
+    /* 11. 结汇账户列表 ---------------------------------------------- */
+    await step('结汇账户页（统计 / 搜索 / 筛选 / 分页 / 管理）', cdp, async () => {
+      // 步骤 10 结束时停在结汇首页；从顶部 tab「结汇账户」进入（入栈）
+      await click(cdp, '#rmb-tabseg .seg-item[data-go="rmb-exchange-accounts"]')
+      await cdp.waitFor(`PP.router.current() === 'rmb-exchange-accounts'`, '进入结汇账户')
+      await sleep(250)
+
+      let s = await cdp.eval(`({
+        counts: [].slice.call(document.querySelectorAll('.stat-bar [data-count]')).map(function (e) { return e.textContent }),
+        cards: document.querySelectorAll('#acct-list .acct-item').length,
+        count: document.querySelector('#acct-count').textContent,
+        pager: !document.querySelector('#acct-pager').hidden,
+        info: document.querySelector('.pager-info').textContent
+      })`)
+      check('状态统计条 10 / 8 / 2', s.counts.join(',') === '10,8,2', JSON.stringify(s.counts))
+      check('第 1 页 5 张卡且分页可见', s.cards === 5 && s.pager, JSON.stringify(s))
+      check('分页信息「第 1–5 条 / 共 10 条」',
+        /第 1–5 条/.test(s.info) && /共 10 条/.test(s.info), s.info)
+
+      // 翻页：数据按绑定时间倒序，第 2 页首卡应是北京达飞科技
+      await click(cdp, '#acct-pager [data-pg="2"]')
+      await sleep(250)
+      s = await cdp.eval(`({
+        cards: document.querySelectorAll('#acct-list .acct-item').length,
+        name: document.querySelector('#acct-list .acct-name').textContent,
+        info: document.querySelector('.pager-info').textContent
+      })`)
+      check('第 2 页 5 张卡且首卡为北京达飞科技（倒序）',
+        s.cards === 5 && s.name === '北京达飞科技', JSON.stringify(s))
+      check('第 2 页分页信息「第 6–10 条」', /第 6–10 条/.test(s.info), s.info)
+      await click(cdp, '#acct-pager [data-pg="1"]')
+      await sleep(250)
+
+      // 状态统计点击即筛：正常 8 个
+      await click(cdp, '.stat-bar [data-acct-status="ok"]')
+      await sleep(200)
+      s = await cdp.eval(`({
+        count: document.querySelector('#acct-count').textContent,
+        pressed: document.querySelector('[data-acct-status="ok"]').getAttribute('aria-pressed')
+      })`)
+      check('点「正常」筛出 8 个账户', s.count === '共 8 个结汇账户' && s.pressed === 'true', JSON.stringify(s))
+      await click(cdp, '.stat-bar [data-acct-status=""]')
+      await sleep(200)
+
+      // 搜索（名称 / 账号 / 别名），输入即筛、可清除
+      await cdp.eval(`(function () {
+        var el = document.querySelector('#acct-search');
+        el.value = '张三';
+        el.dispatchEvent(new Event('input', { bubbles: true }))
+      })()`)
+      await sleep(200)
+      s = await cdp.eval(`({
+        cards: document.querySelectorAll('#acct-list .acct-item').length,
+        name: document.querySelector('#acct-list .acct-name').textContent,
+        clear: !document.querySelector('#acct-clear').hidden
+      })`)
+      check('搜索「张三」→ 1 张卡且出现清除按钮', s.cards === 1 && s.name === '张三' && s.clear, JSON.stringify(s))
+      await click(cdp, '#acct-clear')
+      await sleep(200)
+      s = await cdp.eval(`document.querySelectorAll('#acct-list .acct-item').length`)
+      check('清除后回到第 1 页 5 张卡', s === 5, String(s))
+
+      // 修改别名：王五原本未设置别名
+      await click(cdp, '.acct-item:first-child .acct-op[data-act="alias"]')
+      await cdp.waitFor(`!!document.querySelector('#acct-alias-input')`, '别名弹层出现')
+      await cdp.eval(`document.querySelector('#acct-alias-input').value = '结算备用'`)
+      await click(cdp, '[data-save]', 'document.querySelector("#layer-root")')
+      await sleep(250)
+      s = await cdp.eval(`({
+        alias: document.querySelector('#acct-list .acct-item:first-child .acct-field:nth-child(3) .acct-value').textContent,
+        empty: document.querySelector('#acct-list .acct-item:first-child .acct-value.is-empty') !== null
+      })`)
+      check('别名保存后卡片同步且不再是未设置态',
+        s.alias === '结算备用' && !s.empty, JSON.stringify(s))
+
+      // 修改资料：改第一张卡（王五）的银行名称
+      await click(cdp, '.acct-item:first-child .acct-op[data-act="edit"]')
+      await cdp.waitFor(`!!document.querySelector('#acct-edit-name')`, '修改资料弹层出现')
+      await cdp.eval(`(function () {
+        var el = document.querySelector('#acct-edit-bank');
+        el.value = '工商银行深圳分行';
+        el.dispatchEvent(new Event('input', { bubbles: true }))
+      })()`)
+      await click(cdp, '[data-save]', 'document.querySelector("#layer-root")')
+      await sleep(250)
+      s = await cdp.eval(`document.querySelector('#acct-list .acct-item:first-child .acct-field:nth-child(1) .acct-value').textContent`)
+      check('修改资料后银行名称同步', s === '工商银行深圳分行', s)
+
+      // 删除：先取消后确认，列表与统计同步
+      s = await cdp.eval(`document.querySelectorAll('#acct-list .acct-item').length`)
+      const cardsBefore = s
+      await click(cdp, '.acct-item:first-child .acct-op[data-act="delete"]')
+      await sleep(300)
+      s = await cdp.eval(`!!document.querySelector('#layer-root [data-ok]')`)
+      check('删除弹层出现且文案警示不可恢复', s, '')
+      await click(cdp, '[data-cancel]', 'document.querySelector("#layer-root")')
+      await sleep(250)
+      s = await cdp.eval(`document.querySelectorAll('#acct-list .acct-item').length`)
+      check('取消删除后列表不变', s === cardsBefore, String(s))
+      await click(cdp, '.acct-item:first-child .acct-op[data-act="delete"]')
+      await sleep(300)
+      await click(cdp, '[data-ok]', 'document.querySelector("#layer-root")')
+      await sleep(300)
+      s = await cdp.eval(`({
+        cards: document.querySelectorAll('#acct-list .acct-item').length,
+        total: document.querySelector('#acct-count').textContent,
+        ok: document.querySelector('.stat-bar [data-count="ok"]').textContent
+      })`)
+      check('确认删除后列表与统计同步（剩 9 个、正常 7 个，第 1 页仍是 5 张卡）',
+        s.cards === 5 && /共 9 个/.test(s.total) && s.ok === '7', JSON.stringify(s))
+
+      // 筛选弹层：账户所属 = 供货商（删除王五后剩 4 个）
+      // 注意 picker 是叠在筛选弹层之上的第二个弹层，全局检索它的选项即可，
+      // 不要把 scope 限定在第一个 .mask（那是筛选弹层自己的）
+      await click(cdp, '#acct-filter')
+      await cdp.waitFor(`!!document.querySelector('#acct-f-owner')`, '筛选弹层出现')
+      await click(cdp, '#acct-f-owner')
+      await cdp.waitFor(`!!document.querySelector('#layer-root .option-row')`, '所属 picker 出现')
+      await click(cdp, '.option-row[data-value="supplier"]')
+      await sleep(200)
+      await click(cdp, '[data-apply]', 'document.querySelector("#layer-root")')
+      await sleep(300)
+      s = await cdp.eval(`({
+        count: document.querySelector('#acct-count').textContent,
+        badge: document.querySelector('#acct-filter-badge').textContent,
+        active: document.querySelector('#acct-filter').getAttribute('data-active')
+      })`)
+      check('筛选供货商 → 4 个且筛选徽标亮起',
+        /共 4 个/.test(s.count) && s.badge === '1' && s.active === 'true', JSON.stringify(s))
+
+      // 重置筛选
+      await click(cdp, '#acct-filter')
+      await cdp.waitFor(`!!document.querySelector('#acct-f-owner')`, '再次打开筛选弹层')
+      await click(cdp, '[data-reset]', 'document.querySelector("#layer-root")')
+      await sleep(150)
+      await click(cdp, '[data-apply]', 'document.querySelector("#layer-root")')
+      await sleep(300)
+      s = await cdp.eval(`document.querySelector('#acct-count').textContent`)
+      check('重置后回到全量 9 个', /共 9 个/.test(s), s)
+
+      // 「添加账户」按钮直达新增向导
+      await click(cdp, '.acct-add[data-go="add-rmb-exchange-account"]')
+      await cdp.waitFor(`PP.router.current() === 'add-rmb-exchange-account'`, '进入添加账户向导')
+      await sleep(150)
+      s = await cdp.eval(`({ title: document.querySelector('#bar-title').textContent, depth: PP.router.stack().length })`)
+      check('添加账户入口直达向导且入栈（深度 4）',
+        s.title === '添加人民币结汇账户' && s.depth === 4, JSON.stringify(s))
+
+      // 返回落回结汇账户页
+      await click(cdp, '#bar-back')
+      await cdp.waitFor(`PP.router.current() === 'rmb-exchange-accounts'`, '返回结汇账户')
+      check('返回落回结汇账户页', true)
     })
 
     /* 汇总 -------------------------------------------------------- */
