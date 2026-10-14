@@ -4,6 +4,7 @@
    与小程序导航语义对齐但更简单：
      - tab 页：切换即重置栈（对应 switchTab），tabBar 常驻
      - 二级页：入栈（对应 navigateTo），导航栏出现返回键
+     - 平级替换：顶掉栈顶（对应 redirectTo），模块内 tab 互跳用
      - 返回：出栈（对应 navigateBack），回到上一页并恢复其滚动位置
 
    页面片段加载：
@@ -222,6 +223,34 @@
     })
   }
 
+  /** 替换当前二级页：同一模块下平级页面的 tab 互跳用的语义
+   *   - 目标已在栈中（非栈顶）：回退到它，其上的页面一并出栈
+   *   - 目标不在栈中：顶掉栈顶再入栈，栈深度不增长
+   *  这样来回切 tab 不会把页面栈越堆越深，返回键始终落在模块首页。 */
+  function replace(name, params) {
+    var route = PP.routeOf(name)
+    if (!route) return Promise.reject(new Error('路由不存在：' + name))
+    if (route.tab) return switchTab(name, params)
+
+    var top = stack[stack.length - 1]
+    if (top && top.name === name) return Promise.resolve(top) // 就在当前页，不动
+
+    var idx = -1
+    for (var i = 0; i < stack.length; i++) {
+      if (stack[i].name === name) idx = i
+    }
+    if (idx >= 0) {
+      while (stack.length - 1 > idx) teardown(stack.pop())
+      var prev = stack[stack.length - 1]
+      show(prev, true)
+      writeHash(prev.name)
+      return Promise.resolve(prev)
+    }
+
+    if (stack.length) teardown(stack.pop())
+    return navigate(name, params)
+  }
+
   function back() {
     if (stack.length <= 1) return
     var inst = stack.pop()
@@ -284,6 +313,7 @@
   PP.router = {
     start: start,
     go: navigate,
+    replace: replace,
     switchTab: switchTab,
     back: back,
     current: function () { return current },

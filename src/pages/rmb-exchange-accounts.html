@@ -1,0 +1,86 @@
+<!--
+  pages/rmb-exchange-accounts.html · 人民币结汇账户
+  ---------------------------------------------------------------
+  人民币结汇模块的 tab 二（入口：人民币结汇页顶部 tab「结汇账户」）。
+  页内「添加账户」按钮跳 pages/add-rmb-exchange-account.html 走新增向导 ——
+  账户信息的采集只在那个向导里做，本页只负责管理（列表 / 改别名 / 改资料 / 删除）。
+
+  内容对齐 desktop 版 pages/rmb_exchange_accounts.html：
+    页头（标题 +「添加账户」）→ 查询区（账户名称 / 银行账号 / 账户所属 /
+    账户类型 / 状态）→ 10 列表格 → 分页，行内三个操作（修改别名 / 修改 / 删除）。
+  桌面版 1260px 的宽表格在 375px 下折成卡片四段堆叠：
+    「账户名称 + 状态徽章」→「所属 · 类型」→「四个字段 2×2」→「操作行」，
+  不做横向滚动，也就不需要首列吸附那套桌面技巧。
+
+  查询区同样收了口：桌面版两个文本输入合并成一个搜索框（名称 / 账号 / 别名
+  一起检索），「账户所属 / 账户类型」收进筛选弹层，「状态」提为点击即筛的
+  统计条 —— 与收款页、换汇记录页的做法保持一致。
+
+  列表每页 5 条，底部分页交给 PP.ui.pager（单页时自动收起）；
+  筛选弹层、改别名 / 改资料弹层交给 PP.ui.sheet，删除走 PP.ui.confirm，
+  页面里只保留触发按钮。
+-->
+
+<!-- ===== 顶部 tab：结汇提现 / 结汇账户 ===== -->
+<div class="seg tabseg" id="acct-tabseg" role="tablist" aria-label="人民币结汇功能">
+  <button type="button" class="seg-item" role="tab" aria-selected="false"
+          data-go="rmb-exchange-withdraw" data-replace>结汇提现</button>
+  <button type="button" class="seg-item" role="tab" aria-selected="true"
+          data-go="rmb-exchange-accounts" data-replace>结汇账户</button>
+</div>
+
+<!-- ===== 状态统计（点击即筛选） ===== -->
+<div class="stat-bar" role="group" aria-label="按账户状态筛选">
+  <button type="button" class="stat-item" data-acct-status="" aria-pressed="true">
+    <span class="stat-num num" data-count="all">0</span>
+    <span class="stat-label">全部</span>
+  </button>
+  <button type="button" class="stat-item" data-acct-status="ok" data-tone="success" aria-pressed="false">
+    <span class="stat-num num" data-count="ok">0</span>
+    <span class="stat-label">正常</span>
+  </button>
+  <button type="button" class="stat-item" data-acct-status="disabled" data-tone="neutral" aria-pressed="false">
+    <span class="stat-num num" data-count="disabled">0</span>
+    <span class="stat-label">禁用</span>
+  </button>
+</div>
+
+<!-- ===== 工具栏：搜索 + 筛选 ===== -->
+<div class="toolbar">
+  <div class="search-box">
+    <svg class="search-icon" aria-hidden="true"><use href="#i-search"/></svg>
+    <input type="text" class="search-input" id="acct-search" enterkeyhint="search"
+           placeholder="搜索账户名称 / 银行账号 / 别名"
+           aria-label="搜索账户名称、银行账号或别名">
+    <button type="button" class="search-clear" id="acct-clear" hidden>清除</button>
+  </div>
+  <button type="button" class="filter-btn" id="acct-filter" data-active="false"
+          aria-haspopup="dialog" aria-label="筛选">
+    <svg aria-hidden="true"><use href="#i-filter"/></svg>
+    <span class="filter-badge" id="acct-filter-badge" hidden>0</span>
+  </button>
+</div>
+
+<!-- ===== 列表头：条数 + 添加账户 ===== -->
+<div class="list-head">
+  <span class="list-count" id="acct-count">共 0 个结汇账户</span>
+  <button type="button" class="btn-text acct-add" data-go="add-rmb-exchange-account">
+    <svg aria-hidden="true"><use href="#i-plus"/></svg>
+    <span>添加账户</span>
+  </button>
+</div>
+
+<!-- ===== 账户卡片列表（JS 渲染；每页 5 条） ===== -->
+<ul class="acct-list" id="acct-list" aria-label="人民币结汇账户"></ul>
+
+<!-- 分页：由 PP.ui.pager 渲染，单页时自动隐藏 -->
+<div class="pager" id="acct-pager" hidden></div>
+
+<!-- 空状态 -->
+<div class="card empty acct-empty" id="acct-empty" hidden>
+  <svg class="empty-icon" aria-hidden="true"><use href="#i-inbox"/></svg>
+  <p class="empty-text">当前条件下暂无结汇账户</p>
+  <p class="empty-sub">可点「添加账户」新增，或调整筛选条件</p>
+</div>
+
+<div class="page-end"></div>

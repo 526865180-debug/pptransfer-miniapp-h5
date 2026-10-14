@@ -63,9 +63,11 @@
    *   data-go="wallet"         → 跳转页面（tab 页自动走 switchTab）
    *   data-go="trade-collection" data-view="fund"
    *                            → 进入 tab 页并指定视图（页面按 onParams 响应）
+   *   data-go="rmb-exchange-withdraw" data-replace
+   *                            → 平级页互跳：顶掉栈顶而不是入栈（模块内 tab 用）
    *   data-back                → 返回上一页
    *   data-demo="文案"          → 演示环境占位提示
-   * 13 个页面因此不需要各写一遍导航代码。
+   * 全站页面因此不需要各写一遍导航代码。
    *
    * ⚠ data-back / data-go 是保留属性名，页面根元素不能用它们做别的钩子
    *   （历史上曾与路由的进场动画方向属性撞名，导致二级页点哪都返回）。
@@ -78,7 +80,10 @@
       var go = target.closest('[data-go]')
       if (go) {
         var view = go.getAttribute('data-view')
-        PP.router.go(go.getAttribute('data-go'), view ? { view: view } : null)
+        var params = view ? { view: view } : null
+        var name = go.getAttribute('data-go')
+        if (go.hasAttribute('data-replace')) PP.router.replace(name, params)
+        else PP.router.go(name, params)
         return
       }
       if (target.closest('[data-back]')) {

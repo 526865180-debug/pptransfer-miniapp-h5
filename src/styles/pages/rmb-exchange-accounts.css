@@ -1,0 +1,138 @@
+/* ============================================================
+   pages/rmb-exchange-accounts.css · 人民币结汇账户
+   ------------------------------------------------------------
+   本页只写账户卡片与列表头右侧的「添加账户」；
+   seg / tabseg / stat-bar / toolbar / search-box / filter-btn /
+   list-head / pager / card / empty / pill / sheet 一律复用 components.css。
+   尺寸按 375px 基准换算。
+
+   卡片代替桌面版的 10 列表格：名称+状态一行、归属副标题一行、
+   四个字段在浅底块里 2×2、操作行右对齐 —— 不做横向滚动。
+   ============================================================ */
+
+.page[data-page='rmb-exchange-accounts'] {
+  padding: 12px 0 20px;
+}
+
+/* ============ 顶部 tab：结汇提现 / 结汇账户 ============
+   分段控件本体与下方留白见 components.css 的 .seg / .tabseg；
+   本页是通栏布局，这里补左右 gutter。 */
+.page[data-page='rmb-exchange-accounts'] .tabseg {
+  margin: 0 var(--gutter) var(--space-4);
+}
+
+/* ============ 列表头右侧：添加账户 ============ */
+.page[data-page='rmb-exchange-accounts'] .acct-add {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: var(--weight-semibold);
+}
+.page[data-page='rmb-exchange-accounts'] .acct-add > svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ============ 账户卡片列表 ============ */
+.page[data-page='rmb-exchange-accounts'] .acct-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 10px var(--gutter) 0;
+}
+
+.page[data-page='rmb-exchange-accounts'] .acct-item {
+  padding: var(--space-4);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+/* —— 账户名称 + 状态徽章 —— */
+.page[data-page='rmb-exchange-accounts'] .acct-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.page[data-page='rmb-exchange-accounts'] .acct-name {
+  min-width: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+/* —— 所属 · 类型 —— */
+.page[data-page='rmb-exchange-accounts'] .acct-sub {
+  margin-top: 3px;
+  font-size: var(--text-xs);
+  color: var(--text-quaternary);
+}
+
+/* —— 开户银行 / 银行账号 / 别名 / 绑定时间 2×2 —— */
+.page[data-page='rmb-exchange-accounts'] .acct-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px 12px;
+  margin-top: 10px;
+  padding: 10px var(--space-4);
+  background: var(--surface-sunken);
+  border-radius: var(--radius-inner);
+}
+.page[data-page='rmb-exchange-accounts'] .acct-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.page[data-page='rmb-exchange-accounts'] .acct-label {
+  font-size: var(--text-2xs);
+  color: var(--text-quaternary);
+}
+.page[data-page='rmb-exchange-accounts'] .acct-value {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+/* 账号与时间用等宽数字，字号收一档换取不折行 */
+.page[data-page='rmb-exchange-accounts'] .acct-value.num {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+/* 未设置别名（desktop 版显示「（无别名）」） */
+.page[data-page='rmb-exchange-accounts'] .acct-value.is-empty {
+  color: var(--text-placeholder);
+}
+
+/* —— 操作行 —— */
+.page[data-page='rmb-exchange-accounts'] .acct-ops {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-5);
+  margin-top: 10px;
+}
+.page[data-page='rmb-exchange-accounts'] .acct-op {
+  position: relative;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--color-brand);
+}
+/* 视觉 16px 左右，用伪元素把命中区撑到 36px */
+.page[data-page='rmb-exchange-accounts'] .acct-op::after {
+  content: '';
+  position: absolute;
+  inset: -10px -8px;
+}
+.page[data-page='rmb-exchange-accounts'] .acct-op:active {
+  opacity: 0.6;
+}
+.page[data-page='rmb-exchange-accounts'] .acct-op--danger {
+  color: var(--tone-danger-fg);
+}
+
+/* ============ 空状态 ============ */
+.page[data-page='rmb-exchange-accounts'] .acct-empty {
+  margin: 10px var(--gutter) 0;
+}

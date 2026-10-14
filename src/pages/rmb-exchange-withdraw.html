@@ -1,12 +1,24 @@
 <!--
   pages/rmb-exchange-withdraw.html · 结汇提现
   ---------------------------------------------------------------
+  人民币结汇模块的 tab 一。顶部 tab 条与首页、结汇账户页共用同一条：
+  两个子页是平级的，互跳用 data-replace（顶掉栈顶而不是入栈），来回切换
+  不会把页面栈越堆越深；返回键始终回到人民币结汇首页。
+
   三步在同一页内切换（section 的 hidden 属性），不新开路由。
   步骤 1 对齐产品截图：可提现金额 / 提现金额(全部提现) / 提现至单选 /
   结汇提现账户(搜索选择) / 基础手续费 / 到账金额(反算) / 转账附言。
   步骤 2 确认信息 + 交易密码；步骤 3 提交成功。
   账户搜索选择用 PP.ui.sheet；提交前用 PP.ui.confirm 二次确认。
 -->
+
+<!-- ================= 顶部 tab：结汇提现 / 结汇账户 ================= -->
+<div class="seg tabseg" id="withdraw-tabseg" role="tablist" aria-label="人民币结汇功能">
+  <button type="button" class="seg-item" role="tab" aria-selected="true"
+          data-go="rmb-exchange-withdraw" data-replace>结汇提现</button>
+  <button type="button" class="seg-item" role="tab" aria-selected="false"
+          data-go="rmb-exchange-accounts" data-replace>结汇账户</button>
+</div>
 
 <!-- 步骤指示器：data-tone 由 JS 按当前进度刷新 -->
 <ol class="wz-steps" id="steps" aria-label="结汇提现流程">

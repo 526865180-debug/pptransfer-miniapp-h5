@@ -1,10 +1,24 @@
 <!--
   pages/rmb-exchange.html · 人民币结汇
   ---------------------------------------------------------------
-  页头横幅 + 双入口 + 优势信息。入口与信息项都是同构列表（2 条 / 3 条），
-  由 JS 渲染；跳转靠声明式属性：可用的入口写 data-go，未上线的写 data-demo，
-  页面脚本因此不需要再写导航代码。
+  页头是模块级 tab（结汇提现 / 结汇账户）+ 横幅 + 入口 + 优势信息。
+  两个 tab 各自是一个独立页面，tab 只做导航、不做页内切换：
+    结汇提现  → pages/rmb-exchange-withdraw.html
+    结汇账户  → pages/rmb-exchange-accounts.html（列表，内含添加账户入口）
+  那两页顶部放同一条 tab 条（用 data-replace 互跳，来回切换不会让页面栈
+  越堆越深），三个页面因此看起来是同一模块下的三个 tab 页。
+  本页的 tab 用 data-go：从这里进子页要入栈，返回才有落点。
+  入口与信息项都是同构列表，由 JS 渲染；入口数据里打 hidden 标记的
+  不渲染（企业结汇暂时下线），未上线的入口写 data-demo 给占位提示。
 -->
+
+<!-- ================= 顶部 tab：结汇提现 / 结汇账户 ================= -->
+<div class="seg tabseg" id="rmb-tabseg" role="tablist" aria-label="人民币结汇功能">
+  <button type="button" class="seg-item" role="tab" aria-selected="true"
+          data-go="rmb-exchange-withdraw">结汇提现</button>
+  <button type="button" class="seg-item" role="tab" aria-selected="false"
+          data-go="rmb-exchange-accounts">结汇账户</button>
+</div>
 
 <!-- ================= 页头横幅 ================= -->
 <section class="banner">
@@ -20,7 +34,7 @@
   </button>
 </section>
 
-<!-- ================= 双入口 ================= -->
+<!-- ================= 结汇入口 ================= -->
 <nav id="entry-list" aria-label="结汇入口"></nav>
 
 <!-- ================= 优势信息 ================= -->

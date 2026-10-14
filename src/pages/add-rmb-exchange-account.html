@@ -16,6 +16,12 @@
   按银行账号自动返显、不可填写；扩展材料只对供应商账户收集。
   页面内所有 id 都带 add- 前缀：多个页面实例会同时存在于页面栈里，
   不加前缀会和结汇提现页的 #next-btn / #amount-input 之类撞车。
+
+  入口有两处，都是入栈进入子页（返回即回上一页）：
+    结汇账户页「添加账户」按钮   → 主入口
+    结汇提现页「添加结汇提现账户」→ 提现流程里的快捷入口
+  本页因此不参与顶部 tab（tab 只有「结汇提现 / 结汇账户」两项），
+  成功页的「去提现」用 data-replace：离开本页去提现，不让向导留在栈里。
 -->
 
 <ol class="wz-steps" id="add-steps" aria-label="添加人民币结汇账户流程">
@@ -278,7 +284,7 @@
   </div>
 
   <div class="footbar">
-    <button type="button" class="btn btn--ghost" data-back>返回结汇提现</button>
-    <button type="button" class="btn btn--primary" data-go="rmb-exchange-withdraw">去提现</button>
+    <button type="button" class="btn btn--ghost" data-back>返回上一页</button>
+    <button type="button" class="btn btn--primary" data-go="rmb-exchange-withdraw" data-replace>去提现</button>
   </div>
 </section>

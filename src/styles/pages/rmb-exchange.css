@@ -1,13 +1,17 @@
 /* ============================================================
    pages/rmb-exchange.css · 人民币结汇
    ------------------------------------------------------------
-   本页只写结汇首页特有部分：渐变横幅、双入口卡、优势信息列表。
+   本页只写结汇首页特有部分：渐变横幅、入口卡、优势信息列表。
    图标块尺寸、卡片、徽章见 components.css（.tile / .card / .pill）。
    尺寸取自原 750 设计稿 ÷2（375px 基准）。
 
-   取舍：原稿的入口图标块是蓝色/绿色渐变底，这里改为语义色平底
-   （--tone-brand-bg / --tone-success-bg）—— token 层没有对应的
-   渐变色阶，混用会让两块图标的观感不一致。
+   视觉语言：全页只有「一支品牌蓝 + 中性灰」。
+     - 横幅与入口卡图标块用同一支品牌蓝（横幅是三停渐变，图标块是实底
+       渐变），构成顶部的蓝色行动区；
+     - 优势信息是有别于行动的说明性内容，图标块退回浅蓝底（.tile 的
+       blue 语义色），靠深浅而不是换色相来拉开层级。
+   早期版本给三条优势信息配了蓝/绿/橙三种语义色，与品牌蓝无色彩关联，
+   整页像三原色拼盘；现统一为蓝，靠图标形状与文案区分。
    ============================================================ */
 
 .page[data-page='rmb-exchange'] {
@@ -23,7 +27,9 @@
   gap: var(--space-4);
   padding: 20px 18px;
   border-radius: var(--radius-hero);
-  background: linear-gradient(120deg, var(--color-brand-deep) 0%, var(--color-brand-strong) 100%);
+  /* 与全站 .hero 同一支三停渐变：深端压在左上角落，中段 45% 就进主色，
+     比原来的两档深蓝更亮、有光感；白字落在左上深色区，对比度安全 */
+  background: linear-gradient(135deg, var(--color-brand-deep) 0%, var(--color-brand) 45%, var(--blue-500) 100%);
   box-shadow: var(--shadow-hero);
   overflow: hidden;
 }
@@ -81,26 +87,33 @@
 .record-btn:active { background: rgba(255, 255, 255, 0.28); }
 .record-btn > svg { width: 15px; height: 15px; }
 
-/* ============ 双入口卡 ============ */
+/* ============ 入口卡（可多条，按数据渲染） ============ */
 .entry {
   display: flex;
   align-items: center;
-  gap: 13px;
+  gap: 14px;
   width: 100%;
   margin-top: var(--space-4);
-  padding: 17px 15px;
+  padding: 16px 15px;
   background: var(--surface-card);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
   text-align: left;
 }
 .entry:active { background: var(--surface-sunken); }
-.entry-tile {
-  width: 54px;
-  height: 54px;
-  border-radius: 15px;
+/* 入口是页面唯一的主行动：图标块用品牌蓝实底渐变 + 白图标，与上方横幅
+   同一支蓝，两者一起构成顶部的「蓝色行动区」；下方优势信息的图标块退回
+   浅蓝底，靠这一步深浅差拉开行动与说明的层级。
+   选择器带 [data-tone] 是为了压过 components.css 的 .tile[data-tone='blue']。 */
+.entry .entry-tile[data-tone] {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-strong) 100%);
+  color: var(--text-on-brand);
+  box-shadow: var(--shadow-brand);
 }
-.entry-tile > svg { width: 30px; height: 30px; }
+.entry .entry-tile > svg { width: 26px; height: 26px; }
 .entry-body {
   flex: 1;
   min-width: 0;
@@ -129,14 +142,15 @@
   margin-top: 4px;
   font-size: var(--text-sm);
   line-height: 1.6;
-  color: var(--text-quaternary);
+  color: var(--text-tertiary);
 }
+/* 箭头用品牌蓝而不是中性灰：它是这条卡片的「可点」提示，
+   与图标块同色后整张卡的首尾呼应更完整 */
 .entry-arrow {
   flex-shrink: 0;
   width: 16px;
   height: 16px;
-  color: var(--text-quaternary);
-  opacity: 0.8;
+  color: var(--color-brand);
 }
 
 /* ============ 优势信息列表 ============ */
@@ -148,17 +162,18 @@
 .info-item {
   display: flex;
   align-items: flex-start;
-  gap: 11px;
-  padding: 12px 0;
+  gap: 12px;
+  padding: 13px 0;
   border-bottom: 1px solid var(--border-subtle);
 }
 .info-item:last-child { border-bottom: 0; }
+/* 与入口卡 52px 图标块同族：浅蓝底 + 品牌蓝图标，尺寸回到 .tile 基准 */
 .info-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-inner);
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
 }
-.info-icon > svg { width: 20px; height: 20px; }
+.info-icon > svg { width: 21px; height: 21px; }
 .info-body {
   flex: 1;
   min-width: 0;
@@ -169,10 +184,13 @@
   font-weight: var(--weight-semibold);
   color: var(--text-primary);
 }
+/* 说明文字用 tertiary（slate-500，对白 4.76:1）而不是 quaternary
+   （slate-400，约 2.6:1）：12px 小字在浅底上淡到发虚，是这页此前
+   显得「脏」的来源之一 */
 .info-desc {
   display: block;
   margin-top: 3px;
   font-size: var(--text-xs);
   line-height: 1.6;
-  color: var(--text-quaternary);
+  color: var(--text-tertiary);
 }

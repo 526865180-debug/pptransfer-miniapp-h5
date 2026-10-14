@@ -12,6 +12,13 @@
   padding: 12px 0 24px;
 }
 
+/* ============ 顶部 tab：结汇提现 / 结汇账户 ============
+   分段控件本体与下方留白见 components.css 的 .seg / .tabseg；
+   本页是通栏布局，这里补左右 gutter（与步骤条缩进对齐）。 */
+.page[data-page='rmb-exchange-withdraw'] .tabseg {
+  margin: 0 var(--gutter) var(--space-4);
+}
+
 /* ============ 步骤内容卡片 ============ */
 .page[data-page='rmb-exchange-withdraw'] .wizard-card {
   margin: var(--space-4) var(--gutter) 0;
