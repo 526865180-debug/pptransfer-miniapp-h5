@@ -40,7 +40,7 @@
 .page[data-page='international-remittance'] .step[data-state='on'] .step-dot{
   background: var(--color-brand);
   color: var(--text-on-brand);
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.28);
+  box-shadow: 0 2px 6px rgba(10, 108, 255, 0.30);
 }
 .page[data-page='international-remittance'] .step[data-state='done'] .step-dot{
   background: var(--color-success);

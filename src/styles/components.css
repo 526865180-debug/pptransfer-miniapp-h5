@@ -60,7 +60,9 @@
   position: relative;
   padding: var(--space-7) 18px;
   border-radius: var(--radius-hero);
-  background: linear-gradient(135deg, var(--color-brand-deep) 0%, var(--color-brand-strong) 55%, var(--blue-500) 100%);
+  /* 渐变三停：深端压角落，中段 45% 就进入主色 —— 整体更亮、有光感；
+     白字集中在左上 35% 以内的深色区，实测对比 ≥6.9:1 */
+  background: linear-gradient(135deg, var(--color-brand-deep) 0%, var(--color-brand) 45%, var(--blue-500) 100%);
   box-shadow: var(--shadow-hero);
   overflow: hidden;
   color: var(--text-on-brand);
@@ -247,6 +249,16 @@
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
 }
 
+/* ---- 模块内 tab 条 ----
+   人民币结汇模块（首页 / 结汇提现 / 结汇账户）顶部共用的一条 tab：
+   结汇提现 / 结汇账户。本体是上面的 .seg；tab 只做导航不做页内切换，
+   选中态表示当前所在的功能页。
+   这里只给默认的下方留白（上方留白由各页 .page 的 padding-top 提供）；
+   通栏页面在各自的页面样式里补左右 gutter。 */
+.tabseg {
+  margin-bottom: var(--space-4);
+}
+
 /* ============ 分页（列表底部） ============
    由 PP.ui.pager 渲染：‹ 1 2 › +「第 x–y 条 / 共 N 条」。
    单页时不渲染内容并由组件自带 hidden，不占位。 */
@@ -340,7 +352,7 @@
 .field-input:focus {
   outline: none;
   border-color: var(--color-brand);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 0 0 3px rgba(10, 108, 255, 0.14);
 }
 .field-input:disabled {
   color: var(--text-quaternary);
@@ -581,7 +593,7 @@
 }
 .search-box:focus-within {
   border-color: var(--color-brand);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 0 0 3px rgba(10, 108, 255, 0.14);
 }
 .search-clear {
   flex-shrink: 0;

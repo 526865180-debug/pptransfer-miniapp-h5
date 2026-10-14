@@ -12,14 +12,27 @@
    ============================================================ */
 
 :root {
-  /* ---------- ① 原始层 · 品牌蓝 ---------- */
-  --blue-50: #eff6ff;
-  --blue-100: #dbeafe;
-  --blue-400: #60a5fa;
-  --blue-500: #3b82f6;
-  --blue-600: #2563eb;
-  --blue-700: #1d4ed8;
-  --blue-900: #1e3a8a;
+  /* ---------- ① 原始层 · 品牌蓝 ----------
+     2026-10-14 第三次调色，目标：更明亮、更生动。
+     前两版只在饱和度上加减（−10 / +20），色相与明度没动 —— 结果是饱和度
+     顶到 100% 仍然显沉。根因有二：色相停在 221°（偏紫的皇家蓝），且深档
+     一路漂到 224°，越深越紫，加重了「暗」的观感。
+     本版做了三件事：
+       ① 色相整体左移到 212–220°（清透天蓝方向），深档不再发紫；
+       ② 明度重新分布：亮端与深端一齐上提（深端 L33 → L40），渐变不再压暗；
+       ③ 主色 blue-600 卡在「对白 4.56:1」的亮度上限 —— 再亮就跌破 AA。
+     实测对比度基线：主色对白 4.56 ｜ tone 前景对淡蓝底 5.32 ｜
+     白字对渐变深端 7.77 ｜ 白字对渐变亮端 3.05（大字/图形级）。
+     注意 --tone-brand-fg 已改用 700：徽章小字（11–12px）需 4.5:1，
+     600 在淡蓝底上只有 4.23。 */
+  --blue-50: #f0f7ff;     /* H212 L97 · 极淡清透 */
+  --blue-100: #deedff;    /* H213 L94 · 淡底 / 描边 */
+  --blue-400: #66adff;    /* H212 L70 · 辅助亮蓝 */
+  --blue-500: #3d94ff;    /* H213 L62 · 渐变亮端 */
+  --blue-600: #0a6cff;    /* H216 L52 · 主色（对白 4.56） */
+  --blue-700: #0058f0;    /* H218 L47 · 前景 / 按压（对白 5.75） */
+  --blue-900: #0c48c0;    /* H220 L40 · 渐变深端（对白 7.77） */
+  --blue-canvas: #f7faff; /* 页面底：灰白改微蓝白，整体更通透 */
 
   /* ---------- ① 原始层 · 中性灰 ---------- */
   --slate-50: #f8fafc;
@@ -68,9 +81,9 @@
   --text-placeholder: var(--slate-300);
   --text-on-brand: #ffffff;
 
-  --surface-page: var(--slate-50);
+  --surface-page: var(--blue-canvas);
   --surface-card: #ffffff;
-  --surface-sunken: var(--slate-50);
+  --surface-sunken: var(--blue-canvas);
   --surface-frame: var(--slate-200); /* 应用框之外的画布底色 */
 
   --border-subtle: var(--slate-100);
@@ -78,7 +91,7 @@
 
   /* 状态底色（徽章 / 图标块 / 提示条） */
   --tone-brand-bg: var(--blue-50);
-  --tone-brand-fg: var(--blue-600);
+  --tone-brand-fg: var(--blue-700); /* 小字前景取 700：600 在淡蓝底上仅 4.23 */
   --tone-success-bg: var(--emerald-50);
   --tone-success-fg: var(--emerald-600);
   --tone-warning-bg: var(--amber-50);
@@ -144,8 +157,8 @@
   /* ---------- ② 语义层 · 阴影与层级 ---------- */
   --shadow-card: 0 2px 8px rgba(15, 23, 42, 0.04);
   --shadow-raised: 0 8px 20px rgba(15, 23, 42, 0.08);
-  --shadow-hero: 0 8px 20px rgba(29, 78, 216, 0.26);
-  --shadow-brand: 0 4px 10px rgba(37, 99, 235, 0.22);
+  --shadow-hero: 0 8px 20px rgba(0, 88, 240, 0.24);
+  --shadow-brand: 0 4px 10px rgba(10, 108, 255, 0.22);
   --shadow-sheet: 0 -8px 32px rgba(15, 23, 42, 0.16);
 
   --z-sticky: 20;

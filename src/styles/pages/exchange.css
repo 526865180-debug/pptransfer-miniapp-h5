@@ -142,6 +142,16 @@
 .page[data-page='exchange'] .swap-card .btn{ margin-top: 10px; }
 .page[data-page='exchange'] .swap-card .field-error{ margin-top: 9px; }
 
+/* 立即换汇：产品要求按钮常蓝，未填金额时也不许变灰。
+   覆盖 components.css 里 .btn[aria-disabled='true'] 的中性灰底；
+   仅靠「无投影 + not-allowed 光标」暗示不可点，点击仍由 JS 给出原因提示。 */
+.page[data-page='exchange'] #submit-swap[aria-disabled='true']{
+  background: var(--color-brand);
+  box-shadow: none;
+  opacity: 1;
+  cursor: not-allowed;
+}
+
 /* ============ 换汇历史 ============ */
 .page[data-page='exchange'] .rec-list{ margin: 0; }
 .page[data-page='exchange'] .rec-right{

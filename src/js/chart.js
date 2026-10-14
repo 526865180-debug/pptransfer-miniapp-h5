@@ -4,7 +4,7 @@
    替代 echarts-for-weixin / ECharts。只需要一条平滑折线 + 渐变面积
    + 虚线网格 + 当前价标注，用 Canvas 手绘比引入 400KB 的图表库划算得多。
    视觉规格与原 ECharts option 保持一致：
-     折线 #2563eb / 2px、面积渐变 0.18→0.01、
+     折线 #0a6cff / 2px、面积渐变 0.18→0.01、
      网格 #f1f5f9 虚线、当前价标注 #f59e0b 虚线 + 4 位小数
    ============================================================ */
 (function (PP) {
@@ -195,8 +195,8 @@
 
     /* ---- 面积（品牌蓝渐变） ---- */
     var grad = ctx.createLinearGradient(0, PADDING.top, 0, PADDING.top + plotH)
-    grad.addColorStop(0, 'rgba(37,99,235,0.18)')
-    grad.addColorStop(1, 'rgba(37,99,235,0.01)')
+    grad.addColorStop(0, 'rgba(10,108,255,0.18)')
+    grad.addColorStop(1, 'rgba(10,108,255,0.01)')
 
     var pts = rates.map(function (v, i) { return { x: x(i), y: y(v) } })
 
@@ -212,7 +212,7 @@
     /* ---- 折线 ---- */
     ctx.beginPath()
     ctx.lineWidth = 2
-    ctx.strokeStyle = '#2563eb'
+    ctx.strokeStyle = '#0a6cff'
     ctx.lineJoin = 'round'
     ctx.lineCap = 'round'
     ctx.moveTo(pts[0].x, pts[0].y)
