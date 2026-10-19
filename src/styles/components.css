@@ -259,6 +259,43 @@
   margin-bottom: var(--space-4);
 }
 
+/* ============ 开关 ============
+   <button class="switch" role="switch" aria-checked="true" aria-label="到账提醒"></button>
+   状态只由 aria-checked 驱动（样式与无障碍读屏共用一份真源），
+   不再额外挂 .on 类。::before 把可点区域撑到 44px 高，视觉尺寸保持 48×28。 */
+.switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: var(--slate-300);
+  transition: background-color var(--dur-base) var(--ease-out);
+}
+.switch::before {
+  content: '';
+  position: absolute;
+  inset: -8px -6px;
+}
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface-card);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.2);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.switch[aria-checked='true'] { background: var(--color-brand); }
+.switch[aria-checked='true']::after { transform: translateX(20px); }
+.switch:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 3px;
+}
+
 /* ============ 分页（列表底部） ============
    由 PP.ui.pager 渲染：‹ 1 2 › +「第 x–y 条 / 共 N 条」。
    单页时不渲染内容并由组件自带 hidden，不占位。 */

@@ -45,7 +45,7 @@ src/
     ├── store.js           全局状态（用户信息 / 未读数 / 金额可见性）
     ├── ui.js              反馈与弹层统一收口（toast / sheet / confirm / picker / searchPicker / actions / pager）
     ├── chart.js           原生 Canvas 折线图（平滑曲线 + 渐变面积 + 当前价标注）
-    ├── routes.js          15 页路由表（唯一真源）
+    ├── routes.js          16 页路由表（唯一真源）
     ├── router.js          hash 路由 + 页面栈（switchTab / navigateTo / back 语义）
     ├── app.js             启动引导 + 声明式交互委托
     └── pages/<name>.js    页面控制器（PP.definePage 注册）
@@ -86,9 +86,9 @@ python3 tools/bundle.py         # src/ → ./index.html
 
 ```bash
 python3 tools/verify.py                          # 静态校验，6 项
-node tools/render_check.js                       # 产物 15 页渲染 + 截图 → tools/.render-out/
+node tools/render_check.js                       # 产物 16 页渲染 + 截图 → tools/.render-out/
 node tools/render_check.js http://localhost:8080/index.html   # 同上，但验证开发态
-node tools/interact_check.js                     # 交互冒烟，126 项断言
+node tools/interact_check.js                     # 交互冒烟，146 项断言
 ```
 
 `render_check.js` / `interact_check.js` 通过 DevTools Protocol 直连 headless Chrome
@@ -101,7 +101,7 @@ node tools/interact_check.js                     # 交互冒烟，126 项断言
 - **页面注册制**：`PP.definePage(name, { mount, show, hide, unmount })`，
   可变状态放模块作用域闭包，清理走 `ctx.onCleanup(fn)`（定时器 / 事件解绑 / 图表销毁）。
 - **声明式交互**：`data-go="wallet"` / `data-back` / `data-demo="文案"` 由 `app.js` 全局委托，
-  15 个页面不需要各写一遍导航代码。带视图意图进入 tab 页用
+  16 个页面不需要各写一遍导航代码。带视图意图进入 tab 页用
   `data-go="trade-collection" data-view="fund"`（页面按 `onParams` 钩子落位）；
   模块内平级页互跳再加 `data-replace`（顶掉栈顶而不入栈，见「模块内 tab」）。
   ⚠ `data-go` / `data-back` 是保留属性名，页面根元素不要挪作他用
@@ -126,13 +126,14 @@ node tools/interact_check.js                     # 交互冒烟，126 项断言
 
 ---
 
-## 页面清单（15 页）
+## 页面清单（16 页）
 
 | 路由 | 页面 | 底部 tab |
 |---|---|---|
 | `index` | 商户首页 | 首页 |
 | `trade-collection` | 外贸收款管理（页内分段切换「收款记录 / 在途资金」两个视图，列表均分页） | 收款 |
 | `rights-center` | 权益中心 | 权益中心 |
+| `system-settings` | 系统管理（账号信息 / 安全设置 / 通知偏好；修改类操作走弹层） | 系统管理 |
 | `order-management` | 订单管理 | — |
 | `exchange` | 换汇中心 | — |
 | `exchange-records` | 换汇记录（经换汇中心「查看全部 ›」进入；KPI 概览 + 状态/条件筛选 + 分页） | — |
@@ -146,8 +147,14 @@ node tools/interact_check.js                     # 交互冒烟，126 项断言
 | `collection` | 外贸收款账户（无入口，保留页） | — |
 | `notifications` | 消息通知（经首页「通知」入口进入） | — |
 
-> 原「在途资金」一级页（`in-transit-funds`）已并入 `trade-collection`：
-> tabBar 从四栏收敛为三栏，首页在途资金的「详情 ›」带 `data-view="fund"` 直达该视图。
+> 原「在途资金」一级页（`in-transit-funds`）已并入 `trade-collection`；
+> 首页在途资金的「详情 ›」带 `data-view="fund"` 直达该视图。
+> tabBar 现为四栏：首页 / 收款 / 权益中心 / 系统管理。
+>
+> `system-settings` 对齐 desktop 版 `pages/account_settings.html`：
+> 三组设置卡（账号信息 / 安全设置 / 通知偏好）＋开关与修改弹层。
+> 桌面端的「徽章 + 修改」堆在行右侧，375px 下会把值挤成省略号，
+> 移动端把徽章收进标签行、右侧只留一个操作；修改类操作走 `PP.ui.sheet`。
 >
 > 人民币结汇模块的 `rmb-exchange` / `rmb-exchange-withdraw` /
 > `rmb-exchange-accounts` 三页顶部共用同一条 tab（`.seg.tabseg`）：tab 只做导航，

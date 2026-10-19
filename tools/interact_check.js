@@ -25,6 +25,9 @@
  *                          点当前页自己的 tab 无副作用、返回落回结汇首页
  *  10. 结汇账户列表     —— 状态统计、搜索、筛选弹层、分页、
  *                          修改别名 / 修改资料 / 删除、添加账户入口
+ *  11. 系统管理页       —— tabBar 第 4 栏：三组设置卡、开关翻转、
+ *                          修改手机号 / 登录密码弹层的校验与成功回写、
+ *                          状态在切走再切回后保持
  *
  * 任一步骤失败即非零退出。
  *
@@ -127,11 +130,12 @@ async function main() {
 
     /* 2.5 收款页双视图：在途资金已并入本页 ------------------------- */
     await step('收款页内切换「在途资金」视图', cdp, async () => {
-      // tabBar 收敛为三栏（在途资金不再是独立一级页）
+      // tabBar 四栏：首页 / 收款 / 权益中心 / 系统管理（在途资金并入收款页）
       const tabs = await cdp.eval(
         `[].slice.call(document.querySelectorAll('#tabbar .tab')).map(function (t) { return t.getAttribute('data-name') })`)
-      check('tabBar 收敛为三栏',
-        tabs.length === 3 && tabs.join(',') === 'index,trade-collection,rights-center', JSON.stringify(tabs))
+      check('tabBar 四栏',
+        tabs.length === 4 && tabs.join(',') === 'index,trade-collection,rights-center,system-settings',
+        JSON.stringify(tabs))
 
       // 分段切换到在途视图
       await click(cdp, '#tc-viewseg [data-view="fund"]')
@@ -1079,6 +1083,169 @@ async function main() {
       await click(cdp, '#bar-back')
       await cdp.waitFor(`PP.router.current() === 'rmb-exchange-accounts'`, '返回结汇账户')
       check('返回落回结汇账户页', true)
+    })
+
+    /* 12. 系统管理页（第 4 个 tab） ---------------------------------- */
+    await step('系统管理页（设置行 / 开关 / 修改弹层）', cdp, async () => {
+      await cdp.eval(`PP.router.switchTab('system-settings')`)
+      await cdp.waitFor(`PP.router.current() === 'system-settings'`, '切到系统管理')
+      await sleep(200)
+
+      let s = await cdp.eval(`({
+        selected: document.querySelector('.tab[data-name="system-settings"]').getAttribute('aria-selected'),
+        title: document.querySelector('#bar-title').textContent,
+        tabbarHidden: document.querySelector('#tabbar').hidden,
+        back: !!document.querySelector('#bar-back'),
+        cards: document.querySelectorAll('.sys-card').length,
+        rows: document.querySelectorAll('.sys-row').length,
+        labels: [].slice.call(document.querySelectorAll('.sys-label')).map(function (e) { return e.textContent.trim() }),
+        switches: [].slice.call(document.querySelectorAll('.switch[role="switch"]')).map(function (e) { return e.getAttribute('aria-checked') })
+      })`)
+      check('tab 选中且为 tabBar 页（无返回键）',
+        s.selected === 'true' && !s.tabbarHidden && !s.back, JSON.stringify({
+          selected: s.selected, tabbarHidden: s.tabbarHidden, back: s.back }))
+      check('导航栏标题为「系统管理」', s.title === '系统管理', s.title)
+      check('三组设置卡共 9 行', s.cards === 3 && s.rows === 9,
+        JSON.stringify({ cards: s.cards, rows: s.rows }))
+      check('行齐全（账号信息 2 + 安全设置 4 + 通知偏好 3）',
+        s.labels.join('/') === '手机号/邮箱/登录密码/交易密码/交易二次校验/付款交易审批/到账提醒/入账提醒/付款提醒',
+        JSON.stringify(s.labels))
+      check('开关初始态 开/关/开/开/开', s.switches.join(',') === 'true,false,true,true,true',
+        JSON.stringify(s.switches))
+      s = await cdp.eval(`({
+        phone: document.querySelector('#sys-phone-value').textContent,
+        email: document.querySelector('#sys-email-value').textContent
+      })`)
+      check('手机号 / 邮箱与 desktop 版一致',
+        s.phone === '+86 17301643654' && s.email === '1950130401@qq.com', JSON.stringify(s))
+
+      // 开关翻转 + toast 反馈
+      await click(cdp, '.switch[data-toggle="verify"]')
+      await sleep(150)
+      s = await cdp.eval(`({
+        checked: document.querySelector('.switch[data-toggle="verify"]').getAttribute('aria-checked'),
+        toast: document.querySelector('#toast-layer').textContent
+      })`)
+      check('开关点击翻为关并 toast「交易二次校验已关闭」',
+        s.checked === 'false' && s.toast.indexOf('交易二次校验已关闭') >= 0, JSON.stringify(s))
+      await click(cdp, '.switch[data-toggle="verify"]')
+      await sleep(120)
+
+      // 修改手机号弹层：校验链 → 成功回写
+      await click(cdp, '.sys-act[data-act="phone"]')
+      await cdp.waitFor(`!!document.querySelector('#sys-contact-input')`, '修改手机号弹层出现')
+      s = await cdp.eval(`({
+        title: document.querySelector('.sheet-title').textContent,
+        current: document.querySelector('.sys-current').textContent
+      })`)
+      check('弹层标题与当前掩码号',
+        s.title === '修改手机号' && s.current === '当前：+86 173****3654', JSON.stringify(s))
+      await click(cdp, '[data-act="save"]', 'document.querySelector("#layer-root")')
+      await sleep(120)
+      s = await cdp.eval(`({
+        shown: !document.querySelector('#sys-contact-error').hidden,
+        err: document.querySelector('#sys-contact-error').textContent
+      })`)
+      check('空提交给出错误提示', s.shown && s.err.indexOf('请输入') >= 0, JSON.stringify(s))
+
+      await cdp.eval(`(function () {
+        var i = document.querySelector('#sys-contact-input')
+        i.value = '13912345678'
+        i.dispatchEvent(new Event('input', { bubbles: true }))
+      })()`)
+      await click(cdp, '[data-act="send"]', 'document.querySelector("#layer-root")')
+      await sleep(150)
+      s = await cdp.eval(`({
+        disabled: document.querySelector('[data-act="send"]').disabled,
+        text: document.querySelector('[data-act="send"]').textContent
+      })`)
+      check('获取验证码后进入 60 秒倒计时', s.disabled && /秒后重发/.test(s.text), JSON.stringify(s))
+
+      await click(cdp, '[data-act="save"]', 'document.querySelector("#layer-root")')
+      await sleep(120)
+      s = await cdp.eval(`({
+        shown: !document.querySelector('#sys-contact-error').hidden,
+        err: document.querySelector('#sys-contact-error').textContent
+      })`)
+      check('缺验证码被拦截', s.shown && s.err.indexOf('验证码') >= 0, JSON.stringify(s))
+
+      await cdp.eval(`(function () {
+        var i = document.querySelector('#sys-contact-code')
+        i.value = '123456'
+        i.dispatchEvent(new Event('input', { bubbles: true }))
+      })()`)
+      await click(cdp, '[data-act="save"]', 'document.querySelector("#layer-root")')
+      await cdp.waitFor(`!document.querySelector('#sys-contact-input')`, '保存成功后弹层关闭')
+      await sleep(150)
+      s = await cdp.eval(`({
+        v: document.querySelector('#sys-phone-value').textContent,
+        toast: document.querySelector('#toast-layer').textContent
+      })`)
+      check('手机号行值更新为 +86 13912345678', s.v === '+86 13912345678', JSON.stringify(s))
+
+      // 修改登录密码：强度条联动 + 逐项校验
+      await click(cdp, '.sys-act[data-act="login-pwd"]')
+      await cdp.waitFor(`!!document.querySelector('#sys-pwd-new')`, '修改登录密码弹层出现')
+      await cdp.eval(`(function () {
+        var i = document.querySelector('#sys-pwd-new')
+        i.value = 'Ab123456!'
+        i.dispatchEvent(new Event('input', { bubbles: true }))
+      })()`)
+      await sleep(120)
+      s = await cdp.eval(`({
+        lv: document.querySelector('#sys-strength').getAttribute('data-level'),
+        text: document.querySelector('#sys-strength-text').textContent
+      })`)
+      check('密码强度条实时联动（Ab123456! → 强）', s.lv === '4', JSON.stringify(s))
+
+      await click(cdp, '[data-act="save"]', 'document.querySelector("#layer-root")')
+      await sleep(120)
+      s = await cdp.eval(`document.querySelector('#sys-pwd-error').textContent`)
+      check('未填当前密码被拦截', s.indexOf('当前密码') >= 0, s)
+
+      await cdp.eval(`(function () {
+        var i = document.querySelector('#sys-pwd-old')
+        i.value = 'old123'
+        i.dispatchEvent(new Event('input', { bubbles: true }))
+      })()`)
+      await cdp.eval(`(function () {
+        var i = document.querySelector('#sys-pwd-confirm')
+        i.value = 'Ab123457!'
+        i.dispatchEvent(new Event('input', { bubbles: true }))
+      })()`)
+      await click(cdp, '[data-act="save"]', 'document.querySelector("#layer-root")')
+      await sleep(120)
+      s = await cdp.eval(`document.querySelector('#sys-pwd-error').textContent`)
+      check('两次新密码不一致被拦截', s.indexOf('不一致') >= 0, s)
+
+      await cdp.eval(`(function () {
+        var i = document.querySelector('#sys-pwd-confirm')
+        i.value = 'Ab123456!'
+        i.dispatchEvent(new Event('input', { bubbles: true }))
+      })()`)
+      await click(cdp, '[data-act="save"]', 'document.querySelector("#layer-root")')
+      await cdp.waitFor(`!document.querySelector('#sys-pwd-new')`, '密码保存成功弹层关闭')
+      await sleep(150)
+      s = await cdp.eval(`document.querySelector('#toast-layer').textContent`)
+      check('toast「登录密码修改成功」', s.indexOf('登录密码修改成功') >= 0, s)
+
+      // 状态持久性：切走再切回，开关与手机号保持修改后的值
+      await click(cdp, '.switch[data-toggle="payment"]')
+      await sleep(120)
+      await cdp.eval(`PP.router.switchTab('index')`)
+      await cdp.waitFor(`PP.router.current() === 'index'`, '切回首页')
+      await sleep(150)
+      await cdp.eval(`PP.router.switchTab('system-settings')`)
+      await cdp.waitFor(`PP.router.current() === 'system-settings'`, '再回系统管理')
+      await sleep(200)
+      s = await cdp.eval(`({
+        payment: document.querySelector('.switch[data-toggle="payment"]').getAttribute('aria-checked'),
+        phone: document.querySelector('#sys-phone-value').textContent
+      })`)
+      check('切走再回来：开关与手机号保持修改后的状态',
+        s.payment === 'false' && s.phone === '+86 13912345678', JSON.stringify(s))
+      // 翻回付款提醒，避免给后续演示留脏状态
+      await click(cdp, '.switch[data-toggle="payment"]')
     })
 
     /* 汇总 -------------------------------------------------------- */

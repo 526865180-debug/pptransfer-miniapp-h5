@@ -80,10 +80,12 @@ PP.definePage('trade-collection', {
 2. **静态文案直接写在 HTML 里**；列表型数据（≥4 条、同构）由 JS 渲染，数据放在页面 JS 顶部的常量里。
 3. **可变的文本节点**加 `id` 或 `data-*` 钩子，JS 只改文本/属性，不重建结构。
 4. **金额**：`<span class="num" data-amount>…</span>` —— `data-amount` 受全局脱敏开关控制（见 index.css）。
-5. **图标**：`<svg aria-hidden="true"><use href="#i-name"/></svg>`，sprite 见 `src/assets/icons.svg`（30 个 symbol）。
+5. **图标**：`<svg aria-hidden="true"><use href="#i-name"/></svg>`，sprite 见 `src/assets/icons.svg`（42 个 symbol）。
    配色交给外层的 `color`，不要在 symbol 里写死颜色。
 6. **弹层不要手写 mask/sheet 结构**，用 `PP.ui.sheet()`，页面里只写触发按钮。
-7. 片段里**不要**写 `<style>` 或 `<script>`。
+7. **开关**：`<button class="switch" role="switch" aria-checked="true" aria-label="…"></button>` ——
+   状态只由 `aria-checked` 驱动（样式与读屏共用一份真源），不要额外挂 `.on` 类。
+8. 片段里**不要**写 `<style>` 或 `<script>`。
 
 ---
 

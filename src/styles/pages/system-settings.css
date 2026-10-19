@@ -1,0 +1,181 @@
+/* ============================================================
+   pages/system-settings.css · 系统管理（账号设置）
+   ------------------------------------------------------------
+   本页只写设置卡的版式：卡头、设置行、状态徽章位置，
+   以及两个弹层里的表单细节（验证码行、密码强度条）。
+   卡片外壳、徽章、输入框、开关本体都在 components.css。
+
+   行版式取舍：桌面版把「状态徽章 + 修改」都堆在右侧，375px 下
+   值会被挤成省略号；这里把徽章收进标签行，右侧只留一个操作，
+   信息列因此多出约 70px，手机号/邮箱能完整显示。
+   ============================================================ */
+
+.page[data-page='system-settings'] {
+  padding-top: var(--space-4);
+}
+
+.sys-intro {
+  margin: 0 var(--gutter) var(--space-4);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--text-tertiary);
+}
+
+/* ============ 设置卡 ============ */
+.sys-card {
+  margin: var(--space-4) var(--gutter) 0;
+  overflow: hidden;
+}
+.sys-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 13px var(--space-5) 12px;
+}
+.sys-head-body { min-width: 0; }
+.sys-head-title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  color: var(--text-primary);
+}
+.sys-head-sub {
+  margin-top: 3px;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+/* ============ 设置行 ============ */
+.sys-rows { border-top: 1px solid var(--border-subtle); }
+.sys-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 12px var(--space-5);
+}
+.sys-row + .sys-row { border-top: 1px solid var(--border-subtle); }
+
+.sys-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+}
+.sys-icon > svg {
+  width: 18px;
+  height: 18px;
+}
+
+.sys-info { flex: 1; min-width: 0; }
+.sys-label-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sys-label {
+  display: block;
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-snug);
+  color: var(--text-primary);
+}
+.sys-value {
+  display: block;
+  margin-top: 3px;
+  overflow: hidden;
+  font-family: var(--font-num);
+  font-size: var(--text-md);
+  line-height: var(--leading-snug);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.sys-desc {
+  display: block;
+  margin-top: 3px;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--text-tertiary);
+}
+.sys-ctrl { flex-shrink: 0; }
+
+/* 行内「修改」：比通用 btn-text 更紧凑，图标 13px */
+.sys-act {
+  gap: 4px;
+  padding: 6px 2px 6px var(--space-2);
+  font-size: var(--text-sm);
+}
+.sys-act > svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* 状态徽章里的对勾比文字略小 */
+.sys-pill > svg {
+  width: 11px;
+  height: 11px;
+}
+
+.sys-foot {
+  margin: var(--space-6) var(--gutter) 0;
+  font-size: var(--text-xs);
+  color: var(--text-quaternary);
+  text-align: center;
+}
+
+/* ============ 弹层：当前值提示 ============ */
+.sys-current {
+  margin-bottom: var(--space-5);
+  padding: 8px var(--space-3);
+  border-radius: var(--radius-inner);
+  background: var(--surface-sunken);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+/* ============ 弹层：验证码行 ============ */
+.sys-code-row {
+  display: flex;
+  gap: var(--space-2);
+}
+.sys-code-row .field-input {
+  flex: 1;
+  min-width: 0;
+}
+.sys-code-btn {
+  flex-shrink: 0;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-4);
+  font-size: var(--text-md);
+  border-radius: var(--radius-inner);
+}
+
+/* 弹层里最后一个字段不留底部外边距（footer 自带 margin-top） */
+.sys-field-last { margin-bottom: 0; }
+
+/* ============ 弹层：密码强度 ============ */
+.sys-strength {
+  display: flex;
+  gap: 4px;
+  margin-top: var(--space-2);
+}
+.sys-strength > i {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--slate-200);
+  transition: background-color var(--dur-base) var(--ease-out);
+}
+.sys-strength[data-level='1'] > i:nth-child(-n + 1) { background: var(--color-danger); }
+.sys-strength[data-level='2'] > i:nth-child(-n + 2) { background: var(--color-warning); }
+.sys-strength[data-level='3'] > i:nth-child(-n + 3) { background: var(--color-brand); }
+.sys-strength[data-level='4'] > i { background: var(--color-success); }
+
+.sys-strength-text {
+  margin-top: 5px;
+  font-size: var(--text-xs);
+  color: var(--text-quaternary);
+}
+.sys-strength-text[data-level='1'] { color: var(--color-danger); }
+.sys-strength-text[data-level='2'] { color: var(--color-warning); }
+.sys-strength-text[data-level='3'] { color: var(--color-brand); }
+.sys-strength-text[data-level='4'] { color: var(--color-success); }

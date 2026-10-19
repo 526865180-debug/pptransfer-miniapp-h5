@@ -1,7 +1,7 @@
 /* ============================================================
    routes.js · 路由表
    ------------------------------------------------------------
-   15 个页面的唯一真源：导航栏标题、tabBar 归属、片段文件名。
+   16 个页面的唯一真源：导航栏标题、tabBar 归属、片段文件名。
    router 与 tabBar 都从这里读，避免两处各写一份对不上。
    ============================================================ */
 (function (PP) {
@@ -15,12 +15,13 @@
   }
 
   PP.ROUTES = [
-    /* ---------- tabBar 三页 ---------- */
+    /* ---------- tabBar 四页 ---------- */
     /* 「在途资金」已并入收款页：页内顶部分段切换「收款记录 / 在途资金」两个视图，
        不再单列一级页。首页在途资金「详情 ›」用 { view: 'fund' } 直达该视图。 */
     { name: 'index', title: 'PPTransfer 商户端', tab: { text: '首页', icon: 'i-home' } },
     { name: 'trade-collection', title: '外贸收款管理', tab: { text: '收款', icon: 'i-banknote' } },
     { name: 'rights-center', title: '权益中心', tab: { text: '权益中心', icon: 'i-crown' } },
+    { name: 'system-settings', title: '系统管理', tab: { text: '系统管理', icon: 'i-gear' } },
 
     /* ---------- 二级页 ---------- */
     { name: 'order-management', title: '订单管理' },
